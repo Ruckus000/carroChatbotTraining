@@ -4,6 +4,34 @@
 
 Your chatbot is currently built on a DistilBERT-based architecture for intent classification and entity extraction, but it struggles with negation (e.g., "I don't need a tow truck") and context switching (e.g., "Actually, forget the tow truck; I need a new battery"). This implementation plan will enhance your system to better handle these scenarios.
 
+## Improvement Recommendations
+
+After reviewing the codebase and this implementation plan, we've identified several areas that should be addressed to ensure a robust implementation:
+
+### 1. Context Management Enhancements
+
+- **Broader Entity Context**: Store more than just the last 3 intents - entity values are equally important for context understanding and contradiction detection.
+- **Conversation State Tracking**: Implement a more robust conversation state tracker that maintains the full context of entities mentioned across turns.
+
+### 2. Model Architecture Improvements
+
+- **Cross-Turn Attention**: Add an attention mechanism between previous conversation turns and current input to better capture context relationships.
+- **Refined Negation Detection**: The current plan uses `hidden_states[-1]` for negation detection, but multiple transformer layers or specialized attention mechanisms would be more effective.
+- **Alternative Architecture Option**: Consider a modular approach with separate models sharing embeddings as a fallback if the multi-task approach becomes too complex.
+
+### 3. Evaluation and Testing Enhancements
+
+- **Conversation-Level Metrics**: Add full conversation-level success metrics beyond single-turn accuracy.
+- **User Simulator Testing**: Implement automated user simulators that can evaluate complex multi-turn scenarios.
+- **Production Monitoring**: Add metrics to track context-related failures in production.
+
+### 4. Streamlit Integration Considerations
+
+- **Session Management**: The current Streamlit implementation needs explicit updates to maintain conversation context between turns.
+- **UI Feedback**: Add UI elements to show when context is being carried over from previous turns.
+
+These improvements will be integrated into the implementation plan below.
+
 ## Step 1: Data Collection and Augmentation
 
 ### 1.1 Create New Negation Examples
@@ -292,20 +320,40 @@ def create_clarification_dataset(conversations: List[Dict[str, Any]],
 
 ### 3.1 Create a Contextual Intent Classifier
 
-Modify your model_training.py to include context sensitivity in the intent classifier:
+Modify your model_training.py to include context sensitivity in the intent classifier with enhanced attention mechanisms:
 
 ```python
 class ContextualIntentClassifier(DistilBertForSequenceClassification):
-    """DistilBERT model with context awareness for intent classification"""
+    """DistilBERT model with enhanced context awareness for intent classification"""
 
     def __init__(self, config):
         super().__init__(config)
-        # Add a component to handle negation features
-        self.negation_detector = torch.nn.Linear(config.hidden_size, 1)
+
+        # Add a component to handle negation features with multi-layer processing
+        self.negation_detector = torch.nn.Sequential(
+            torch.nn.Linear(config.hidden_size, config.hidden_size // 2),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(0.1),
+            torch.nn.Linear(config.hidden_size // 2, 1)
+        )
+
+        # Add context attention component for cross-turn awareness
+        self.context_attention = torch.nn.MultiheadAttention(
+            embed_dim=config.hidden_size,
+            num_heads=8,
+            dropout=0.1
+        )
+
+        # Previous context projection layer
+        self.context_projection = torch.nn.Linear(config.hidden_size, config.hidden_size)
+
+        # Register buffer for storing previous turn embeddings
+        self.register_buffer("previous_turn_embedding", torch.zeros(1, config.hidden_size))
+        self.has_previous_context = False
 
     def forward(self, input_ids=None, attention_mask=None, head_mask=None,
                 inputs_embeds=None, labels=None, output_attentions=None,
-                output_hidden_states=None, return_dict=None):
+                output_hidden_states=None, return_dict=None, previous_context=None):
         # Get standard outputs from DistilBERT
         outputs = super().forward(
             input_ids=input_ids,
@@ -314,19 +362,52 @@ class ContextualIntentClassifier(DistilBertForSequenceClassification):
             inputs_embeds=inputs_embeds,
             labels=labels,
             output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_dict=return_dict
+            output_hidden_states=True,  # Always get hidden states for context processing
+            return_dict=True  # Always return dict for consistency
         )
 
-        # Extract last hidden state for negation detection
-        sequence_output = outputs.hidden_states[-1]
-        pooled_output = sequence_output[:, 0]  # Use CLS token
+        # Process hidden states from multiple layers for better feature extraction
+        # Use weighted combination of last 3 layers instead of just the last one
+        last_hidden_states = outputs.hidden_states[-3:]  # Get last 3 layers
+        layer_weights = torch.tensor([0.1, 0.3, 0.6]).to(input_ids.device)  # Weighted importance
 
-        # Detect negation
+        # Apply weighted combination
+        weighted_hidden_states = torch.zeros_like(last_hidden_states[-1])
+        for i, layer in enumerate(last_hidden_states):
+            weighted_hidden_states += layer_weights[i] * layer
+
+        # Get CLS token representation
+        pooled_output = weighted_hidden_states[:, 0]  # Use CLS token
+
+        # Apply context attention if previous context exists
+        if previous_context is not None:
+            # Process previous context
+            context_embedding = self.context_projection(previous_context)
+
+            # Reshape for attention
+            query = pooled_output.unsqueeze(0)
+            key = context_embedding.unsqueeze(0)
+            value = context_embedding.unsqueeze(0)
+
+            # Apply cross-turn attention
+            context_aware_output, _ = self.context_attention(query, key, value)
+            context_aware_output = context_aware_output.squeeze(0)
+
+            # Combine current representation with context-aware representation
+            pooled_output = pooled_output + 0.3 * context_aware_output
+
+        # Store current embedding for next turn
+        self.previous_turn_embedding = pooled_output.detach()
+        self.has_previous_context = True
+
+        # Enhanced negation detection with multi-layer processing
         negation_logits = self.negation_detector(pooled_output)
 
-        # Include negation prediction in outputs
+        # Add negation prediction to outputs
         outputs.negation_logits = negation_logits
+
+        # Store context-aware token representation for downstream tasks
+        outputs.context_aware_embedding = pooled_output
 
         return outputs
 
@@ -372,14 +453,30 @@ def train_contextual_intent_classifier(flow: str, dataset_dir: str, output_dir: 
     val_texts = [x['text'] for x in flow_val_data]
     val_labels = [label2id[x['label']] if x['label'] in label2id else 0 for x in flow_val_data]
 
-    # Add negation and context switching flags
-    train_negation = [1 if "don't" in x['text'].lower() or "not " in x['text'].lower() or
-                     "no longer" in x['text'].lower() or "forget" in x['text'].lower() else 0
-                     for x in flow_train_data]
+    # Enhanced feature extraction for negation and context
+    train_features = []
+    for x in flow_train_data:
+        features = {
+            "contains_negation": 1 if any(neg in x['text'].lower() for neg in
+                                         ["don't", "not ", "no longer", "forget", "isn't", "aren't", "wasn't"]) else 0,
+            "contains_context_switch": 1 if any(cs in x['text'].lower() for cs in
+                                              ["actually", "instead", "rather", "changed my mind", "forget"]) else 0,
+            "text_length": len(x['text'].split()),
+            "has_question": 1 if "?" in x['text'] else 0
+        }
+        train_features.append(features)
 
-    val_negation = [1 if "don't" in x['text'].lower() or "not " in x['text'].lower() or
-                    "no longer" in x['text'].lower() or "forget" in x['text'].lower() else 0
-                    for x in flow_val_data]
+    val_features = []
+    for x in flow_val_data:
+        features = {
+            "contains_negation": 1 if any(neg in x['text'].lower() for neg in
+                                         ["don't", "not ", "no longer", "forget", "isn't", "aren't", "wasn't"]) else 0,
+            "contains_context_switch": 1 if any(cs in x['text'].lower() for cs in
+                                              ["actually", "instead", "rather", "changed my mind", "forget"]) else 0,
+            "text_length": len(x['text'].split()),
+            "has_question": 1 if "?" in x['text'] else 0
+        }
+        val_features.append(features)
 
     # Tokenize data
     tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
@@ -387,9 +484,37 @@ def train_contextual_intent_classifier(flow: str, dataset_dir: str, output_dir: 
     train_encodings = tokenizer(train_texts, truncation=True, padding=True)
     val_encodings = tokenizer(val_texts, truncation=True, padding=True)
 
-    # Add negation flag to encodings (this would need to be handled in a custom dataset)
-    train_encodings['negation'] = train_negation
-    val_encodings['negation'] = val_negation
+    # Add extracted features to encodings for custom dataset
+    for i, features in enumerate(train_features):
+        for feat_name, feat_value in features.items():
+            if feat_name not in train_encodings:
+                train_encodings[feat_name] = []
+            train_encodings[feat_name].append(feat_value)
+
+    for i, features in enumerate(val_features):
+        for feat_name, feat_value in features.items():
+            if feat_name not in val_encodings:
+                val_encodings[feat_name] = []
+            val_encodings[feat_name].append(feat_value)
+
+    # Create custom dataset to handle additional features
+    class ContextualIntentDataset(Dataset):
+        def __init__(self, encodings, labels):
+            self.encodings = encodings
+            self.labels = labels
+
+        def __getitem__(self, idx):
+            item = {key: torch.tensor(val[idx]) if not isinstance(val[idx], int) else torch.tensor([val[idx]])
+                   for key, val in self.encodings.items()}
+            item['labels'] = torch.tensor(self.labels[idx])
+            return item
+
+        def __len__(self):
+            return len(self.labels)
+
+    # Create datasets
+    train_dataset = ContextualIntentDataset(train_encodings, train_labels)
+    val_dataset = ContextualIntentDataset(val_encodings, val_labels)
 
     # Initialize model with context awareness
     config = DistilBertConfig.from_pretrained(
@@ -411,18 +536,19 @@ def train_contextual_intent_classifier(flow: str, dataset_dir: str, output_dir: 
 
 ### 3.2 Implement Multi-task Learning for Clarification Detection
 
-Update your training approach to incorporate multi-task learning:
+Update your training approach to incorporate multi-task learning with improved architecture:
 
 ```python
 def train_multi_task_clarification_classifier(dataset_dir: str, output_dir: str):
     """
-    Train a multi-task classifier that detects both clarification needs and negation.
+    Train an enhanced multi-task classifier that detects clarification needs, negation,
+    and context switching with shared representations.
 
     Args:
         dataset_dir: Directory containing datasets
         output_dir: Directory to save model
     """
-    logger.info("Training multi-task clarification classifier")
+    logger.info("Training multi-task clarification classifier with enhanced architecture")
 
     # Load datasets
     train_file = os.path.join(dataset_dir, 'clarification_classification_train.json')
@@ -433,6 +559,17 @@ def train_multi_task_clarification_classifier(dataset_dir: str, output_dir: str)
 
     with open(val_file, 'r') as f:
         val_data = json.load(f)
+
+    # Log dataset statistics for monitoring class imbalance
+    clarification_count = sum(1 for item in train_data if item['label'] == 'clarification')
+    negation_count = sum(1 for item in train_data if item.get('type') == 'negation')
+    context_switch_count = sum(1 for item in train_data if item.get('type') == 'context_switch')
+
+    logger.info(f"Training data statistics:")
+    logger.info(f"  Total examples: {len(train_data)}")
+    logger.info(f"  Clarification examples: {clarification_count} ({clarification_count/len(train_data)*100:.1f}%)")
+    logger.info(f"  Negation examples: {negation_count} ({negation_count/len(train_data)*100:.1f}%)")
+    logger.info(f"  Context switch examples: {context_switch_count} ({context_switch_count/len(train_data)*100:.1f}%)")
 
     # Prepare multi-task labels
     train_texts = [item['text'] for item in train_data]
@@ -445,13 +582,24 @@ def train_multi_task_clarification_classifier(dataset_dir: str, output_dir: str)
     val_negation_labels = [1 if item.get('type') == 'negation' else 0 for item in val_data]
     val_context_switch_labels = [1 if item.get('type') == 'context_switch' else 0 for item in val_data]
 
-    # Create a custom dataset for multi-task learning
+    # Create a custom dataset for multi-task learning with improved features
     class MultiTaskDataset(Dataset):
         def __init__(self, encodings, clarification_labels, negation_labels, context_switch_labels):
             self.encodings = encodings
             self.clarification_labels = clarification_labels
             self.negation_labels = negation_labels
             self.context_switch_labels = context_switch_labels
+
+            # Calculate class weights for balanced loss
+            pos_weight_clarification = (len(clarification_labels) - sum(clarification_labels)) / max(1, sum(clarification_labels))
+            pos_weight_negation = (len(negation_labels) - sum(negation_labels)) / max(1, sum(negation_labels))
+            pos_weight_context_switch = (len(context_switch_labels) - sum(context_switch_labels)) / max(1, sum(context_switch_labels))
+
+            self.class_weights = {
+                "clarification": torch.tensor([1.0, pos_weight_clarification]),
+                "negation": torch.tensor([1.0, pos_weight_negation]),
+                "context_switch": torch.tensor([1.0, pos_weight_context_switch])
+            }
 
         def __getitem__(self, idx):
             item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
@@ -463,73 +611,284 @@ def train_multi_task_clarification_classifier(dataset_dir: str, output_dir: str)
         def __len__(self):
             return len(self.clarification_labels)
 
+        def get_class_weights(self):
+            return self.class_weights
+
+    # Extract additional linguistic features for improved detection
+    def extract_linguistic_features(texts):
+        features = []
+        for text in texts:
+            # Check for negation indicators
+            contains_negation = int(any(neg in text.lower() for neg in
+                                     ["don't", "not ", "no longer", "forget", "isn't", "aren't", "wasn't"]))
+
+            # Check for context switch indicators
+            contains_switch = int(any(cs in text.lower() for cs in
+                                    ["actually", "instead", "rather", "changed my mind", "forget"]))
+
+            # Check for question indicators
+            contains_question = int("?" in text)
+
+            # Check for uncertainty indicators
+            contains_uncertainty = int(any(unc in text.lower() for neg in
+                                         ["maybe", "perhaps", "possibly", "not sure", "might", "could"]))
+
+            # Text length as proxy for complexity
+            text_length = min(50, len(text.split())) / 50.0  # Normalize to 0-1
+
+            features.append({
+                "negation_feature": contains_negation,
+                "switch_feature": contains_switch,
+                "question_feature": contains_question,
+                "uncertainty_feature": contains_uncertainty,
+                "length_feature": text_length
+            })
+        return features
+
+    # Extract linguistic features
+    train_linguistic_features = extract_linguistic_features(train_texts)
+    val_linguistic_features = extract_linguistic_features(val_texts)
+
     # Tokenize data
     tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
 
     train_encodings = tokenizer(train_texts, truncation=True, padding=True)
     val_encodings = tokenizer(val_texts, truncation=True, padding=True)
 
+    # Add linguistic features to encodings
+    for feature_name in train_linguistic_features[0].keys():
+        train_encodings[feature_name] = [item[feature_name] for item in train_linguistic_features]
+        val_encodings[feature_name] = [item[feature_name] for item in val_linguistic_features]
+
     # Create datasets
     train_dataset = MultiTaskDataset(train_encodings, train_clarification_labels, train_negation_labels, train_context_switch_labels)
     val_dataset = MultiTaskDataset(val_encodings, val_clarification_labels, val_negation_labels, val_context_switch_labels)
 
-    # Create a custom multi-task model
-    class MultiTaskClarificationModel(DistilBertPreTrainedModel):
+    # Get class weights for balanced training
+    class_weights = train_dataset.get_class_weights()
+
+    # Create a custom multi-task model with enhanced architecture
+    class EnhancedMultiTaskModel(DistilBertPreTrainedModel):
         def __init__(self, config):
             super().__init__(config)
             self.distilbert = DistilBertModel(config)
-            self.pre_classifier = torch.nn.Linear(config.dim, config.dim)
-            self.dropout = torch.nn.Dropout(config.seq_classif_dropout)
 
-            # Multiple classification heads
+            # Feature fusion layer - combine transformer outputs with linguistic features
+            self.feature_dim = config.dim + 5  # 5 linguistic features
+
+            # Enhanced shared representation layer
+            self.shared_layer = torch.nn.Sequential(
+                torch.nn.Linear(self.feature_dim, self.feature_dim),
+                torch.nn.LayerNorm(self.feature_dim),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(0.2)
+            )
+
+            # Task-specific representation layers for better specialization
+            self.clarification_representation = torch.nn.Sequential(
+                torch.nn.Linear(self.feature_dim, config.dim),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(0.1)
+            )
+
+            self.negation_representation = torch.nn.Sequential(
+                torch.nn.Linear(self.feature_dim, config.dim),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(0.1)
+            )
+
+            self.context_switch_representation = torch.nn.Sequential(
+                torch.nn.Linear(self.feature_dim, config.dim),
+                torch.nn.ReLU(),
+                torch.nn.Dropout(0.1)
+            )
+
+            # Classification heads
             self.clarification_classifier = torch.nn.Linear(config.dim, 2)
             self.negation_classifier = torch.nn.Linear(config.dim, 2)
             self.context_switch_classifier = torch.nn.Linear(config.dim, 2)
 
+            # Apply weight initialization
             self.init_weights()
 
         def forward(self, input_ids=None, attention_mask=None,
-                  clarification_labels=None, negation_labels=None, context_switch_labels=None):
+                  clarification_labels=None, negation_labels=None, context_switch_labels=None,
+                  negation_feature=None, switch_feature=None, question_feature=None,
+                  uncertainty_feature=None, length_feature=None):
             # DistilBERT forward pass
             outputs = self.distilbert(
                 input_ids=input_ids,
                 attention_mask=attention_mask
             )
 
-            # Get sequence output and apply pre-classifier and dropout
+            # Extract sequence output and get CLS token
             hidden_state = outputs[0]  # (bs, seq_len, dim)
             pooled_output = hidden_state[:, 0]  # (bs, dim)
-            pooled_output = self.pre_classifier(pooled_output)  # (bs, dim)
-            pooled_output = torch.nn.ReLU()(pooled_output)  # (bs, dim)
-            pooled_output = self.dropout(pooled_output)  # (bs, dim)
 
-            # Multiple classification heads
-            clarification_logits = self.clarification_classifier(pooled_output)  # (bs, 2)
-            negation_logits = self.negation_classifier(pooled_output)  # (bs, 2)
-            context_switch_logits = self.context_switch_classifier(pooled_output)  # (bs, 2)
+            # Prepare linguistic features tensor
+            linguistic_features = torch.stack([
+                negation_feature, switch_feature, question_feature,
+                uncertainty_feature, length_feature
+            ], dim=1).float()
 
+            # Combine transformer output with linguistic features
+            combined_features = torch.cat([pooled_output, linguistic_features], dim=1)
+
+            # Apply shared representation layer
+            shared_representation = self.shared_layer(combined_features)
+
+            # Apply task-specific representations
+            clarification_representation = self.clarification_representation(shared_representation)
+            negation_representation = self.negation_representation(shared_representation)
+            context_switch_representation = self.context_switch_representation(shared_representation)
+
+            # Generate logits for each task
+            clarification_logits = self.clarification_classifier(clarification_representation)
+            negation_logits = self.negation_classifier(negation_representation)
+            context_switch_logits = self.context_switch_classifier(context_switch_representation)
+
+            # Calculate loss if labels are provided
             loss = None
             if clarification_labels is not None and negation_labels is not None and context_switch_labels is not None:
-                loss_fct = torch.nn.CrossEntropyLoss()
+                # Use weighted cross entropy loss for handling class imbalance
+                loss_fct = torch.nn.CrossEntropyLoss(weight=None)  # Weights handled in training loop
+
                 clarification_loss = loss_fct(clarification_logits.view(-1, 2), clarification_labels.view(-1))
                 negation_loss = loss_fct(negation_logits.view(-1, 2), negation_labels.view(-1))
                 context_switch_loss = loss_fct(context_switch_logits.view(-1, 2), context_switch_labels.view(-1))
 
-                # Combined loss with weights (can be adjusted)
-                loss = clarification_loss + 0.5 * negation_loss + 0.5 * context_switch_loss
+                # Combined loss with adjustable weights
+                # Prioritize tasks based on their importance
+                loss = clarification_loss + 0.7 * negation_loss + 0.7 * context_switch_loss
 
             return {
                 'loss': loss,
                 'clarification_logits': clarification_logits,
                 'negation_logits': negation_logits,
-                'context_switch_logits': context_switch_logits
+                'context_switch_logits': context_switch_logits,
+                'shared_representation': shared_representation
             }
 
     # Initialize model
-    model = MultiTaskClarificationModel.from_pretrained('distilbert-base-uncased')
+    model = EnhancedMultiTaskModel.from_pretrained('distilbert-base-uncased')
 
-    # Rest of the training code...
-    # ...
+    # Define training arguments with early stopping and learning rate scheduling
+    training_args = TrainingArguments(
+        output_dir=f"{output_dir}/checkpoints",
+        num_train_epochs=10,
+        per_device_train_batch_size=16,
+        per_device_eval_batch_size=64,
+        warmup_steps=500,
+        weight_decay=0.01,
+        logging_dir=f"{output_dir}/logs",
+        logging_steps=50,
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        load_best_model_at_end=True,
+        metric_for_best_model="f1_macro",
+        greater_is_better=True,
+        no_cuda=True  # Using CPU
+    )
+
+    # Custom compute_metrics function to track performance
+    def compute_metrics(eval_pred):
+        results = {}
+
+        # Unpack predictions and labels
+        predictions = eval_pred.predictions
+        clarification_preds = np.argmax(predictions[0], axis=1)
+        negation_preds = np.argmax(predictions[1], axis=1)
+        context_switch_preds = np.argmax(predictions[2], axis=1)
+
+        clarification_labels = eval_pred.label_ids[0]
+        negation_labels = eval_pred.label_ids[1]
+        context_switch_labels = eval_pred.label_ids[2]
+
+        # Calculate metrics for each task
+        from sklearn.metrics import accuracy_score, precision_recall_fscore_support, f1_score
+
+        # Clarification metrics
+        results["clarification_accuracy"] = accuracy_score(clarification_labels, clarification_preds)
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            clarification_labels, clarification_preds, average="binary"
+        )
+        results["clarification_precision"] = precision
+        results["clarification_recall"] = recall
+        results["clarification_f1"] = f1
+
+        # Negation metrics
+        results["negation_accuracy"] = accuracy_score(negation_labels, negation_preds)
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            negation_labels, negation_preds, average="binary"
+        )
+        results["negation_precision"] = precision
+        results["negation_recall"] = recall
+        results["negation_f1"] = f1
+
+        # Context switch metrics
+        results["context_switch_accuracy"] = accuracy_score(context_switch_labels, context_switch_preds)
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            context_switch_labels, context_switch_preds, average="binary"
+        )
+        results["context_switch_precision"] = precision
+        results["context_switch_recall"] = recall
+        results["context_switch_f1"] = f1
+
+        # Calculate macro-averaged F1 across all tasks
+        results["f1_macro"] = (results["clarification_f1"] + results["negation_f1"] + results["context_switch_f1"]) / 3
+
+        return results
+
+    # Initialize the CustomTrainer with our multi-task setup
+    class MultiTaskTrainer(Trainer):
+        def compute_loss(self, model, inputs, return_outputs=False):
+            labels = {
+                "clarification_labels": inputs.pop("clarification_labels"),
+                "negation_labels": inputs.pop("negation_labels"),
+                "context_switch_labels": inputs.pop("context_switch_labels")
+            }
+
+            outputs = model(**inputs, **labels)
+            loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
+
+            return (loss, outputs) if return_outputs else loss
+
+    # Initialize trainer
+    trainer = MultiTaskTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset,
+        eval_dataset=val_dataset,
+        compute_metrics=compute_metrics,
+    )
+
+    # Train the model
+    trainer.train()
+
+    # Evaluate the model on validation set
+    eval_results = trainer.evaluate()
+    logger.info(f"Validation results: {eval_results}")
+
+    # Save the model
+    model_path = os.path.join(output_dir, "multi_task_clarification")
+    model.save_pretrained(model_path)
+    tokenizer.save_pretrained(model_path)
+
+    # Save task-specific class weights for inference
+    with open(os.path.join(model_path, "class_weights.json"), "w") as f:
+        json.dump({
+            "clarification": class_weights["clarification"].tolist(),
+            "negation": class_weights["negation"].tolist(),
+            "context_switch": class_weights["context_switch"].tolist()
+        }, f)
+
+    # Save evaluation results
+    with open(os.path.join(model_path, "eval_results.json"), "w") as f:
+        json.dump(eval_results, f)
+
+    logger.info(f"Multi-task clarification model saved to {model_path}")
+
+    return model_path
 ```
 
 ## Step 4: Implement Clarification Mechanism
@@ -556,11 +915,23 @@ class ContextAwareCarroAssistant:
         self.clarification_model.to(device)
         self.clarification_model.eval()
 
-        # Maintain conversation context
+        # Maintain conversation context - ENHANCED CONTEXT TRACKING
         self.conversation_context = {
-            "previous_intents": [],
-            "previous_entities": [],
-            "active_flow": None
+            "previous_intents": [],        # Track last 5 intents
+            "previous_entities": [],       # Track all entities from conversation
+            "entity_history": {},          # Map of entity_type -> [values across turns]
+            "active_flow": None,           # Current flow
+            "previous_flows": [],          # Track flow transitions
+            "session_start_time": None,    # Track session duration
+            "contradiction_history": [],   # Track detected contradictions
+            "turn_count": 0                # Track conversation length
+        }
+
+        # Configure context tracking parameters
+        self.context_config = {
+            "max_intents_history": 5,      # Maximum intents to track (increased from 3)
+            "max_turns_for_context": 10,   # Maximum conversation turns to consider
+            "contradiction_threshold": 0.7  # Confidence threshold for contradiction detection
         }
 
     def detect_context_features(self, text):
@@ -605,26 +976,62 @@ class ContextAwareCarroAssistant:
     def update_conversation_context(self, processing_result):
         """
         Update the conversation context based on latest processing result.
+        Enhanced with more robust entity tracking and context management.
 
         Args:
             processing_result: Result from process_message
         """
+        # Increment turn count
+        self.conversation_context["turn_count"] += 1
+
         # Store previous intent in context
         if processing_result['intent'] not in ['unknown', 'clarification_needed']:
-            self.conversation_context['previous_intents'].append(processing_result['intent'])
-            if len(self.conversation_context['previous_intents']) > 3:
-                self.conversation_context['previous_intents'].pop(0)  # Keep last 3 intents
+            self.conversation_context['previous_intents'].append({
+                'intent': processing_result['intent'],
+                'turn': self.conversation_context["turn_count"],
+                'confidence': processing_result.get('intent_confidence', 1.0)
+            })
 
-        # Store entities
+            # Keep limited history but more than before
+            if len(self.conversation_context['previous_intents']) > self.context_config["max_intents_history"]:
+                self.conversation_context['previous_intents'].pop(0)
+
+        # Enhanced entity tracking with timestamps and confidence
         for entity_type, values in processing_result['entities'].items():
+            # Initialize entity type history if not exists
+            if entity_type not in self.conversation_context['entity_history']:
+                self.conversation_context['entity_history'][entity_type] = []
+
+            # Add each entity value with metadata
             for value in values:
-                self.conversation_context['previous_entities'].append({
+                entity_entry = {
                     'entity': entity_type,
-                    'value': value
+                    'value': value,
+                    'turn': self.conversation_context["turn_count"],
+                    'confidence': processing_result.get('entity_confidence', {}).get(entity_type, 1.0)
+                }
+
+                # Add to general entities list
+                self.conversation_context['previous_entities'].append(entity_entry)
+
+                # Add to type-specific history
+                self.conversation_context['entity_history'][entity_type].append({
+                    'value': value,
+                    'turn': self.conversation_context["turn_count"],
+                    'confidence': processing_result.get('entity_confidence', {}).get(entity_type, 1.0)
                 })
 
-        # Update active flow
+        # Update active flow and track flow transitions
         if processing_result.get('flow') and processing_result['flow'] not in ['clarification', 'fallback']:
+            # If flow changed, record the transition
+            if self.conversation_context['active_flow'] and self.conversation_context['active_flow'] != processing_result['flow']:
+                self.conversation_context['previous_flows'].append({
+                    'from': self.conversation_context['active_flow'],
+                    'to': processing_result['flow'],
+                    'turn': self.conversation_context["turn_count"]
+                })
+
+            # Update current flow
             self.conversation_context['active_flow'] = processing_result['flow']
 
     def process_message(self, text):
@@ -840,16 +1247,17 @@ def detect_contradictions(result, conversation_history):
 
 ## Step 5: Evaluation and Testing
 
-### 5.1 Create Specialized Test Cases
+### 5.1 Enhanced Test Case Design
 
-Create dedicated test cases focusing on negation and context switching:
+Create dedicated test cases focusing on negation, context switching, and multi-turn interactions:
 
 ```python
-def create_negation_test_cases():
+def create_comprehensive_test_suite():
     """
-    Create test cases specifically for evaluating negation handling.
+    Create a comprehensive test suite with specialized test cases for context handling.
     """
-    test_cases = [
+    # Basic negation test cases
+    negation_test_cases = [
         {
             "test_id": "negation_basic_1",
             "context": {"previous_intent": "request_tow_basic"},
@@ -870,6 +1278,11 @@ def create_negation_test_cases():
                 "entities": {"service_type": ["jump start"]}
             }
         },
+        # More negation cases...
+    ]
+
+    # Context switching test cases
+    context_switch_test_cases = [
         {
             "test_id": "context_switch_1",
             "context": {"previous_intent": "request_tow_basic"},
@@ -881,264 +1294,404 @@ def create_negation_test_cases():
                 "entities": {"service_type": ["flat tire"]}
             }
         },
+        # More context switching cases...
+    ]
+
+    # Entity contradiction test cases
+    contradiction_test_cases = [
         {
-            "test_id": "complex_negation_1",
-            "context": {"previous_intent": "vehicle_info_request"},
-            "input": "It's not a Toyota, it's a Honda Civic.",
+            "test_id": "contradiction_vehicle_1",
+            "context": {
+                "previous_entities": [
+                    {"entity": "vehicle_make", "value": "Toyota"},
+                    {"entity": "vehicle_model", "value": "Camry"}
+                ]
+            },
+            "input": "Actually, I'm driving a Honda Civic.",
             "expected": {
-                "contains_negation": True,
+                "contains_context_switch": True,
                 "entities": {
                     "vehicle_make": ["Honda"],
                     "vehicle_model": ["Civic"]
-                }
+                },
+                "contradicts_previous": True
             }
-        }
+        },
+        # More contradiction cases...
     ]
 
-    return test_cases
+    # Combine all test cases
+    all_test_cases = {
+        "negation": negation_test_cases,
+        "context_switch": context_switch_test_cases,
+        "contradiction": contradiction_test_cases
+    }
 
-def evaluate_context_handling(test_cases, models_dir):
+    return all_test_cases
+
+def create_conversation_simulator():
+    """
+    Create a simulator for testing multi-turn conversations with realistic user behaviors.
+    """
+    # Define user simulator behaviors
+    behaviors = {
+        "standard": {
+            "description": "User who follows the expected flow",
+            "contradiction_rate": 0.0,
+            "negation_rate": 0.1,
+            "context_switch_rate": 0.1,
+            "ambiguity_rate": 0.1,
+        },
+        "indecisive": {
+            "description": "User who frequently changes their mind",
+            "contradiction_rate": 0.2,
+            "negation_rate": 0.4,
+            "context_switch_rate": 0.3,
+            "ambiguity_rate": 0.2,
+        },
+        "confused": {
+            "description": "User who provides contradictory information",
+            "contradiction_rate": 0.4,
+            "negation_rate": 0.2,
+            "context_switch_rate": 0.2,
+            "ambiguity_rate": 0.3,
+        }
+    }
+
+    # Define conversation scenarios
+    scenarios = [
+        {
+            "scenario_id": "tow_then_negation_then_alternative",
+            "behavior": "indecisive",
+            "initial_intent": "request_tow_basic",
+            "turns": 5,
+            "success_criteria": {
+                "final_intent": "request_roadside_specific",
+                "required_entities": ["service_type", "pickup_location"]
+            }
+        },
+        {
+            "scenario_id": "contradictory_vehicle_info",
+            "behavior": "confused",
+            "initial_intent": "vehicle_info_request",
+            "turns": 4,
+            "success_criteria": {
+                "final_entities": ["vehicle_make", "vehicle_model", "vehicle_year"],
+                "contradiction_resolved": True
+            }
+        },
+        # More scenarios...
+    ]
+
+    return {
+        "behaviors": behaviors,
+        "scenarios": scenarios
+    }
+
+def simulate_conversation(scenario, assistant, simulator_config):
+    """
+    Run a simulated conversation based on a scenario.
+
+    Args:
+        scenario: Conversation scenario definition
+        assistant: ContextAwareCarroAssistant instance
+        simulator_config: Configuration for user simulator
+
+    Returns:
+        Dictionary with conversation log and metrics
+    """
+    # Initialize conversation
+    conversation = []
+    behavior = simulator_config["behaviors"][scenario["behavior"]]
+
+    # Get initial message based on intent
+    initial_message = get_initial_message_for_intent(scenario["initial_intent"])
+
+    # Process initial message
+    result = assistant.process_message(initial_message)
+    response = generate_response(result)
+
+    # Store first turn
+    conversation.append({
+        "turn": 1,
+        "user": initial_message,
+        "system_result": result,
+        "system_response": response
+    })
+
+    # Simulation metrics
+    metrics = {
+        "negations": 0,
+        "context_switches": 0,
+        "contradictions": 0,
+        "ambiguities": 0,
+        "successful_recoveries": 0,
+        "completion_rate": 0.0
+    }
+
+    # Simulate remaining turns
+    for turn in range(2, scenario["turns"] + 1):
+        # Determine user behavior for this turn
+        if random.random() < behavior["negation_rate"]:
+            # Generate negation response
+            user_message = generate_negation_message(conversation[-1])
+            metrics["negations"] += 1
+        elif random.random() < behavior["context_switch_rate"]:
+            # Generate context switch
+            user_message = generate_context_switch_message(conversation[-1])
+            metrics["context_switches"] += 1
+        elif random.random() < behavior["contradiction_rate"]:
+            # Generate contradiction
+            user_message = generate_contradiction_message(conversation[-1])
+            metrics["contradictions"] += 1
+        elif random.random() < behavior["ambiguity_rate"]:
+            # Generate ambiguous message
+            user_message = generate_ambiguous_message(conversation[-1])
+            metrics["ambiguities"] += 1
+        else:
+            # Generate standard response
+            user_message = generate_standard_message(conversation[-1])
+
+        # Process user message
+        result = assistant.process_message(user_message)
+        response = generate_response(result)
+
+        # Check if the system recovered from a previous issue
+        if turn > 2 and (conversation[-2].get("problematic", False) and not conversation[-1].get("problematic", False)):
+            metrics["successful_recoveries"] += 1
+
+        # Store this turn
+        conversation.append({
+            "turn": turn,
+            "user": user_message,
+            "system_result": result,
+            "system_response": response,
+            "problematic": result.get("needs_clarification", False) or result.get("needs_fallback", False)
+        })
+
+    # Evaluate overall success
+    success = evaluate_conversation_success(conversation, scenario["success_criteria"])
+    metrics["success"] = success
+    metrics["completion_rate"] = calculate_completion_rate(conversation, scenario["success_criteria"])
+
+    return {
+        "scenario_id": scenario["scenario_id"],
+        "behavior": scenario["behavior"],
+        "conversation": conversation,
+        "metrics": metrics
+    }
+
+def evaluate_context_handling(test_suite, models_dir):
     """
     Evaluate the model's ability to handle negation and context switching.
 
     Args:
-        test_cases: List of test case dictionaries
+        test_suite: Comprehensive test suite
         models_dir: Directory containing trained models
 
     Returns:
-        Evaluation metrics dictionary
+        Evaluation metrics dictionary with detailed analysis
     """
     # Initialize context-aware assistant
     assistant = ContextAwareCarroAssistant(models_dir)
 
-    # Track metrics
+    # Track metrics for each test category
     metrics = {
         "negation_detection": {
             "correct": 0,
-            "total": 0
+            "total": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
         },
         "context_switch_detection": {
             "correct": 0,
-            "total": 0
+            "total": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
         },
         "entity_extraction_with_context": {
             "correct": 0,
-            "total": 0
+            "total": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
+        },
+        "contradiction_detection": {
+            "correct": 0,
+            "total": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0
         }
     }
 
-    # Process each test case
-    for case in test_cases:
-        # Set up conversation context
-        if "context" in case:
-            assistant.conversation_context = case["context"]
+    # Process each test category
+    for category, test_cases in test_suite.items():
+        # Process each test case in this category
+        for case in test_cases:
+            # Set up conversation context
+            if "context" in case:
+                assistant.conversation_context = case["context"]
+            else:
+                # Reset context for cases that don't specify it
+                assistant.conversation_context = {
+                    "previous_intents": [],
+                    "previous_entities": [],
+                    "active_flow": None
+                }
 
-        # Process the input
-        result = assistant.process_message(case["input"])
+            # Process the input
+            result = assistant.process_message(case["input"])
 
-        # Compare with expected output
-        expected = case["expected"]
+            # Store detailed case results for analysis
+            case_result = {
+                "test_id": case["test_id"],
+                "input": case["input"],
+                "expected": case["expected"],
+                "actual": result,
+                "success": True  # Will be updated based on evaluation
+            }
 
-        # Check negation detection
-        if "contains_negation" in expected:
-            metrics["negation_detection"]["total"] += 1
-            if result.get("contains_negation") == expected["contains_negation"]:
-                metrics["negation_detection"]["correct"] += 1
+            # Evaluate based on test category
+            if category == "negation":
+                evaluate_negation_case(case, result, metrics, case_result)
+            elif category == "context_switch":
+                evaluate_context_switch_case(case, result, metrics, case_result)
+            elif category == "contradiction":
+                evaluate_contradiction_case(case, result, metrics, case_result)
 
-        # Check context switch detection
-        if "contains_context_switch" in expected:
-            metrics["context_switch_detection"]["total"] += 1
-            if result.get("contains_context_switch") == expected["contains_context_switch"]:
-                metrics["context_switch_detection"]["correct"] += 1
+            # Record detailed case result
+            test_suite[category][test_cases.index(case)]["result"] = case_result
 
-        # Check entity extraction
-        if "entities" in expected:
-            metrics["entity_extraction_with_context"]["total"] += 1
-            entities_match = True
+    # Calculate final metrics
+    for metric_category in metrics:
+        if metrics[metric_category]["total"] > 0:
+            metrics[metric_category]["accuracy"] = metrics[metric_category]["correct"] / metrics[metric_category]["total"]
 
-            for entity_type, expected_values in expected["entities"].items():
-                if entity_type not in result.get("entities", {}) or set(expected_values) != set(result["entities"][entity_type]):
-                    entities_match = False
-                    break
+            # Calculate precision, recall, F1 where applicable
+            if "true_positives" in metrics[metric_category] and "false_positives" in metrics[metric_category]:
+                true_positives = metrics[metric_category]["true_positives"]
+                false_positives = metrics[metric_category]["false_positives"]
+                false_negatives = metrics[metric_category]["false_negatives"]
 
-            if entities_match:
-                metrics["entity_extraction_with_context"]["correct"] += 1
+                precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+                recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
 
-    # Calculate accuracy for each metric
-    for metric in metrics:
-        if metrics[metric]["total"] > 0:
-            metrics[metric]["accuracy"] = metrics[metric]["correct"] / metrics[metric]["total"]
+                metrics[metric_category]["precision"] = precision
+                metrics[metric_category]["recall"] = recall
+                metrics[metric_category]["f1"] = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
         else:
-            metrics[metric]["accuracy"] = 0
+            metrics[metric_category]["accuracy"] = 0
 
-    return metrics
+    return {
+        "detailed_test_suite": test_suite,
+        "summary_metrics": metrics
+    }
 
-def run_multi_turn_conversation_test(models_dir):
+def run_conversation_simulations(models_dir):
     """
-    Test the system with multi-turn conversations to evaluate context handling.
+    Run multiple simulated conversations to evaluate system performance.
 
     Args:
         models_dir: Directory containing trained models
 
     Returns:
-        Evaluation results
+        Summary of simulation results
     """
-    # Define multi-turn test scenarios
-    scenarios = [
-        {
-            "scenario_id": "tow_then_negation_then_alternative",
-            "turns": [
-                {
-                    "user": "I need a tow truck",
-                    "expected_flow": "towing",
-                    "expected_intent": "request_tow_basic"
-                },
-                {
-                    "user": "Actually I don't need a tow truck",
-                    "expected_contains_negation": True,
-                    "expected_negated_intent": "request_tow_basic"
-                },
-                {
-                    "user": "I need help with a flat tire",
-                    "expected_flow": "roadside",
-                    "expected_intent": "request_roadside_specific",
-                    "expected_entities": {"service_type": ["flat tire"]}
-                }
-            ]
-        },
-        {
-            "scenario_id": "roadside_then_context_switch",
-            "turns": [
-                {
-                    "user": "My car battery is dead",
-                    "expected_flow": "roadside",
-                    "expected_intent": "request_roadside_specific"
-                },
-                {
-                    "user": "Actually, can you help me schedule an oil change next week?",
-                    "expected_contains_context_switch": True,
-                    "expected_flow": "appointment",
-                    "expected_intent": "book_service_basic"
-                }
-            ]
-        }
-    ]
+    # Create simulator configuration
+    simulator_config = create_conversation_simulator()
 
     # Initialize context-aware assistant
     assistant = ContextAwareCarroAssistant(models_dir)
 
-    # Track results
-    results = []
+    # Run simulations for each scenario
+    scenario_results = []
+    for scenario in simulator_config["scenarios"]:
+        # Run multiple simulations for statistical significance
+        scenario_simulations = []
+        for i in range(10):  # Run each scenario 10 times
+            simulation_result = simulate_conversation(scenario, assistant, simulator_config)
+            scenario_simulations.append(simulation_result)
 
-    # Run each scenario
-    for scenario in scenarios:
-        scenario_result = {
+        # Aggregate metrics across simulations
+        aggregated_metrics = aggregate_simulation_metrics(scenario_simulations)
+
+        # Record results
+        scenario_results.append({
             "scenario_id": scenario["scenario_id"],
-            "turns": [],
-            "success": True
-        }
+            "behavior": scenario["behavior"],
+            "metrics": aggregated_metrics,
+            "success_rate": sum(sim["metrics"]["success"] for sim in scenario_simulations) / len(scenario_simulations)
+        })
 
-        # Reset assistant context
-        assistant.conversation_context = {
-            "previous_intents": [],
-            "previous_entities": [],
-            "active_flow": None
-        }
-
-        # Process each turn
-        for turn in scenario["turns"]:
-            # Get user input
-            user_input = turn["user"]
-
-            # Process message
-            result = assistant.process_message(user_input)
-
-            # Check expectations
-            turn_result = {
-                "user": user_input,
-                "system_result": result,
-                "expectations_met": True,
-                "failures": []
-            }
-
-            # Check flow
-            if "expected_flow" in turn and result.get("flow") != turn["expected_flow"]:
-                turn_result["expectations_met"] = False
-                turn_result["failures"].append(f"Flow mismatch: expected {turn['expected_flow']}, got {result.get('flow')}")
-
-            # Check intent
-            if "expected_intent" in turn and result.get("intent") != turn["expected_intent"]:
-                turn_result["expectations_met"] = False
-                turn_result["failures"].append(f"Intent mismatch: expected {turn['expected_intent']}, got {result.get('intent')}")
-
-            # Check negation
-            if "expected_contains_negation" in turn and result.get("contains_negation") != turn["expected_contains_negation"]:
-                turn_result["expectations_met"] = False
-                turn_result["failures"].append(f"Negation detection mismatch: expected {turn['expected_contains_negation']}, got {result.get('contains_negation')}")
-
-            # Check context switch
-            if "expected_contains_context_switch" in turn and result.get("contains_context_switch") != turn["expected_contains_context_switch"]:
-                turn_result["expectations_met"] = False
-                turn_result["failures"].append(f"Context switch detection mismatch: expected {turn['expected_contains_context_switch']}, got {result.get('contains_context_switch')}")
-
-            # Check entities
-            if "expected_entities" in turn:
-                for entity_type, expected_values in turn["expected_entities"].items():
-                    if entity_type not in result.get("entities", {}) or set(expected_values) != set(result["entities"][entity_type]):
-                        turn_result["expectations_met"] = False
-                        turn_result["failures"].append(f"Entity mismatch for {entity_type}: expected {expected_values}, got {result.get('entities', {}).get(entity_type, [])}")
-
-            # Add turn result to scenario
-            scenario_result["turns"].append(turn_result)
-
-            # Update scenario success
-            if not turn_result["expectations_met"]:
-                scenario_result["success"] = False
-
-        # Add scenario result
-        results.append(scenario_result)
-
-    # Calculate overall success rate
-    success_count = sum(1 for scenario in results if scenario["success"])
-    overall_success_rate = success_count / len(results) if results else 0
+    # Calculate conversation-level metrics
+    conversation_metrics = {
+        "overall_success_rate": sum(scenario["success_rate"] for scenario in scenario_results) / len(scenario_results),
+        "negation_recovery_rate": sum(scenario["metrics"]["successful_recoveries"] / max(1, scenario["metrics"]["negations"])
+                                     for scenario in scenario_results) / len(scenario_results),
+        "context_switch_recovery_rate": sum(scenario["metrics"]["successful_recoveries"] / max(1, scenario["metrics"]["context_switches"])
+                                          for scenario in scenario_results) / len(scenario_results),
+        "contradiction_recovery_rate": sum(scenario["metrics"]["successful_recoveries"] / max(1, scenario["metrics"]["contradictions"])
+                                         for scenario in scenario_results) / len(scenario_results)
+    }
 
     return {
-        "scenario_results": results,
-        "overall_success_rate": overall_success_rate
+        "scenario_results": scenario_results,
+        "conversation_metrics": conversation_metrics
     }
 ```
 
-### 5.2 Evaluate on Specific Negation and Context Metrics
+### 5.2 Comprehensive Evaluation Framework
 
-Update the evaluation script (`evaluation.py`) to include specific metrics for negation and context switching:
+Update the evaluation script (`evaluation.py`) to include specific metrics for negation and context switching with detailed analysis:
 
 ```python
 def evaluate_negation_context_handling(test_data_dir: str, models_dir: str) -> Dict[str, Any]:
     """
-    Evaluate the model's handling of negation and context switching.
+    Evaluate the model's handling of negation and context switching with comprehensive metrics.
 
     Args:
         test_data_dir: Directory containing test data
         models_dir: Directory containing trained models
 
     Returns:
-        Dictionary of evaluation metrics
+        Dictionary of evaluation metrics with detailed analysis
     """
-    # Load negation test data
-    with open(os.path.join(test_data_dir, "negation_context_test.json"), 'r') as f:
-        test_cases = json.load(f)
+    # Load test suite
+    test_suite = create_comprehensive_test_suite()
 
-    # Run evaluation
-    metrics = evaluate_context_handling(test_cases, models_dir)
+    # Run single-turn evaluations
+    single_turn_results = evaluate_context_handling(test_suite, models_dir)
 
-    # Run multi-turn tests
-    conversation_results = run_multi_turn_conversation_test(models_dir)
+    # Run multi-turn conversation simulations
+    conversation_results = run_conversation_simulations(models_dir)
 
-    # Combine results
+    # Create analysis visualizations
+    create_evaluation_visualizations(single_turn_results, conversation_results, models_dir)
+
+    # Combine results with deeper analysis
     combined_results = {
-        "single_turn_metrics": metrics,
-        "multi_turn_results": conversation_results
+        "single_turn_metrics": single_turn_results["summary_metrics"],
+        "conversation_metrics": conversation_results["conversation_metrics"],
+        "scenario_results": conversation_results["scenario_results"],
+        "detailed_analysis": {
+            "negation_patterns": analyze_negation_patterns(single_turn_results["detailed_test_suite"]["negation"]),
+            "context_switch_patterns": analyze_context_switch_patterns(single_turn_results["detailed_test_suite"]["context_switch"]),
+            "contradiction_patterns": analyze_contradiction_patterns(single_turn_results["detailed_test_suite"]["contradiction"]),
+            "error_analysis": perform_error_analysis(single_turn_results, conversation_results)
+        }
     }
+
+    # Save results to file
+    save_path = os.path.join(models_dir, "evaluation", "context_handling_evaluation.json")
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    with open(save_path, 'w') as f:
+        json.dump(combined_results, f, indent=2)
+
+    # Generate human-readable report
+    generate_context_handling_report(combined_results, models_dir)
 
     return combined_results
 ```
