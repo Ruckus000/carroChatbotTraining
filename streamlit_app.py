@@ -7,6 +7,9 @@ from transformers import DistilBertTokenizer, DistilBertForSequenceClassificatio
 import torch.nn.functional as F
 import numpy as np
 
+# Import the regular and context-aware assistants
+from inference import CarroAssistant, ContextAwareCarroAssistant
+
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
@@ -79,6 +82,22 @@ def load_actual_models(model_dir: str):
         logger.error(f"Error loading models: {str(e)}", exc_info=True)
     
     return models
+
+# Cache assistant loading to improve performance
+@st.cache_resource(show_spinner=True)
+def load_context_aware_assistant(model_dir: str):
+    """
+    Load the context-aware assistant with caching for efficiency.
+    """
+    try:
+        st.sidebar.text("Loading context-aware assistant...")
+        assistant = ContextAwareCarroAssistant(model_dir)
+        st.sidebar.success("Context-aware assistant loaded")
+        return assistant
+    except Exception as e:
+        st.sidebar.error(f"Error loading context-aware assistant: {str(e)}")
+        logger.error(f"Error loading context-aware assistant: {str(e)}", exc_info=True)
+        return None
 
 class ChatbotPipeline:
     """A pipeline for running inference with the trained models."""
@@ -231,6 +250,123 @@ class ChatbotPipeline:
             logger.error(f"Error in fallback detection: {str(e)}", exc_info=True)
             return False, 0.5
 
+def display_context_indicators(context: Dict[str, Any]) -> None:
+    """
+    Display visual indicators for active context elements.
+    
+    Args:
+        context: Current conversation context
+    """
+    st.sidebar.subheader("Context Information")
+    
+    # Display active flow
+    if "active_flow" in context and context["active_flow"]:
+        st.sidebar.info(f"Current flow: {context['active_flow'].capitalize()}")
+    
+    # Display intent history
+    if "previous_intents" in context and context["previous_intents"]:
+        with st.sidebar.expander("Previous Intents", expanded=False):
+            for i, intent_info in enumerate(reversed(context["previous_intents"])):
+                st.write(f"{i+1}. {intent_info['intent']} (Turn {intent_info['turn']})")
+    
+    # Display entity history
+    if "previous_entities" in context and context["previous_entities"]:
+        with st.sidebar.expander("Active Entities", expanded=False):
+            for entity_type, values in context["previous_entities"].items():
+                if values:
+                    st.write(f"**{entity_type.replace('_', ' ').title()}**:")
+                    for value_info in reversed(values):
+                        st.write(f"- {value_info['value']} (Turn {value_info['turn']})")
+
+def generate_response_with_context(result: Dict[str, Any]) -> str:
+    """
+    Generate appropriate response based on context-aware processing result.
+    
+    Args:
+        result: Context-aware processing result
+        
+    Returns:
+        Response text
+    """
+    # Handle negation
+    if result.get("contains_negation", False):
+        if result.get("alternative_requested", False):
+            # User negated previous request and specified an alternative
+            service_type = result["entities"]["service_type"][0]
+            return f"I understand you would prefer {service_type} instead. I can help with that. Can you provide your location?"
+        elif "negated_intent" in result:
+            # Simple negation of previous intent
+            return "I understand you don't want that anymore. How else can I help you today?"
+        else:
+            # Generic negation
+            return "I understand. What would you like instead?"
+    
+    # Handle context switching
+    elif result.get("contains_context_switch", False):
+        if "flow" in result and result["flow"] != "clarification":
+            if result["flow"] == "roadside":
+                return "I understand you now need roadside assistance. What specific help do you need?"
+            elif result["flow"] == "towing":
+                return "I understand you now need a tow truck. Where are you located and where would you like your vehicle towed?"
+            elif result["flow"] == "appointment":
+                return "I understand you'd like to schedule a service appointment instead. What type of service do you need?"
+        else:
+            return "I notice you've changed your request. Could you provide more details about what you need now?"
+    
+    # Handle contradictions
+    elif result.get("contradictions", []):
+        contradiction = result["contradictions"][0]  # Get the first contradiction
+        entity_type = contradiction["entity_type"].replace("_", " ")
+        return f"I notice you mentioned a different {entity_type}. To confirm, you're now referring to {contradiction['current_value']}?"
+    
+    # Handle fallback
+    elif result.get("needs_fallback", False):
+        return "I'm sorry, I can't help with that. I'm designed to assist with car maintenance, towing, and roadside assistance."
+    
+    # Handle clarification
+    elif result.get("needs_clarification", False):
+        return "I'd like to help you better. Could you provide more details about what you need assistance with?"
+    
+    # Standard flow-based responses
+    elif "flow" in result:
+        flow = result["flow"]
+        intent = result["intent"]
+        
+        if flow == "towing":
+            if "location" in intent:
+                return "I'll arrange for a tow truck to your location. Can you confirm your current address and destination?"
+            elif "vehicle" in intent:
+                return "To arrange the right tow truck, could you tell me the make, model, and year of your vehicle?"
+            elif "urgent" in intent:
+                return "I understand this is urgent. I'm prioritizing your request and will dispatch a tow truck as soon as possible."
+            else:
+                return "I can help arrange a tow truck. Could you please provide your location and vehicle details?"
+        
+        elif flow == "roadside":
+            if "battery" in intent:
+                return "I'll send someone to jump-start your battery. What's your current location?"
+            elif "tire" in intent:
+                return "I'll send a technician to help with your tire. Are you in a safe location?"
+            elif "keys" in intent:
+                return "I can send a locksmith to help you get back into your vehicle. Where are you located?"
+            elif "fuel" in intent:
+                return "I'll arrange for fuel delivery. How much fuel do you need and what's your location?"
+            else:
+                return "I'm here to help with your roadside assistance. Could you provide more details about what you need?"
+        
+        elif flow == "appointment":
+            if "type" in intent:
+                return "I can schedule that service for you. What day works best for you?"
+            elif "date" in intent:
+                return "We have several time slots available on that day. Would you prefer morning or afternoon?"
+            elif "time" in intent:
+                return "Great! I've scheduled your appointment. Is there anything else you'd like to know about your service?"
+            else:
+                return "I'd be happy to schedule a service appointment for you. What type of service do you need?"
+    
+    # Default response
+    return "I'm here to help with towing, roadside assistance, or scheduling service appointments. What can I do for you today?"
+
 # Session management
 if "messages" not in st.session_state:
     st.session_state.messages = [
@@ -240,25 +376,71 @@ if "messages" not in st.session_state:
 if "flow" not in st.session_state:
     st.session_state.flow = None
 
-# Load the trained models
-models = load_actual_models(MODEL_DIR)
-pipeline = ChatbotPipeline(models)
+if "processing_mode" not in st.session_state:
+    st.session_state.processing_mode = "standard"
 
 # Streamlit UI
 st.title("Car Maintenance Chatbot")
+
+# Configure the chatbot sidebar
+with st.sidebar:
+    st.subheader("Chatbot Configuration")
+    
+    # Toggle between standard and context-aware mode
+    processing_mode = st.radio(
+        "Processing Mode",
+        ["Standard (Original)", "Context-Aware (Enhanced)"],
+        index=0,
+        help="Select the processing mode for the chatbot. 'Standard' uses the original model without context tracking, while 'Context-Aware' uses the enhanced model that maintains conversation context."
+    )
+    
+    # Update the processing mode if changed
+    if processing_mode == "Standard (Original)" and st.session_state.processing_mode != "standard":
+        st.session_state.processing_mode = "standard"
+    elif processing_mode == "Context-Aware (Enhanced)" and st.session_state.processing_mode != "context_aware":
+        st.session_state.processing_mode = "context_aware"
+    
+    # Debug toggle
+    debug_section = st.checkbox("Show debug information", value=False)
+    
+    # Clear conversation button
+    if st.button("Clear Conversation"):
+        st.session_state.messages = [{"role": "assistant", "content": "Hi there! I'm your car maintenance assistant. How can I help you today?"}]
+        st.session_state.flow = None
+        
+        # Reset context in context-aware mode
+        if st.session_state.processing_mode == "context_aware":
+            context_assistant = load_context_aware_assistant(MODEL_DIR)
+            if context_assistant:
+                context_assistant.conversation_context = {
+                    "previous_intents": [],
+                    "previous_entities": {},
+                    "active_flow": None,
+                    "turn_count": 0
+                }
+        
+        st.success("Conversation cleared!")
 
 # Display chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
         
-# Debug panel in the sidebar
-with st.sidebar:
-    st.subheader("Debug Information")
-    if st.session_state.flow:
-        st.write(f"Current flow: {st.session_state.flow}")
+        # Show debug info if available and debug mode is enabled
+        if debug_section and "debug_info" in message and message["role"] == "assistant":
+            with st.expander("Debug Information"):
+                st.json(message["debug_info"])
+
+# Initialize models based on selected mode
+models = load_actual_models(MODEL_DIR)
+pipeline = ChatbotPipeline(models)
+
+if st.session_state.processing_mode == "context_aware":
+    context_assistant = load_context_aware_assistant(MODEL_DIR)
     
-    debug_section = st.checkbox("Show debug information")
+    # Display context information if available and debug mode is enabled
+    if debug_section and context_assistant:
+        display_context_indicators(context_assistant.conversation_context)
 
 # Input area
 user_input = st.chat_input("Type your message...")
@@ -269,78 +451,132 @@ if user_input:
     with st.chat_message("user"):
         st.write(user_input)
     
-    # Process the message
+    # Process the message based on selected mode
     with st.spinner("Thinking..."):
-        # Check for fallback first
-        is_fallback, fallback_conf = pipeline.is_fallback(user_input)
-        
-        if debug_section:
-            with st.sidebar:
-                st.write(f"Fallback check: {is_fallback} ({fallback_conf:.2f})")
-        
-        if is_fallback and fallback_conf > CONFIDENCE_THRESHOLD:
-            response = "I'm sorry, I can't help with that. I'm designed to assist with car maintenance, towing, and roadside assistance."
-            st.session_state.flow = "fallback"
-        else:
-            # Determine the flow
-            predicted_flow, flow_conf = pipeline.predict_flow(user_input)
+        if st.session_state.processing_mode == "standard":
+            # Standard processing with original pipeline
+            is_fallback, fallback_conf = pipeline.is_fallback(user_input)
             
             if debug_section:
                 with st.sidebar:
-                    st.write(f"Flow prediction: {predicted_flow} ({flow_conf:.2f})")
+                    st.write(f"Fallback check: {is_fallback} ({fallback_conf:.2f})")
             
-            # Get the intent
-            predicted_intent, intent_conf = pipeline.predict_intent(user_input, predicted_flow)
-            
-            if debug_section:
-                with st.sidebar:
-                    st.write(f"Intent prediction: {predicted_intent} ({intent_conf:.2f})")
-            
-            st.session_state.flow = predicted_flow
-            
-            # Generate response based on flow and intent
-            if predicted_flow == "towing":
-                if "location" in predicted_intent:
-                    response = "I'll arrange for a tow truck to your location. Can you confirm your current address and destination?"
-                elif "vehicle" in predicted_intent:
-                    response = "To arrange the right tow truck, could you tell me the make, model, and year of your vehicle?"
-                elif "urgent" in predicted_intent:
-                    response = "I understand this is urgent. I'm prioritizing your request and will dispatch a tow truck as soon as possible."
-                else:
-                    response = "I can help arrange a tow truck. Could you please provide your location and vehicle details?"
-            
-            elif predicted_flow == "roadside":
-                if "battery" in predicted_intent:
-                    response = "I'll send someone to jump-start your battery. What's your current location?"
-                elif "tire" in predicted_intent:
-                    response = "I'll send a technician to help with your tire. Are you in a safe location?"
-                elif "keys" in predicted_intent:
-                    response = "I can send a locksmith to help you get back into your vehicle. Where are you located?"
-                elif "fuel" in predicted_intent:
-                    response = "I'll arrange for fuel delivery. How much fuel do you need and what's your location?"
-                else:
-                    response = "I'm here to help with your roadside assistance. Could you provide more details about what you need?"
-            
-            elif predicted_flow == "appointment":
-                if "type" in predicted_intent:
-                    response = "I can schedule that service for you. What day works best for you?"
-                elif "date" in predicted_intent:
-                    response = "We have several time slots available on that day. Would you prefer morning or afternoon?"
-                elif "time" in predicted_intent:
-                    response = "Great! I've scheduled your appointment. Is there anything else you'd like to know about your service?"
-                else:
-                    response = "I'd be happy to schedule a service appointment for you. What type of service do you need?"
-            
-            elif predicted_flow == "clarification":
-                response = "I'd like to help you better. Could you provide more details about what you need assistance with?"
-            
+            if is_fallback and fallback_conf > CONFIDENCE_THRESHOLD:
+                response = "I'm sorry, I can't help with that. I'm designed to assist with car maintenance, towing, and roadside assistance."
+                st.session_state.flow = "fallback"
+                
+                # Prepare debug info
+                debug_info = {
+                    "mode": "standard",
+                    "is_fallback": is_fallback,
+                    "fallback_confidence": fallback_conf,
+                    "flow": "fallback"
+                }
             else:
-                response = "I'm here to help with towing, roadside assistance, or scheduling service appointments. What can I do for you today?"
+                # Determine the flow
+                predicted_flow, flow_conf = pipeline.predict_flow(user_input)
+                
+                if debug_section:
+                    with st.sidebar:
+                        st.write(f"Flow prediction: {predicted_flow} ({flow_conf:.2f})")
+                
+                # Get the intent
+                predicted_intent, intent_conf = pipeline.predict_intent(user_input, predicted_flow)
+                
+                if debug_section:
+                    with st.sidebar:
+                        st.write(f"Intent prediction: {predicted_intent} ({intent_conf:.2f})")
+                
+                st.session_state.flow = predicted_flow
+                
+                # Generate response based on flow and intent
+                if predicted_flow == "towing":
+                    if "location" in predicted_intent:
+                        response = "I'll arrange for a tow truck to your location. Can you confirm your current address and destination?"
+                    elif "vehicle" in predicted_intent:
+                        response = "To arrange the right tow truck, could you tell me the make, model, and year of your vehicle?"
+                    elif "urgent" in predicted_intent:
+                        response = "I understand this is urgent. I'm prioritizing your request and will dispatch a tow truck as soon as possible."
+                    else:
+                        response = "I can help arrange a tow truck. Could you please provide your location and vehicle details?"
+                
+                elif predicted_flow == "roadside":
+                    if "battery" in predicted_intent:
+                        response = "I'll send someone to jump-start your battery. What's your current location?"
+                    elif "tire" in predicted_intent:
+                        response = "I'll send a technician to help with your tire. Are you in a safe location?"
+                    elif "keys" in predicted_intent:
+                        response = "I can send a locksmith to help you get back into your vehicle. Where are you located?"
+                    elif "fuel" in predicted_intent:
+                        response = "I'll arrange for fuel delivery. How much fuel do you need and what's your location?"
+                    else:
+                        response = "I'm here to help with your roadside assistance. Could you provide more details about what you need?"
+                
+                elif predicted_flow == "appointment":
+                    if "type" in predicted_intent:
+                        response = "I can schedule that service for you. What day works best for you?"
+                    elif "date" in predicted_intent:
+                        response = "We have several time slots available on that day. Would you prefer morning or afternoon?"
+                    elif "time" in predicted_intent:
+                        response = "Great! I've scheduled your appointment. Is there anything else you'd like to know about your service?"
+                    else:
+                        response = "I'd be happy to schedule a service appointment for you. What type of service do you need?"
+                
+                elif predicted_flow == "clarification":
+                    response = "I'd like to help you better. Could you provide more details about what you need assistance with?"
+                
+                else:
+                    response = "I'm here to help with towing, roadside assistance, or scheduling service appointments. What can I do for you today?"
+                
+                # Prepare debug info
+                debug_info = {
+                    "mode": "standard",
+                    "flow": predicted_flow,
+                    "flow_confidence": flow_conf,
+                    "intent": predicted_intent,
+                    "intent_confidence": intent_conf
+                }
+                
+        else:
+            # Context-aware processing with enhanced assistant
+            context_assistant = load_context_aware_assistant(MODEL_DIR)
+            
+            if context_assistant:
+                # Process with context awareness
+                result = context_assistant.process_message_with_context(user_input)
+                
+                # Generate response based on context-aware result
+                response = generate_response_with_context(result)
+                
+                # Update flow in session state if available
+                if "flow" in result:
+                    st.session_state.flow = result["flow"]
+                
+                # Prepare debug info
+                debug_info = {
+                    "mode": "context_aware",
+                    "result": result
+                }
+            else:
+                # Fallback to standard processing if context assistant fails to load
+                response = "I'm having trouble accessing my enhanced capabilities. Let me help you with basic assistance instead."
+                debug_info = {
+                    "mode": "fallback_to_standard",
+                    "error": "Context-aware assistant unavailable"
+                }
                 
     # Display assistant response
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.messages.append({"role": "assistant", "content": response, "debug_info": debug_info})
     with st.chat_message("assistant"):
         st.write(response)
+        
+        # Show debug info if debug mode is enabled
+        if debug_section:
+            with st.expander("Debug Information"):
+                st.json(debug_info)
 
 # Display note about models at the bottom
-st.caption("This chatbot is using trained DistilBERT models for intent classification and flow detection.")
+if st.session_state.processing_mode == "standard":
+    st.caption("This chatbot is using the standard model for intent classification and flow detection.")
+else:
+    st.caption("This chatbot is using the enhanced context-aware model that maintains conversation history.")

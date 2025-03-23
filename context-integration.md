@@ -1530,10 +1530,10 @@ def evaluate_context_handling(test_suite, models_dir):
     # Process each test category
     for category, test_cases in test_suite.items():
         # Process each test case in this category
-        for case in test_cases:
-            # Set up conversation context
-            if "context" in case:
-                assistant.conversation_context = case["context"]
+    for case in test_cases:
+        # Set up conversation context
+        if "context" in case:
+            assistant.conversation_context = case["context"]
             else:
                 # Reset context for cases that don't specify it
                 assistant.conversation_context = {
@@ -1542,8 +1542,8 @@ def evaluate_context_handling(test_suite, models_dir):
                     "active_flow": None
                 }
 
-            # Process the input
-            result = assistant.process_message(case["input"])
+        # Process the input
+        result = assistant.process_message(case["input"])
 
             # Store detailed case results for analysis
             case_result = {
