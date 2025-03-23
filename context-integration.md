@@ -1696,54 +1696,335 @@ def evaluate_negation_context_handling(test_data_dir: str, models_dir: str) -> D
     return combined_results
 ```
 
-## Implementation Steps
+## Step 6: Streamlit App Integration
 
-To implement these changes, follow these steps:
+### 6.1 Update Streamlit UI for Context-Awareness
 
-1. Create the negation examples dataset (`negation_examples.json`)
-2. Update the data augmentation scripts with negation and context switching functions
-3. Implement the contextual intent classifier and multi-task clarification model
-4. Update the inference process to incorporate context awareness
-5. Create test cases for negation and context switching
-6. Evaluate the enhanced system
+Enhance the `streamlit_app.py` to properly manage conversation context and provide visual feedback:
 
-### Implementation Timeline:
+```python
+import streamlit as st
+import torch
+import json
+import os
+import logging
+from typing import Dict, Any, List, Tuple
 
-1. **Day 1**: Data preparation and augmentation
+# Import the inference module with context-aware assistant
+from inference import ContextAwareCarroAssistant
 
-   - Create negation examples
-   - Update augmentation scripts
+# Set up logging
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+# Helper function to load the assistant
+@st.cache_resource
+def load_context_aware_assistant(models_dir: str) -> ContextAwareCarroAssistant:
+    """Load the context-aware assistant with caching for efficiency."""
+    return ContextAwareCarroAssistant(models_dir)
+
+def display_context_indicators(context: Dict[str, Any]) -> None:
+    """
+    Display visual indicators for active context elements.
+
+    Args:
+        context: Current conversation context
+    """
+    # Only show if we have context to display
+    if not context or not any(v for v in context.values() if v):
+        return
+
+    st.sidebar.subheader("Active Context")
+
+    # Show active flow
+    if context.get("active_flow"):
+        st.sidebar.info(f"Current flow: {context['active_flow'].capitalize()}")
+
+    # Show previous intents if available
+    if context.get("previous_intents"):
+        with st.sidebar.expander("Recent Intents"):
+            for idx, intent_info in enumerate(reversed(context["previous_intents"][:3])):
+                st.write(f"{idx+1}. {intent_info['intent']}")
+
+    # Show active entities
+    if context.get("entity_history"):
+        with st.sidebar.expander("Active Entities"):
+            for entity_type, values in context["entity_history"].items():
+                if values:
+                    # Show the most recent value for each entity type
+                    most_recent = max(values, key=lambda x: x["turn"])
+                    st.write(f"**{entity_type.replace('_', ' ').title()}**: {most_recent['value']}")
+
+    # Show if there's a context switch or negation in progress
+    if getattr(st.session_state, "last_result", {}).get("contains_context_switch"):
+        st.sidebar.warning("⚠️ Context switch detected")
+
+    if getattr(st.session_state, "last_result", {}).get("contains_negation"):
+        st.sidebar.warning("⚠️ Negation detected")
+
+def process_message_with_context(user_input: str) -> Tuple[str, Dict[str, Any]]:
+    """
+    Process the user message with context awareness.
+
+    Args:
+        user_input: Text from the user
+
+    Returns:
+        Response text and processing result
+    """
+    # Get or initialize assistant
+    assistant = load_context_aware_assistant(st.session_state.models_dir)
+
+    # Process the message
+    result = assistant.process_message(user_input)
+
+    # Store the result for context display
+    st.session_state.last_result = result
+
+    # Handle different response types based on context features
+    if result.get("contains_negation", False):
+        if result.get("alternative_requested", False):
+            # User negated and provided an alternative
+            response = generate_alternative_response(result)
+        else:
+            # Simple negation
+            response = "I understand you don't want that. How else can I help you today?"
+
+    elif result.get("contains_context_switch", False):
+        # Context switch
+        response = generate_switch_response(result)
+
+    elif result.get("needs_clarification", False):
+        # Needs clarification
+        response = generate_clarification_prompt(result, st.session_state.conversation_history)
+
+    elif result.get("needs_fallback", False):
+        # Fallback
+        response = "I'm not sure I understood. Could you please rephrase or provide more details?"
+
+    else:
+        # Standard response
+        response = generate_response(result)
+
+    return response, result
+
+def main():
+    # App title and description
+    st.title("Carro Assistance Chatbot")
+    st.write("Ask me about roadside assistance, towing, or service appointments.")
+
+    # Initialize session state for conversation history
+    if "conversation_history" not in st.session_state:
+        st.session_state.conversation_history = []
+
+    if "models_dir" not in st.session_state:
+        st.session_state.models_dir = "./output/models"
+
+    # Debug mode toggle
+    with st.sidebar:
+        debug_mode = st.checkbox("Debug Mode", value=False)
+
+        # In debug mode, add ability to clear context
+        if debug_mode:
+            if st.button("Clear Conversation Context"):
+                # Reset the assistant's context
+                assistant = load_context_aware_assistant(st.session_state.models_dir)
+                assistant.conversation_context = {
+                    "previous_intents": [],
+                    "previous_entities": [],
+                    "entity_history": {},
+                    "active_flow": None,
+                    "previous_flows": [],
+                    "session_start_time": None,
+                    "contradiction_history": [],
+                    "turn_count": 0
+                }
+                st.session_state.conversation_history = []
+                st.success("Conversation context cleared!")
+
+    # Display conversation history
+    for message in st.session_state.conversation_history:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
+
+            # In debug mode, show additional details
+            if debug_mode and message["role"] == "assistant" and "result" in message:
+                with st.expander("Debug Info"):
+                    st.json(message["result"])
+
+    # Get user input
+    user_input = st.chat_input("Type your message here...")
+
+    # Process user input
+    if user_input:
+        # Add user message to chat
+        st.session_state.conversation_history.append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.write(user_input)
+
+        # Process the message with context awareness
+        with st.spinner("Thinking..."):
+            response, result = process_message_with_context(user_input)
+
+        # Add assistant response to chat
+        st.session_state.conversation_history.append(
+            {"role": "assistant", "content": response, "result": result}
+        )
+        with st.chat_message("assistant"):
+            st.write(response)
+
+    # Display context indicators in the sidebar
+    if hasattr(st.session_state, "last_result"):
+        # Get the assistant to access its context
+        assistant = load_context_aware_assistant(st.session_state.models_dir)
+        display_context_indicators(assistant.conversation_context)
+
+if __name__ == "__main__":
+    main()
+```
+
+### 6.2 Context Visualization Functions
+
+Add helper functions to visualize the conversation context evolution:
+
+```python
+def visualize_context_evolution(conversation_history):
+    """
+    Create a visualization of how the context evolved during the conversation.
+
+    Args:
+        conversation_history: List of conversation turns
+    """
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    import numpy as np
+
+    # Extract context data from conversation history
+    turns = []
+    flows = []
+    intents = []
+    entities_count = []
+    clarification_needed = []
+
+    for i, turn in enumerate(conversation_history):
+        if turn.get("role") == "assistant" and "result" in turn:
+            result = turn["result"]
+            turns.append(i//2 + 1)  # User + assistant count as one turn
+            flows.append(result.get("flow", "unknown"))
+            intents.append(result.get("intent", "unknown"))
+            entities_count.append(len(result.get("entities", {})))
+            clarification_needed.append(int(result.get("needs_clarification", False)))
+
+    # Create figure with multiple subplots
+    fig, axes = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
+
+    # Plot flow changes
+    axes[0].plot(turns, flows, 'o-', color='blue')
+    axes[0].set_ylabel('Flow')
+    axes[0].set_title('Conversation Context Evolution')
+
+    # Plot intent changes
+    axes[1].plot(turns, intents, 'o-', color='green')
+    axes[1].set_ylabel('Intent')
+
+    # Plot entity count and clarification needs
+    axes[2].bar(turns, entities_count, color='purple', alpha=0.7, label='Entities Count')
+    ax2 = axes[2].twinx()
+    ax2.plot(turns, clarification_needed, 'ro-', label='Clarification Needed')
+    ax2.set_ylim(0, 1.1)
+    axes[2].set_xlabel('Turn')
+    axes[2].set_ylabel('Entity Count')
+    ax2.set_ylabel('Clarification Needed')
+
+    # Add legend
+    lines1, labels1 = axes[2].get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax2.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
+
+    plt.tight_layout()
+    return fig
+```
+
+## Implementation Timeline (Revised)
+
+Based on the enhanced implementation plan, we've revised the timeline to accommodate the additional improvements:
+
+1. **Day 1-2**: Enhanced Data Preparation and Augmentation
+
+   - Create comprehensive negation examples
+   - Implement new data augmentation functions for context sensitivity
+   - Create synthetic multi-turn conversations for training
    - Run data augmentation pipeline
+   - Create test datasets for evaluation
 
-2. **Day 2-3**: Model architecture updates
+2. **Day 3-5**: Advanced Model Architecture Implementation
 
-   - Implement contextual intent classifier
-   - Implement multi-task learning for clarification detection
+   - Implement context-aware intent classifier with cross-turn attention
+   - Implement enhanced multi-task learning for clarification detection
+   - Create robust entity extraction with context understanding
    - Train models on enhanced datasets
+   - Optimize hyperparameters
 
-3. **Day 4**: Inference engine updates
+3. **Day 6-7**: Context-Aware Inference Engine
 
-   - Implement context-aware inference process
-   - Create clarification mechanism
-   - Integrate with existing code
+   - Implement comprehensive context tracking system
+   - Create context switching and negation detection mechanism
+   - Develop contradiction detection algorithm
+   - Integrate all components into a cohesive inference system
+   - Unit test each component
 
-4. **Day 5**: Testing and evaluation
-   - Create specialized test cases
-   - Run comprehensive evaluations
-   - Analyze results and make adjustments
+4. **Day 8-9**: Streamlit Integration and Testing
 
-### Success Metrics:
+   - Update Streamlit app with context visualization
+   - Implement conversation history tracking
+   - Create test cases and conversation simulations
+   - Run comprehensive evaluations across multiple scenarios
+   - Create analysis dashboard for evaluation results
 
-Measure the following metrics to evaluate the effectiveness of the improvements:
+5. **Day 10**: Refinement and Documentation
+   - Address any issues identified during testing
+   - Fine-tune models based on evaluation results
+   - Document architecture and implementation details
+   - Create user guide for the context-aware features
+   - Prepare deployment plan
 
-1. **Negation Detection Accuracy**: Ability to correctly identify when a user negates a previous request
-2. **Context Switch Detection Accuracy**: Ability to identify when a user changes the topic/intent
-3. **Entity Extraction with Context**: Accuracy of entity extraction in context-sensitive situations
-4. **Multi-turn Success Rate**: Success rate of handling realistic multi-turn conversations
-5. **Overall User Satisfaction**: Test with real users and measure satisfaction scores
+## Success Metrics (Enhanced)
+
+We've expanded the original success metrics to better measure context handling capabilities:
+
+1. **Negation Handling Effectiveness**
+
+   - **Negation Detection Accuracy**: >90% accuracy in identifying negations
+   - **Negation Recovery Rate**: >85% success rate in recovering from negations
+   - **Negation Context Precision**: >80% accuracy in understanding what was negated
+
+2. **Context Switching Performance**
+
+   - **Context Switch Detection**: >85% accuracy in detecting topic changes
+   - **Context Carryover Appropriateness**: >80% accuracy in determining which context to carry over
+   - **Transition Smoothness Rating**: Human evaluation score >4/5
+
+3. **Conversation Coherence**
+
+   - **Contradiction Rate**: <10% contradictions in bot responses
+   - **Contextual Consistency Score**: >85% consistency across turns
+   - **Conversation Completion Rate**: >80% of conversations reach their goal
+
+4. **Entity Tracking Accuracy**
+
+   - **Entity Memory Precision**: >90% accuracy in remembering previously mentioned entities
+   - **Entity Contradiction Resolution**: >85% success in resolving contradictory entity information
+
+5. **User Experience**
+   - **User Satisfaction Rating**: >4/5 average satisfaction score
+   - **Task Completion Improvement**: >20% improvement over baseline system
+   - **Clarification Reduction**: >30% reduction in unnecessary clarification requests
 
 ## Conclusion
 
-By implementing these enhancements, your chatbot will significantly improve its ability to handle negation and context switching. The multi-task learning approach will enable the system to simultaneously detect negation, context switches, and clarification needs, while the context-aware inference process will ensure appropriate responses based on conversation history.
+With these enhancements to the implementation plan, the chatbot will significantly improve its ability to handle negation, context switching, and maintain conversation coherence. The multi-task learning approach combined with robust context tracking will enable the system to provide more natural and effective interactions, particularly in complex conversation scenarios.
 
-This implementation follows ChatGPT's recommendations but adds concrete code examples and a detailed implementation plan specific to your existing codebase.
+The enhanced architecture is designed to be maintainable and extensible, allowing for future improvements and expansion to handle additional conversation patterns. The comprehensive evaluation framework will provide detailed insights into system performance and guide further refinements.
