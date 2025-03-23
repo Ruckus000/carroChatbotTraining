@@ -250,37 +250,103 @@ class ChatbotPipeline:
             logger.error(f"Error in fallback detection: {str(e)}", exc_info=True)
             return False, 0.5
 
-def display_context_indicators(context: Dict[str, Any]) -> None:
+def display_enhanced_context_indicators(context: Dict[str, Any]) -> None:
     """
-    Display visual indicators for active context elements.
+    Enhanced display of context information with better visualization.
     
     Args:
         context: Current conversation context
     """
-    st.sidebar.subheader("Context Information")
+    st.sidebar.subheader("Conversation Context", help="Current state of the conversation")
     
-    # Display active flow
-    if "active_flow" in context and context["active_flow"]:
-        st.sidebar.info(f"Current flow: {context['active_flow'].capitalize()}")
+    # Active Flow with Visual Enhancement
+    if context.get("active_flow"):
+        flow_icon = {
+            "towing": "🚛", "roadside": "🔧",
+            "appointment": "📅", "information": "ℹ️"
+        }.get(context["active_flow"], "🔄")
+        
+        st.sidebar.success(
+            f"{flow_icon} Active Flow: {context['active_flow'].capitalize()}"
+        )
+        
+        # Show flow confidence if available
+        if "confidence_scores" in context and "flow" in context["confidence_scores"]:
+            flow_conf = context["confidence_scores"]["flow"]
+            st.sidebar.progress(flow_conf, text=f"Flow Confidence: {flow_conf:.2%}")
     
-    # Display intent history
-    if "previous_intents" in context and context["previous_intents"]:
-        with st.sidebar.expander("Previous Intents", expanded=False):
-            for i, intent_info in enumerate(reversed(context["previous_intents"])):
-                st.write(f"{i+1}. {intent_info['intent']} (Turn {intent_info['turn']})")
+    # Context Switches with Timeline
+    if context.get("context_switches"):
+        with st.sidebar.expander("🔄 Context Switches", expanded=False):
+            for switch in reversed(context["context_switches"]):
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    st.write(f"Turn {switch['turn']}")
+                with col2:
+                    st.info(f"{switch['text']}\n*Confidence: {switch['confidence']:.2%}*")
     
-    # Display entity history
-    if "previous_entities" in context and context["previous_entities"]:
-        with st.sidebar.expander("Active Entities", expanded=False):
+    # Active Entities with Contradiction Highlighting
+    if context.get("previous_entities"):
+        with st.sidebar.expander("📋 Active Entities", expanded=True):
             for entity_type, values in context["previous_entities"].items():
                 if values:
-                    st.write(f"**{entity_type.replace('_', ' ').title()}**:")
-                    for value_info in reversed(values):
-                        st.write(f"- {value_info['value']} (Turn {value_info['turn']})")
+                    most_recent = max(values, key=lambda x: x["turn"])
+                    
+                    # Check for contradictions
+                    is_contradicted = any(
+                        c["entity_type"] == entity_type
+                        for c in context.get("contradictions", [])
+                    )
+                    
+                    if is_contradicted:
+                        # Find the contradiction for this entity
+                        contradiction = next(
+                            c for c in context["contradictions"]
+                            if c["entity_type"] == entity_type
+                        )
+                        
+                        st.warning(
+                            f"**{entity_type.replace('_', ' ').title()}**:\n"
+                            f"~~{contradiction['previous_value']}~~ → "
+                            f"**{contradiction['current_value']}** ⚠️\n"
+                            f"*Confidence: {contradiction.get('confidence', 0):.2%}*"
+                        )
+                    else:
+                        st.info(
+                            f"**{entity_type.replace('_', ' ').title()}**:\n"
+                            f"{most_recent['value']}"
+                        )
+    
+    # Intent History with Confidence
+    if context.get("previous_intents"):
+        with st.sidebar.expander("🎯 Intent History", expanded=False):
+            for i, intent_info in enumerate(reversed(context["previous_intents"])):
+                confidence = intent_info.get("confidence", 0)
+                st.write(
+                    f"{i+1}. {intent_info['intent']} "
+                    f"(Turn {intent_info['turn']}, "
+                    f"Confidence: {confidence:.2%})"
+                )
+    
+    # Overall Context Health
+    if "confidence_scores" in context:
+        with st.sidebar.expander("📊 Context Health", expanded=False):
+            scores = context["confidence_scores"]
+            
+            # Overall confidence
+            if "overall" in scores:
+                st.write("**Overall Confidence**")
+                st.progress(scores["overall"], text=f"{scores['overall']:.2%}")
+            
+            # Individual metrics
+            for metric in ["intent", "negation", "context_switch"]:
+                if metric in scores:
+                    st.write(f"**{metric.replace('_', ' ').title()}**")
+                    st.progress(scores[metric], text=f"{scores[metric]:.2%}")
 
 def generate_response_with_context(result: Dict[str, Any]) -> str:
     """
-    Generate appropriate response based on context-aware processing result.
+    Generate appropriate response based on enhanced context-aware processing result.
     
     Args:
         result: Context-aware processing result
@@ -288,86 +354,73 @@ def generate_response_with_context(result: Dict[str, Any]) -> str:
     Returns:
         Response text
     """
-    # Handle negation
-    if result.get("contains_negation", False):
+    # Handle different response types based on the enhanced processing
+    response_type = result.get("response_type", "standard")
+    
+    if response_type == "negation":
         if result.get("alternative_requested", False):
             # User negated previous request and specified an alternative
             service_type = result["entities"]["service_type"][0]
-            return f"I understand you would prefer {service_type} instead. I can help with that. Can you provide your location?"
+            return f"I understand you would prefer {service_type} instead. I'll help you with that. Can you provide your location?"
         elif "negated_intent" in result:
-            # Simple negation of previous intent
-            return "I understand you don't want that anymore. How else can I help you today?"
+            # Negation of previous intent with no alternative
+            return "I understand you don't want that anymore. What would you like me to help you with instead?"
         else:
             # Generic negation
-            return "I understand. What would you like instead?"
-    
-    # Handle context switching
-    elif result.get("contains_context_switch", False):
-        if "flow" in result and result["flow"] != "clarification":
-            if result["flow"] == "roadside":
-                return "I understand you now need roadside assistance. What specific help do you need?"
-            elif result["flow"] == "towing":
-                return "I understand you now need a tow truck. Where are you located and where would you like your vehicle towed?"
-            elif result["flow"] == "appointment":
-                return "I understand you'd like to schedule a service appointment instead. What type of service do you need?"
+            return "I understand. What would you like me to help you with?"
+            
+    elif response_type == "context_switch":
+        switch_type = result.get("switch_type", "general_change")
+        
+        if switch_type == "service_change":
+            service = result["entities"]["service_type"][0]
+            return f"I understand you'd like to switch to {service}. I can help you with that. What specific details do you need assistance with?"
+        elif switch_type == "location_change":
+            location = result["entities"]["location"][0]
+            return f"I've updated your location to {location}. Would you like me to proceed with the service at this new location?"
         else:
             return "I notice you've changed your request. Could you provide more details about what you need now?"
-    
-    # Handle contradictions
-    elif result.get("contradictions", []):
-        contradiction = result["contradictions"][0]  # Get the first contradiction
-        entity_type = contradiction["entity_type"].replace("_", " ")
-        return f"I notice you mentioned a different {entity_type}. To confirm, you're now referring to {contradiction['current_value']}?"
-    
-    # Handle fallback
-    elif result.get("needs_fallback", False):
-        return "I'm sorry, I can't help with that. I'm designed to assist with car maintenance, towing, and roadside assistance."
-    
-    # Handle clarification
-    elif result.get("needs_clarification", False):
-        return "I'd like to help you better. Could you provide more details about what you need assistance with?"
-    
-    # Standard flow-based responses
+            
+    elif response_type == "contradiction":
+        # Handle contradictions with more nuanced responses
+        if result["contradictions"]:
+            contradiction = result["contradictions"][0]  # Get highest confidence contradiction
+            entity_type = contradiction["entity_type"].replace("_", " ")
+            current = contradiction["current_value"]
+            previous = contradiction["previous_value"]
+            
+            return f"I notice you've changed the {entity_type} from {previous} to {current}. Would you like me to update this information?"
+            
+    elif response_type == "alternative_service":
+        service = result["entities"]["service_type"][0]
+        return f"I'll help you with {service} instead. What specific assistance do you need?"
+        
+    # Handle standard responses with flow awareness
     elif "flow" in result:
         flow = result["flow"]
-        intent = result["intent"]
-        
         if flow == "towing":
-            if "location" in intent:
-                return "I'll arrange for a tow truck to your location. Can you confirm your current address and destination?"
-            elif "vehicle" in intent:
-                return "To arrange the right tow truck, could you tell me the make, model, and year of your vehicle?"
-            elif "urgent" in intent:
-                return "I understand this is urgent. I'm prioritizing your request and will dispatch a tow truck as soon as possible."
-            else:
-                return "I can help arrange a tow truck. Could you please provide your location and vehicle details?"
-        
+            return "I can help you with towing. Could you please provide your current location and where you'd like your vehicle towed to?"
         elif flow == "roadside":
-            if "battery" in intent:
-                return "I'll send someone to jump-start your battery. What's your current location?"
-            elif "tire" in intent:
-                return "I'll send a technician to help with your tire. Are you in a safe location?"
-            elif "keys" in intent:
-                return "I can send a locksmith to help you get back into your vehicle. Where are you located?"
-            elif "fuel" in intent:
-                return "I'll arrange for fuel delivery. How much fuel do you need and what's your location?"
-            else:
-                return "I'm here to help with your roadside assistance. Could you provide more details about what you need?"
-        
+            return "I can help you with roadside assistance. What specific issue are you experiencing with your vehicle?"
         elif flow == "appointment":
-            if "type" in intent:
-                return "I can schedule that service for you. What day works best for you?"
-            elif "date" in intent:
-                return "We have several time slots available on that day. Would you prefer morning or afternoon?"
-            elif "time" in intent:
-                return "Great! I've scheduled your appointment. Is there anything else you'd like to know about your service?"
-            else:
-                return "I'd be happy to schedule a service appointment for you. What type of service do you need?"
+            return "I can help you schedule a service appointment. What type of service do you need?"
+        elif flow == "information":
+            return "I can provide information about our services. What would you like to know?"
+            
+    # Handle clarification needs
+    if result.get("needs_clarification", False):
+        reason = next((action for action in result.get("suggested_actions", []) 
+                      if action["type"] == "request_clarification"), {}).get("reason")
+                      
+        if reason == "low_confidence":
+            return "I'm not quite sure I understood completely. Could you please provide more details about what you need?"
+        else:
+            return "Could you please clarify what specific assistance you need?"
     
-    # Default response
-    return "I'm here to help with towing, roadside assistance, or scheduling service appointments. What can I do for you today?"
+    # Default response if no specific handling is needed
+    return "How can I assist you today with towing, roadside assistance, or scheduling a service appointment?"
 
-# Session management
+# Enhanced session state management
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hi there! I'm your car maintenance assistant. How can I help you today?"}
@@ -378,6 +431,17 @@ if "flow" not in st.session_state:
 
 if "processing_mode" not in st.session_state:
     st.session_state.processing_mode = "standard"
+
+# New session state for enhanced context tracking
+if "context_history" not in st.session_state:
+    st.session_state.context_history = {
+        "switches": [],  # Track context switches
+        "contradictions": [],  # Track contradictions
+        "negations": [],  # Track negations
+        "confidence_history": [],  # Track confidence scores
+        "last_active_flow": None,  # Last active flow before switch
+        "turn_count": 0  # Track conversation turns
+    }
 
 # Streamlit UI
 st.title("Car Maintenance Chatbot")
@@ -403,10 +467,25 @@ with st.sidebar:
     # Debug toggle
     debug_section = st.checkbox("Show debug information", value=False)
     
-    # Clear conversation button
-    if st.button("Clear Conversation"):
-        st.session_state.messages = [{"role": "assistant", "content": "Hi there! I'm your car maintenance assistant. How can I help you today?"}]
+    # Update the clear conversation functionality
+    if st.sidebar.button("Clear Conversation", help="Reset the conversation and all context"):
+        # Reset messages
+        st.session_state.messages = [
+            {"role": "assistant", "content": "Hi there! I'm your car maintenance assistant. How can I help you today?"}
+        ]
+        
+        # Reset flow
         st.session_state.flow = None
+        
+        # Reset context history
+        st.session_state.context_history = {
+            "switches": [],
+            "contradictions": [],
+            "negations": [],
+            "confidence_history": [],
+            "last_active_flow": None,
+            "turn_count": 0
+        }
         
         # Reset context in context-aware mode
         if st.session_state.processing_mode == "context_aware":
@@ -416,10 +495,13 @@ with st.sidebar:
                     "previous_intents": [],
                     "previous_entities": {},
                     "active_flow": None,
-                    "turn_count": 0
+                    "turn_count": 0,
+                    "context_switches": [],
+                    "contradictions": [],
+                    "negations": []
                 }
         
-        st.success("Conversation cleared!")
+        st.success("Conversation and context cleared!")
 
 # Display chat messages
 for message in st.session_state.messages:
@@ -440,7 +522,7 @@ if st.session_state.processing_mode == "context_aware":
     
     # Display context information if available and debug mode is enabled
     if debug_section and context_assistant:
-        display_context_indicators(context_assistant.conversation_context)
+        display_enhanced_context_indicators(context_assistant.conversation_context)
 
 # Input area
 user_input = st.chat_input("Type your message...")
@@ -574,6 +656,41 @@ if user_input:
         if debug_section:
             with st.expander("Debug Information"):
                 st.json(debug_info)
+
+# Update context history after processing
+if st.session_state.processing_mode == "context_aware" and context_assistant:
+    # Update context history
+    st.session_state.context_history["turn_count"] += 1
+    
+    if result.get("contains_context_switch"):
+        st.session_state.context_history["switches"].append({
+            "turn": st.session_state.context_history["turn_count"],
+            "from_flow": st.session_state.context_history["last_active_flow"],
+            "to_flow": result.get("flow"),
+            "confidence": result.get("context_switch_confidence", 0)
+        })
+    
+    if result.get("contradictions"):
+        st.session_state.context_history["contradictions"].extend(
+            result["contradictions"]
+        )
+    
+    if result.get("contains_negation"):
+        st.session_state.context_history["negations"].append({
+            "turn": st.session_state.context_history["turn_count"],
+            "text": user_input,
+            "confidence": result.get("negation_confidence", 0)
+        })
+    
+    # Update last active flow
+    if result.get("flow"):
+        st.session_state.context_history["last_active_flow"] = result["flow"]
+    
+    # Track confidence history
+    st.session_state.context_history["confidence_history"].append({
+        "turn": st.session_state.context_history["turn_count"],
+        "scores": result.get("confidence_scores", {})
+    })
 
 # Display note about models at the bottom
 if st.session_state.processing_mode == "standard":
