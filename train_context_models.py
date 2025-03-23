@@ -75,7 +75,13 @@ def generate_negation_dataset():
         "I'd rather not have a tow truck",
         "I didn't say I needed a tow truck",
         "That's not what I'm looking for",
-        "That's not what I meant"
+        "That's not what I meant",
+        # Adding recommended additional negation examples
+        "I no longer require that service",
+        "Let's not do the tow truck after all",
+        "I've decided I don't need assistance anymore",
+        "On second thought, I don't want roadside help",
+        "I'd rather not have a tow truck sent now"
     ]
     
     # Examples of non-negation phrases
@@ -94,7 +100,11 @@ def generate_negation_dataset():
         "What services do you offer",
         "How much does towing cost",
         "Where can I get my car fixed",
-        "Do you work on weekends"
+        "Do you work on weekends",
+        # Adding recommended contrastive examples
+        "I need something different than a tow truck",
+        "What I actually need is roadside assistance, not a tow",
+        "Instead of towing, I need a battery jump"
     ]
     
     # Create variations by adding context and filler words
@@ -503,6 +513,45 @@ def generate_context_switch_dataset():
         "labels": labels
     }
 
+def save_model_with_config(model, tokenizer, output_dir, task_name):
+    """
+    Save model, tokenizer, and configuration in a format compatible with local loading.
+    
+    Args:
+        model: The trained model
+        tokenizer: The tokenizer
+        output_dir: Directory to save the model
+        task_name: Name of the task (e.g., "negation_detector")
+    """
+    model_dir = os.path.join(output_dir, task_name)
+    os.makedirs(model_dir, exist_ok=True)
+    
+    # Save model state and config
+    model.save_pretrained(
+        model_dir,
+        save_config=True,
+        save_function=torch.save,
+        push_to_hub=False
+    )
+    
+    # Save tokenizer files
+    tokenizer.save_pretrained(
+        model_dir,
+        push_to_hub=False
+    )
+    
+    # Save additional metadata
+    with open(os.path.join(model_dir, "model_info.json"), "w") as f:
+        json.dump({
+            "model_type": "distilbert",
+            "is_local": True,
+            "task": task_name,
+            "version": "1.0"
+        }, f, indent=2)
+    
+    logger.info(f"Model and associated files saved to {model_dir}")
+    return model_dir
+
 def train_binary_classifier(task_name, texts, labels, output_dir):
     """
     Train a binary classifier for context-related tasks.
@@ -549,7 +598,7 @@ def train_binary_classifier(task_name, texts, labels, output_dir):
     # Define training arguments
     training_args = TrainingArguments(
         output_dir=f"{output_dir}/checkpoints",
-        num_train_epochs=3,
+        num_train_epochs=5,
         per_device_train_batch_size=16,
         per_device_eval_batch_size=64,
         warmup_steps=500,
@@ -559,7 +608,9 @@ def train_binary_classifier(task_name, texts, labels, output_dir):
         evaluation_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
-        no_cuda=True  # Using CPU for training
+        metric_for_best_model="eval_loss",
+        greater_is_better=False,
+        no_cuda=True
     )
     
     # Define trainer
@@ -577,16 +628,12 @@ def train_binary_classifier(task_name, texts, labels, output_dir):
     eval_result = trainer.evaluate()
     logger.info(f"Evaluation results: {eval_result}")
     
-    # Save the model
-    model_path = os.path.join(output_dir, task_name)
-    model.save_pretrained(model_path)
-    tokenizer.save_pretrained(model_path)
+    # Save the model using the new function
+    model_path = save_model_with_config(model, tokenizer, output_dir, task_name)
     
     # Save evaluation results
     with open(os.path.join(model_path, "eval_results.json"), "w") as f:
-        json.dump(eval_result, f)
-    
-    logger.info(f"Model saved to {model_path}")
+        json.dump(eval_result, f, indent=2)
     
     return model_path
 

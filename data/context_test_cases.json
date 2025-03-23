@@ -1,0 +1,571 @@
+{
+  "negation_detection": [
+    {
+      "text": "I don't need a tow truck",
+      "is_negation": true
+    },
+    {
+      "text": "I no longer need roadside assistance",
+      "is_negation": true
+    },
+    {
+      "text": "Cancel my request for a tow",
+      "is_negation": true
+    },
+    {
+      "text": "I've changed my mind, I don't want that",
+      "is_negation": true
+    },
+    {
+      "text": "Let's not proceed with the appointment",
+      "is_negation": true
+    },
+    {
+      "text": "I'd rather not have a tow truck",
+      "is_negation": true
+    },
+    {
+      "text": "That's not what I'm looking for",
+      "is_negation": true
+    },
+    {
+      "text": "Forget about the tow truck",
+      "is_negation": true
+    },
+    {
+      "text": "I didn't say I needed a tow truck",
+      "is_negation": true
+    },
+    {
+      "text": "I don't want roadside assistance anymore",
+      "is_negation": true
+    },
+    {
+      "text": "I need a tow truck",
+      "is_negation": false
+    },
+    {
+      "text": "My car won't start",
+      "is_negation": false
+    },
+    {
+      "text": "Can you help me with my car",
+      "is_negation": false
+    },
+    {
+      "text": "The engine is not working",
+      "is_negation": false
+    },
+    {
+      "text": "My car does not start",
+      "is_negation": false
+    },
+    {
+      "text": "I can't get my car to start",
+      "is_negation": false
+    },
+    {
+      "text": "I'm not sure what's wrong with my car",
+      "is_negation": false
+    },
+    {
+      "text": "I need help with my car",
+      "is_negation": false
+    },
+    {
+      "text": "Can you send someone for roadside assistance?",
+      "is_negation": false
+    },
+    {
+      "text": "I'm not at home, I'm at the mall",
+      "is_negation": false
+    },
+    {
+      "text": "Actually, I need something else instead",
+      "is_negation": false
+    },
+    {
+      "text": "Not towing, but roadside assistance",
+      "is_negation": false
+    },
+    {
+      "text": "I don't need towing anymore, I need roadside assistance",
+      "is_negation": true
+    },
+    {
+      "text": "I'm not sure if I need a tow truck or not",
+      "is_negation": false
+    },
+    {
+      "text": "No, I already called someone else",
+      "is_negation": true
+    },
+    {
+      "text": "I don't think I explained my problem correctly",
+      "is_negation": false
+    },
+    {
+      "text": "Don't worry about sending a truck quickly",
+      "is_negation": false
+    },
+    {
+      "text": "I need help, I'm not able to start my car",
+      "is_negation": false
+    },
+    {
+      "text": "Never mind, I got it started",
+      "is_negation": true
+    },
+    {
+      "text": "I won't be needing that service after all",
+      "is_negation": true
+    }
+  ],
+  "context_switch_detection": [
+    {
+      "text": "Actually, I need roadside assistance instead",
+      "has_context_switch": true,
+      "context": {
+        "flow": "towing",
+        "service_type": "towing"
+      }
+    },
+    {
+      "text": "Forget the tow truck, I need a battery jump",
+      "has_context_switch": true,
+      "context": {
+        "flow": "towing",
+        "service_type": "towing"
+      }
+    },
+    {
+      "text": "I've changed my mind, I need a tire change instead",
+      "has_context_switch": true,
+      "context": {
+        "flow": "towing",
+        "service_type": "towing"
+      }
+    },
+    {
+      "text": "Let's do an appointment instead of immediate help",
+      "has_context_switch": true,
+      "context": {
+        "flow": "roadside",
+        "service_type": "roadside"
+      }
+    },
+    {
+      "text": "I'd rather schedule service for next week",
+      "has_context_switch": true,
+      "context": {
+        "flow": "roadside",
+        "service_type": "roadside"
+      }
+    },
+    {
+      "text": "I don't need a tow truck anymore",
+      "has_context_switch": false,
+      "context": {
+        "flow": "towing",
+        "service_type": "towing"
+      }
+    },
+    {
+      "text": "Cancel my request",
+      "has_context_switch": false,
+      "context": {
+        "flow": "roadside",
+        "service_type": "roadside"
+      }
+    },
+    {
+      "text": "I've decided against getting help",
+      "has_context_switch": false,
+      "context": {
+        "flow": "roadside",
+        "service_type": "roadside"
+      }
+    },
+    {
+      "text": "My car is a Honda Civic",
+      "has_context_switch": false,
+      "context": {
+        "flow": "towing",
+        "service_type": "towing"
+      }
+    },
+    {
+      "text": "I'm at the mall on Main Street",
+      "has_context_switch": false,
+      "context": {
+        "flow": "roadside",
+        "service_type": "roadside"
+      }
+    },
+    {
+      "text": "I don't need a tow but I do need roadside assistance",
+      "has_context_switch": true,
+      "context": {
+        "flow": "towing",
+        "service_type": "towing"
+      }
+    },
+    {
+      "text": "Actually, I'm not at the address I mentioned",
+      "has_context_switch": false,
+      "context": {
+        "flow": "towing",
+        "service_type": "towing"
+      }
+    },
+    {
+      "text": "It's not a Honda, it's a Toyota",
+      "has_context_switch": false,
+      "context": {
+        "flow": "towing",
+        "service_type": "towing"
+      }
+    },
+    {
+      "text": "Never mind, I'll just call a friend",
+      "has_context_switch": false,
+      "context": {
+        "flow": "roadside",
+        "service_type": "roadside"
+      }
+    },
+    {
+      "text": "Can we make this more immediate?",
+      "has_context_switch": false,
+      "context": {
+        "flow": "appointment",
+        "service_type": "appointment"
+      }
+    }
+  ],
+  "contradiction_detection": [
+    {
+      "text": "Actually my car is an SUV, not a sedan",
+      "has_contradiction": true,
+      "entity_type": "vehicle_type",
+      "context": {
+        "vehicle_type": "sedan"
+      }
+    },
+    {
+      "text": "It's a truck, not a compact car",
+      "has_contradiction": true,
+      "entity_type": "vehicle_type",
+      "context": {
+        "vehicle_type": "compact"
+      }
+    },
+    {
+      "text": "I'm driving a Honda not a Toyota",
+      "has_contradiction": true,
+      "entity_type": "vehicle_type",
+      "context": {
+        "vehicle_type": "toyota"
+      }
+    },
+    {
+      "text": "I'm actually in downtown, not at the mall",
+      "has_contradiction": true,
+      "entity_type": "location",
+      "context": {
+        "location": "mall"
+      }
+    },
+    {
+      "text": "I'm at the gas station on Main St, not Oak Ave",
+      "has_contradiction": true,
+      "entity_type": "location",
+      "context": {
+        "location": "Oak Ave"
+      }
+    },
+    {
+      "text": "I need a full tow, not just a jump start",
+      "has_contradiction": true,
+      "entity_type": "service_type",
+      "context": {
+        "service_type": "jump start"
+      }
+    },
+    {
+      "text": "I need help with my keys, not a tire change",
+      "has_contradiction": true,
+      "entity_type": "service_type",
+      "context": {
+        "service_type": "tire change"
+      }
+    },
+    {
+      "text": "My car is a sedan",
+      "has_contradiction": false,
+      "context": {
+        "vehicle_type": "sedan"
+      }
+    },
+    {
+      "text": "I'm still at the mall",
+      "has_contradiction": false,
+      "context": {
+        "location": "mall"
+      }
+    },
+    {
+      "text": "Can you still do the jump start?",
+      "has_contradiction": false,
+      "context": {
+        "service_type": "jump start"
+      }
+    },
+    {
+      "text": "I'm at a different part of the mall now",
+      "has_contradiction": false,
+      "context": {
+        "location": "mall"
+      }
+    },
+    {
+      "text": "My car is actually silver, not blue",
+      "has_contradiction": true,
+      "entity_type": "vehicle_color",
+      "context": {
+        "vehicle_color": "blue"
+      }
+    },
+    {
+      "text": "I need to change where you're picking up my car",
+      "has_contradiction": true,
+      "entity_type": "location",
+      "context": {
+        "location": "home"
+      }
+    }
+  ],
+  "multi_turn_conversations": [
+    {
+      "conversation_id": "standard-towing-1",
+      "turns": [
+        {
+          "text": "I need a tow truck for my sedan"
+        },
+        {
+          "text": "I'm at the mall on Main Street"
+        },
+        {
+          "text": "It won't start at all"
+        }
+      ],
+      "expected_outcome": {
+        "final_context": {
+          "flow": "towing",
+          "service_type": "towing",
+          "vehicle_type": "sedan",
+          "location": "mall on Main Street"
+        },
+        "preserved_entities": [
+          {
+            "type": "vehicle_type",
+            "value": "sedan"
+          },
+          {
+            "type": "location",
+            "value": "mall on Main Street"
+          }
+        ]
+      }
+    },
+    {
+      "conversation_id": "negation-example-1",
+      "turns": [
+        {
+          "text": "I need roadside assistance",
+          "is_context_switch": true
+        },
+        {
+          "text": "My battery died in my SUV"
+        },
+        {
+          "text": "I'm at the grocery store parking lot"
+        },
+        {
+          "text": "Actually, I don't need help anymore",
+          "is_negation": true
+        }
+      ],
+      "expected_outcome": {
+        "final_context": {
+          "flow": "roadside",
+          "service_type": "roadside",
+          "vehicle_type": "suv",
+          "location": "grocery store parking lot"
+        },
+        "preserved_entities": [
+          {
+            "type": "vehicle_type",
+            "value": "suv"
+          },
+          {
+            "type": "location",
+            "value": "grocery store parking lot"
+          }
+        ]
+      }
+    },
+    {
+      "conversation_id": "context-switch-example-1",
+      "turns": [
+        {
+          "text": "I need a tow truck",
+          "is_context_switch": true
+        },
+        {
+          "text": "My Honda won't start"
+        },
+        {
+          "text": "I'm at work in the parking garage"
+        },
+        {
+          "text": "Actually, I need roadside assistance instead",
+          "is_context_switch": true
+        }
+      ],
+      "expected_outcome": {
+        "final_context": {
+          "flow": "roadside",
+          "service_type": "roadside",
+          "vehicle_type": "honda",
+          "location": "work in the parking garage"
+        },
+        "preserved_entities": [
+          {
+            "type": "vehicle_type",
+            "value": "honda"
+          },
+          {
+            "type": "location",
+            "value": "work in the parking garage"
+          }
+        ]
+      }
+    },
+    {
+      "conversation_id": "contradiction-example-1",
+      "turns": [
+        {
+          "text": "I need help with my sedan"
+        },
+        {
+          "text": "It won't start and I need a jump"
+        },
+        {
+          "text": "I'm at home in my driveway"
+        },
+        {
+          "text": "Actually, I'm in an SUV, not a sedan",
+          "is_contradiction": true
+        }
+      ],
+      "expected_outcome": {
+        "final_context": {
+          "flow": "roadside",
+          "service_type": "jump start",
+          "vehicle_type": "suv",
+          "location": "home in my driveway"
+        },
+        "preserved_entities": [
+          {
+            "type": "location",
+            "value": "home in my driveway"
+          }
+        ]
+      }
+    },
+    {
+      "conversation_id": "complex-multi-turn-1",
+      "turns": [
+        {
+          "text": "I need a tow truck for my pickup",
+          "is_context_switch": true
+        },
+        {
+          "text": "I'm at the shopping center on Oak Street"
+        },
+        {
+          "text": "Actually I don't need a tow anymore",
+          "is_negation": true
+        },
+        {
+          "text": "I need roadside assistance instead",
+          "is_context_switch": true
+        },
+        {
+          "text": "My battery is dead"
+        },
+        {
+          "text": "Actually, I'm in my sedan not my pickup",
+          "is_contradiction": true
+        },
+        {
+          "text": "And I'm at the gas station not the shopping center",
+          "is_contradiction": true
+        }
+      ],
+      "expected_outcome": {
+        "final_context": {
+          "flow": "roadside",
+          "service_type": "jump start",
+          "vehicle_type": "sedan",
+          "location": "gas station"
+        },
+        "preserved_entities": []
+      }
+    },
+    {
+      "conversation_id": "additional-complex-scenario-1",
+      "turns": [
+        {
+          "text": "My car broke down"
+        },
+        {
+          "text": "It's a Toyota Camry"
+        },
+        {
+          "text": "I need a tow truck"
+        },
+        {
+          "text": "Actually, I think I can fix it myself, I don't need a tow",
+          "is_negation": true
+        },
+        {
+          "text": "Wait, I can't fix it. I need a jump start instead",
+          "is_context_switch": true
+        },
+        {
+          "text": "I'm at the airport parking lot"
+        },
+        {
+          "text": "Sorry, I'm actually in the Honda, not the Toyota",
+          "is_contradiction": true
+        }
+      ],
+      "expected_outcome": {
+        "final_context": {
+          "flow": "roadside",
+          "service_type": "jump start",
+          "vehicle_type": "honda",
+          "location": "airport parking lot"
+        },
+        "preserved_entities": [
+          {
+            "type": "location",
+            "value": "airport parking lot"
+          }
+        ]
+      }
+    }
+  ]
+} 
