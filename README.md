@@ -1,122 +1,167 @@
-# Chatbot Training Framework
+# LangGraph Mistral Integration Chatbot
 
-This framework provides a comprehensive solution for fine-tuning DistilBERT models to power a multi-flow chatbot system covering towing services, roadside assistance, and service appointment booking.
+A sophisticated chatbot implementation that integrates LangGraph for conversation flow control with Mistral's large language model capabilities. This system provides robust intent recognition, context management, and performance optimizations.
 
 ## Features
 
-- Multi-task hierarchical model training pipeline
-- Sophisticated data augmentation for improved robustness
-- Specialized fallback and clarification detection
-- Advanced entity extraction
-- Comprehensive evaluation framework for model testing
+- **Hybrid Intent Detection**: Combines rule-based and ML-based intent detection
+- **Advanced Context Management**: Tracks conversation context and handles context switches
+- **LangGraph Integration**: Uses LangGraph for conversation flow control
+- **Mistral 7B Integration**: Leverages Mistral's language model for natural language processing
+- **Performance Optimizations**: CPU-optimized processing for efficient resource usage
+- **Streamlit UI**: Clean, modern user interface for chatbot interactions
+- **Comprehensive Monitoring**: Structured logging and performance metrics collection
+- **Feature Flags**: Granular control over system features and fallbacks
 
-## Project Structure
+## Installation
 
-```
-chatbot/
-├── chatbot_training.py       # Main orchestration script
-├── data_augmentation.py      # Data variation and noise functions
-├── model_training.py         # DistilBERT fine-tuning functions
-├── evaluation.py             # Testing and evaluation functions
-├── utils.py                  # Utility functions
-└── requirements.txt          # Dependencies
-```
+### Prerequisites
 
-## Getting Started
+- Python 3.8 or higher
+- Pip package manager
+- Mistral API key (for non-mock usage)
 
-### 1. Installation
+### Setup
 
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Prepare Data
-
-Create a JSON file with your conversation data following this structure:
-
-```json
-[
-  {
-    "flow": "towing",
-    "intent": "request_tow_basic",
-    "input": "I need a tow truck.",
-    "response": "I can help with that! Where should they pick up your vehicle and where should it be towed?",
-    "context": {"display_map": true},
-    "entities": []
-  },
-  ...
-]
-```
-
-### 3. Run the Training Pipeline
+1. Clone the repository:
 
 ```bash
-python chatbot_training.py --input_data path/to/conversations.json --output_dir ./output --augment_data --train_models
+git clone https://github.com/yourusername/langgraph-mistral-chatbot.git
+cd langgraph-mistral-chatbot
 ```
 
-### 4. Evaluate Models
+2. Run the deployment script to set up the environment:
 
 ```bash
-python chatbot_training.py --input_data path/to/conversations.json --output_dir ./output --augment_data --extreme_test
+./deploy.sh development
 ```
 
-## Key Components
+This will:
 
-### Data Augmentation
+- Create a virtual environment
+- Install all dependencies
+- Generate environment-specific settings
+- Run tests
+- Start the development server
 
-The system provides extensive data augmentation techniques:
+### Manual Setup
 
-- Entity variations (missing, reordered, format changes)
-- Noise injection (typos, spacing issues, abbreviations)
-- Domain-specific text patterns (slang, shorthand)
-- Extreme test cases (terse inputs, run-on sentences)
+If you prefer to set up manually:
 
-### Hierarchical Model Architecture
-
-The framework trains several specialized models:
-
-1. **Flow Classifier** - Routes requests to the appropriate conversation flow
-2. **Intent Classifiers** - Flow-specific models to identify detailed user intentions
-3. **Fallback Detector** - Identifies out-of-domain requests
-4. **Clarification Detector** - Recognizes ambiguous inputs requiring clarification
-5. **Entity Extractor** - Extracts structured information from natural language
-
-### Robustness Testing
-
-Comprehensive evaluation includes:
-
-- Standard classification metrics (precision, recall, F1)
-- Specialized robustness metrics for noise tolerance
-- Entity extraction quality assessment
-- Extreme case handling evaluation
-
-## Command Line Arguments
-
-- `--input_data`: Path to input conversation data JSON file
-- `--output_dir`: Directory to save processed data and models
-- `--test_size`: Proportion of data to use for testing (default: 0.15)
-- `--val_size`: Proportion of data to use for validation (default: 0.15)
-- `--random_seed`: Random seed for reproducibility (default: 42)
-- `--augment_data`: Apply data augmentation techniques
-- `--extreme_test`: Generate extreme test cases for robustness testing
-- `--train_models`: Train models after preprocessing data
-
-## Example Usage
-
-### Basic Preprocessing Only
+1. Create a virtual environment:
 
 ```bash
-python chatbot_training.py --input_data conversations.json --output_dir ./output
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-### With Data Augmentation
+2. Install dependencies:
 
 ```bash
-python chatbot_training.py --input_data conversations.json --output_dir ./output --augment_data
+pip install -e .
 ```
 
-### Full Pipeline with Training
+3. Set environment variables:
 
 ```bash
-python chatbot_training.py --input_data conversations.json --output_dir ./output --augment_data --train_models
+export MISTRAL_API_KEY="your-api-key-here"
 ```
+
+## Usage
+
+### Starting the Chatbot
+
+After installation, you can run the chatbot with:
+
+```bash
+python -m streamlit run langgraph_integration/streamlit_integration.py
+```
+
+### Chatbot Configuration
+
+You can configure the chatbot by:
+
+1. **Environment Variables**:
+
+   - `MISTRAL_API_KEY`: Your Mistral API key
+   - `ENABLE_USE_LANGGRAPH`: Set to "true" to enable LangGraph integration
+   - `ENABLE_USE_MISTRAL`: Set to "true" to enable Mistral integration
+
+2. **Configuration Files**:
+   - Create `config/deployment.{environment}.yaml` files with settings
+
+### Development
+
+#### Running Tests
+
+```bash
+# Run all tests
+python -m pytest
+
+# Run specific phase tests
+python -m pytest tests/test_phase1.py -v
+python -m pytest tests/test_phase2.py -v
+python -m pytest tests/test_phase3.py -v
+python -m pytest tests/test_phase4.py -v
+python -m pytest tests/test_phase5.py -v
+
+# Run integration tests
+python -m pytest tests/test_integration.py -v
+```
+
+#### Feature Flags
+
+Feature flags allow you to enable or disable specific features:
+
+- `use_langgraph`: Enables the LangGraph workflow for conversation control
+- `use_mistral`: Enables Mistral AI integration
+- `enable_monitoring`: Enables logging and metrics collection
+- `enable_cpu_optimizations`: Enables CPU optimizations for better performance
+
+## Architecture
+
+The system is built with a modular architecture:
+
+1. **Core Components**:
+
+   - `adapters.py`: Base adapter interface
+   - `feature_flags.py`: Feature flag configuration
+   - `langgraph_state.py`: State definitions for LangGraph
+
+2. **ML Integration**:
+
+   - `mistral_integration.py`: Mistral AI integration
+   - `hybrid_detection.py`: Hybrid rule-based and ML-based detection
+
+3. **LangGraph Components**:
+
+   - `langgraph_nodes.py`: Node definitions for the LangGraph workflow
+   - `state_converter.py`: Converts between different state representations
+   - `langgraph_workflow.py`: Main workflow implementation
+
+4. **Performance & Monitoring**:
+
+   - `monitoring.py`: Metrics collection and logging
+   - `cpu_optimizations.py`: CPU-optimized routines
+
+5. **UI Integration**:
+   - `streamlit_integration.py`: Streamlit UI implementation
+
+## Deployment
+
+For production deployment:
+
+```bash
+./deploy.sh production
+```
+
+This script:
+
+- Runs critical tests
+- Sets up appropriate environment settings
+- Deploys the application as a background service
+- Saves logs to the `logs` directory
+
+## License
+
+[MIT License](LICENSE)
