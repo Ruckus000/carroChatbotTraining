@@ -278,9 +278,9 @@ def test_existing_detection_adapter():
 
 ### Objectives
 
-- [ ] Set up Mistral 7B integration
-- [ ] Implement hybrid detection system (rule-based + ML)
-- [ ] Create weighting/confidence mechanism to combine results
+- [x] Set up Mistral 7B integration
+- [x] Implement hybrid detection system (rule-based + ML)
+- [x] Create weighting/confidence mechanism to combine results
 
 ### Implementation Steps
 
@@ -290,34 +290,58 @@ def test_existing_detection_adapter():
 # mistral_integration.py
 import os
 import json
+import requests
 from typing import Dict, Any, Optional
-from langchain_community.llms import MistralAI
 
 class MistralEnhancer:
-    """Enhanced language understanding using Mistral 7B"""
+    """Enhanced language understanding using Mistral API"""
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.getenv("MISTRAL_API_KEY")
-        self.model_name = "mistral-7b-instruct-v0.2"
-        self.model = None
-        self._initialize_model()
+        self.model_name = "mistral-small-latest"
+        self.api_url = "https://api.mistral.ai/v1/chat/completions"
+        self.headers = None
+        self._initialize_headers()
 
-    def _initialize_model(self) -> None:
-        """Initialize Mistral model"""
-        try:
-            if self.api_key:
-                self.model = MistralAI(
-                    model=self.model_name,
-                    temperature=0.1,  # Low temperature for more deterministic outputs
-                    max_tokens=1024,
-                    api_key=self.api_key
-                )
-        except Exception as e:
-            print(f"Error initializing Mistral: {e}")
+    def _initialize_headers(self) -> None:
+        """Initialize API headers"""
+        if self.api_key:
+            self.headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Authorization": f"Bearer {self.api_key}"
+            }
 
     def is_available(self) -> bool:
         """Check if Mistral is available"""
-        return self.model is not None
+        return self.headers is not None
+
+    def _chat_completion(self, prompt: str) -> str:
+        """Make a chat completion call to Mistral API"""
+        if not self.is_available():
+            return ""
+
+        payload = {
+            "model": self.model_name,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.1,
+            "max_tokens": 100
+        }
+
+        try:
+            response = requests.post(
+                self.api_url,
+                headers=self.headers,
+                json=payload,
+                timeout=10
+            )
+            response.raise_for_status()
+
+            result = response.json()
+            return result.get("choices", [{}])[0].get("message", {}).get("content", "")
+        except Exception as e:
+            print(f"Error in Mistral API call: {e}")
+            return ""
 
     def analyze_intent(self, text: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Analyze intent using Mistral"""
@@ -325,21 +349,18 @@ class MistralEnhancer:
             return {"intent": "unknown", "confidence": 0.0}
 
         prompt = self._create_intent_prompt(text, context)
+        response_text = self._chat_completion(prompt)
 
-        try:
-            response = self.model.invoke(prompt)
-
-            # Parse response - in a real implementation, use more robust parsing
-            # Simplified version for demonstration
-            if "tow" in text.lower() or "tow" in response.lower():
-                return {"intent": "request_tow", "confidence": 0.8}
-            elif "road" in text.lower() or "road" in response.lower():
-                return {"intent": "request_roadside", "confidence": 0.8}
-            else:
-                return {"intent": "unknown", "confidence": 0.5}
-        except Exception as e:
-            print(f"Error in Mistral analysis: {e}")
-            return {"intent": "unknown", "confidence": 0.0}
+        # Parse response - in a real implementation, use more robust parsing
+        # Simplified version for demonstration
+        if "roadside" in response_text.lower():
+            return {"intent": "request_roadside", "confidence": 0.8}
+        elif "tow" in text.lower() or "tow" in response_text.lower():
+            return {"intent": "request_tow", "confidence": 0.8}
+        elif "road" in text.lower() or "road" in response_text.lower():
+            return {"intent": "request_roadside", "confidence": 0.8}
+        else:
+            return {"intent": "unknown", "confidence": 0.5}
 
     def detect_negation(self, text: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Detect negation using Mistral"""
@@ -347,18 +368,43 @@ class MistralEnhancer:
             return {"is_negation": False, "confidence": 0.0}
 
         prompt = self._create_negation_prompt(text, context)
+        response_text = self._chat_completion(prompt)
 
-        try:
-            response = self.model.invoke(prompt)
+        # Simple parsing for demonstration
+        is_negation = "yes" in response_text.lower() or "true" in response_text.lower()
+        confidence = 0.9 if is_negation else 0.1
 
-            # Simple parsing for demonstration
-            is_negation = "yes" in response.lower() or "true" in response.lower()
-            confidence = 0.9 if is_negation else 0.1
+        return {"is_negation": is_negation, "confidence": confidence}
 
-            return {"is_negation": is_negation, "confidence": confidence}
-        except Exception as e:
-            print(f"Error in negation detection: {e}")
-            return {"is_negation": False, "confidence": 0.0}
+    def detect_context_switch(self, text: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Detect context switch using Mistral"""
+        if not self.is_available():
+            return {"has_context_switch": False, "confidence": 0.0, "new_context": None}
+
+        prompt = self._create_context_switch_prompt(text, context)
+        response_text = self._chat_completion(prompt)
+
+        # Simple parsing for demonstration
+        has_context_switch = "yes" in response_text.lower() or "true" in response_text.lower()
+
+        # Try to extract new context type with a simple approach
+        new_context = None
+        if has_context_switch:
+            lower_response = response_text.lower()
+            if "tow" in lower_response:
+                new_context = "towing"
+            elif "road" in lower_response or "assist" in lower_response:
+                new_context = "roadside"
+            elif "appoint" in lower_response or "schedul" in lower_response:
+                new_context = "appointment"
+
+        confidence = 0.8 if has_context_switch else 0.2
+
+        return {
+            "has_context_switch": has_context_switch,
+            "confidence": confidence,
+            "new_context": new_context
+        }
 
     def _create_intent_prompt(self, text: str, context: Optional[Dict[str, Any]]) -> str:
         """Create prompt for intent analysis"""
@@ -395,6 +441,22 @@ class MistralEnhancer:
         Is the user negating or declining a previous request or suggestion?
         Respond with Yes or No.
         """
+
+    def _create_context_switch_prompt(self, text: str, context: Optional[Dict[str, Any]]) -> str:
+        """Create prompt for context switch detection"""
+        context_str = json.dumps(context) if context else "No context available"
+
+        return f"""
+        Analyze the following user message for an automotive assistance chatbot:
+
+        User message: "{text}"
+
+        Previous context: {context_str}
+
+        Is the user switching to a different service or topic than what was previously discussed?
+        If yes, what is the new service or topic they want to discuss?
+        Respond with Yes or No, followed by the new service (towing, roadside assistance, appointment) if applicable.
+        """
 ```
 
 #### 2. Hybrid Detection System
@@ -402,9 +464,9 @@ class MistralEnhancer:
 ```python
 # hybrid_detection.py
 from typing import Dict, Any, Optional
-from feature_flags import FeatureFlags
-from adapters import ExistingDetectionAdapter
-from mistral_integration import MistralEnhancer
+from langgraph_integration.feature_flags import FeatureFlags
+from langgraph_integration.adapters import ExistingDetectionAdapter
+from langgraph_integration.mistral_integration import MistralEnhancer
 
 class HybridDetectionSystem:
     """
@@ -457,7 +519,9 @@ class HybridDetectionSystem:
                 "is_negation": rule_result.get("is_negation"),
                 "confidence": rule_confidence + ml_confidence,
                 "rule_based": rule_result,
-                "ml_based": ml_result
+                "ml_based": ml_result,
+                "rule_based_decision": False,
+                "ml_based_decision": False
             }
 
         # If they disagree, go with the higher weighted confidence
@@ -466,14 +530,18 @@ class HybridDetectionSystem:
                 "is_negation": rule_result.get("is_negation"),
                 "confidence": rule_confidence,
                 "rule_based": rule_result,
-                "ml_based": ml_result
+                "ml_based": ml_result,
+                "rule_based_decision": True,
+                "ml_based_decision": False
             }
         else:
             return {
                 "is_negation": ml_result.get("is_negation"),
                 "confidence": ml_confidence,
                 "rule_based": rule_result,
-                "ml_based": ml_result
+                "ml_based": ml_result,
+                "rule_based_decision": False,
+                "ml_based_decision": True
             }
 
     def detect_context_switch(self, text: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -492,12 +560,8 @@ class HybridDetectionSystem:
         if not self.flags.is_enabled("hybrid_detection"):
             return rule_result
 
-        # Get ML result (simplified for brevity - full implementation would have a proper ML method)
-        ml_result = {
-            "has_context_switch": "instead" in text.lower() or "rather" in text.lower(),
-            "confidence": 0.8 if "instead" in text.lower() else 0.5,
-            "new_context": rule_result.get("new_context")
-        }
+        # Get ML result from Mistral
+        ml_result = self.mistral_enhancer.detect_context_switch(text, context)
 
         # Apply weighted decision logic
         rule_confidence = rule_result.get("confidence", 0.0) * self.rule_weight
@@ -505,12 +569,17 @@ class HybridDetectionSystem:
 
         # If they agree, combine confidence
         if rule_result.get("has_context_switch") == ml_result.get("has_context_switch"):
+            # For new_context, prefer rule-based if available, otherwise use ML
+            new_context = rule_result.get("new_context") or ml_result.get("new_context")
+
             return {
                 "has_context_switch": rule_result.get("has_context_switch"),
                 "confidence": rule_confidence + ml_confidence,
-                "new_context": rule_result.get("new_context"),
+                "new_context": new_context,
                 "rule_based": rule_result,
-                "ml_based": ml_result
+                "ml_based": ml_result,
+                "rule_based_decision": False,
+                "ml_based_decision": False
             }
 
         # If they disagree, go with the higher weighted confidence
@@ -520,7 +589,9 @@ class HybridDetectionSystem:
                 "confidence": rule_confidence,
                 "new_context": rule_result.get("new_context"),
                 "rule_based": rule_result,
-                "ml_based": ml_result
+                "ml_based": ml_result,
+                "rule_based_decision": True,
+                "ml_based_decision": False
             }
         else:
             return {
@@ -528,91 +599,162 @@ class HybridDetectionSystem:
                 "confidence": ml_confidence,
                 "new_context": ml_result.get("new_context"),
                 "rule_based": rule_result,
-                "ml_based": ml_result
+                "ml_based": ml_result,
+                "rule_based_decision": False,
+                "ml_based_decision": True
             }
+
+    def analyze_intent(self, text: str, flow: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Analyze intent using hybrid approach
+        Implementation follows the same pattern as other hybrid methods
+        """
+        # Currently, we don't have a direct intent analysis in ExistingDetectionAdapter
+        # So we'll process the message and extract intent
+        rule_result = self.existing_detector.process_message(text, context)
+        rule_intent = {
+            "intent": rule_result.get("intent", "unknown"),
+            "confidence": rule_result.get("confidence", 0.5) if "confidence" in rule_result else 0.5
+        }
+
+        # If Mistral not enabled or available, just return rule-based result
+        if not self.flags.is_enabled("use_mistral") or self.mistral_enhancer is None:
+            return rule_intent
+
+        # If hybrid detection disabled, return rule-based result
+        if not self.flags.is_enabled("hybrid_detection"):
+            return rule_intent
+
+        # Get ML result
+        ml_intent = self.mistral_enhancer.analyze_intent(text, context)
+
+        # Apply weighted decision logic
+        rule_confidence = rule_intent.get("confidence", 0.0) * self.rule_weight
+        ml_confidence = ml_intent.get("confidence", 0.0) * self.ml_weight
+
+        # If they agree, combine confidence
+        if rule_intent.get("intent") == ml_intent.get("intent"):
+            return {
+                "intent": rule_intent.get("intent"),
+                "confidence": rule_confidence + ml_confidence,
+                "rule_based": rule_intent,
+                "ml_based": ml_intent,
+                "rule_based_decision": False,
+                "ml_based_decision": False
+            }
+
+        # If they disagree, go with the higher weighted confidence
+        if rule_confidence >= ml_confidence:
+            return {
+                "intent": rule_intent.get("intent"),
+                "confidence": rule_confidence,
+                "rule_based": rule_intent,
+                "ml_based": ml_intent,
+                "rule_based_decision": True,
+                "ml_based_decision": False
+            }
+        else:
+            return {
+                "intent": ml_intent.get("intent"),
+                "confidence": ml_confidence,
+                "rule_based": rule_intent,
+                "ml_based": ml_intent,
+                "rule_based_decision": False,
+                "ml_based_decision": True
+            }
+    }
 ```
 
 ### Phase 2 Testing
 
 ```python
-# test_phase2.py
-import pytest
-from unittest.mock import MagicMock, patch
-from feature_flags import FeatureFlags
-from adapters import ExistingDetectionAdapter
-from mistral_integration import MistralEnhancer
-from hybrid_detection import HybridDetectionSystem
+# tests/test_phase2.py
+import unittest
+from unittest.mock import patch, MagicMock
+import json
+import os
+from typing import Dict, Any, Optional
 
-# Mock classes and functions
-class MockFeatureFlags:
-    def __init__(self, flag_values):
-        self.flag_values = flag_values
+from langgraph_integration import MistralEnhancer, HybridDetectionSystem, FeatureFlags
 
-    def is_enabled(self, flag_name):
-        return self.flag_values.get(flag_name, False)
+class MockFeatureFlags(FeatureFlags):
+    def __init__(self, enable_mistral: bool = False):
+        self.enable_mistral = enable_mistral
+        self.flags = {"use_mistral": enable_mistral, "hybrid_detection": enable_mistral}
+
+    def is_enabled(self, flag_name: str) -> bool:
+        return self.flags.get(flag_name, False)
+
+    # Keep the original method for compatibility
+    def is_feature_enabled(self, feature_name: str) -> bool:
+        if feature_name == "mistral_integration":
+            return self.enable_mistral
+        return False
 
 class MockExistingDetector:
-    def detect_negation(self, text):
-        is_negation = "don't" in text.lower()
-        return {"is_negation": is_negation, "confidence": 0.9 if is_negation else 0.1}
+    def detect_negation(self, text: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        if "not" in text.lower() or "don't" in text.lower():
+            return {"is_negation": True, "confidence": 0.9}
+        return {"is_negation": False, "confidence": 0.8}
 
-    def detect_context_switch(self, text):
-        has_switch = "instead" in text.lower()
-        return {"has_context_switch": has_switch, "confidence": 0.9 if has_switch else 0.1, "new_context": "roadside" if "roadside" in text else None}
+    def detect_context_switch(self, text: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        if "instead" in text.lower() or "actually" in text.lower():
+            return {"has_context_switch": True, "confidence": 0.9, "new_context": "towing"}
+        return {"has_context_switch": False, "confidence": 0.8, "new_context": None}
 
-# Tests
-def test_hybrid_negation_detection_rule_only():
-    """Test hybrid negation using only rule-based detection"""
-    flags = MockFeatureFlags({"use_mistral": False})
-    existing_detector = MockExistingDetector()
+    def analyze_intent(self, text: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        if "tow" in text.lower():
+            return {"intent": "request_tow", "confidence": 0.9}
+        elif "road" in text.lower():
+            return {"intent": "request_roadside", "confidence": 0.9}
+        else:
+            return {"intent": "unknown", "confidence": 0.5}
 
-    hybrid_system = HybridDetectionSystem(
-        flags=flags,
-        existing_detector=existing_detector,
-        mistral_enhancer=None
-    )
+    def process_message(self, text: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Process message to extract intent and other information"""
+        intent_result = self.analyze_intent(text, context)
 
-    # Test with negation
-    result = hybrid_system.detect_negation("I don't need a tow truck")
-    assert result["is_negation"] is True
-    assert result["confidence"] >= 0.8
+        if intent_result["intent"] == "request_tow":
+            flow = "towing"
+        elif intent_result["intent"] == "request_roadside":
+            flow = "roadside"
+        else:
+            flow = "unknown"
 
-    # Test without negation
-    result = hybrid_system.detect_negation("I need a tow truck")
-    assert result["is_negation"] is False
+        result = {
+            "intent": intent_result["intent"],
+            "confidence": intent_result["confidence"],
+            "flow": flow,
+            "needs_clarification": intent_result["intent"] == "unknown",
+            "entities": []
+        }
 
-def test_hybrid_negation_detection_with_mistral():
-    """Test hybrid negation with Mistral integration"""
-    flags = MockFeatureFlags({"use_mistral": True, "hybrid_detection": True})
-    existing_detector = MockExistingDetector()
+        return result
 
-    # Mock Mistral enhancer
-    mistral = MagicMock()
-    mistral.detect_negation.return_value = {"is_negation": True, "confidence": 0.9}
-
-    hybrid_system = HybridDetectionSystem(
-        flags=flags,
-        existing_detector=existing_detector,
-        mistral_enhancer=mistral
-    )
-
-    # Test with agreement (both detect negation)
-    mistral.detect_negation.return_value = {"is_negation": True, "confidence": 0.9}
-    result = hybrid_system.detect_negation("I don't need a tow truck")
-    assert result["is_negation"] is True
-    assert result["confidence"] > 0.9  # Should be stronger than either alone
-
-    # Test with disagreement (rule detects negation, ML doesn't)
-    mistral.detect_negation.return_value = {"is_negation": False, "confidence": 0.7}
-    hybrid_system.set_weights(0.8)  # Stronger weight to rule-based
-    result = hybrid_system.detect_negation("I don't need a tow truck")
-    assert result["is_negation"] is True  # Rule should win with higher weight
-
-    # Test with weight shift to favor ML
-    hybrid_system.set_weights(0.2)  # Stronger weight to ML
-    result = hybrid_system.detect_negation("I don't need a tow truck")
-    assert result["is_negation"] is False  # ML should win with higher weight
+# Test classes for MistralEnhancer and HybridDetectionSystem
+# ...
 ```
+
+---
+
+#### Implementation Notes:
+
+1. We modified the implementation to use direct API calls to Mistral via the requests library instead of using LangChain, providing:
+
+   - Reduced dependencies
+   - More direct control over API interactions
+   - Better stability across updates
+
+2. We added a proper context switch detection method to the Mistral integration, ensuring that all three key detection methods are consistently implemented:
+
+   - Intent analysis
+   - Negation detection
+   - Context switch detection
+
+3. The hybrid detection system adds diagnostic information to the results:
+   - `rule_based_decision`: Indicates when rule-based logic overrode ML
+   - `ml_based_decision`: Indicates when ML overrode rule-based logic
+   - Includes both original results for traceability
 
 ## Phase 3: LangGraph Integration for Flow Control
 
@@ -1489,10 +1631,10 @@ pytest
 
 ### Phase 2: Mistral Integration as Enhancement
 
-- [ ] Implement Mistral integration (`mistral_integration.py`)
-- [ ] Create hybrid detection system (`hybrid_detection.py`)
-- [ ] Configure confidence weighting mechanism
-- [ ] Run Phase 2 tests (`test_phase2.py`)
+- [x] Implement Mistral integration (`mistral_integration.py`)
+- [x] Create hybrid detection system (`hybrid_detection.py`)
+- [x] Configure confidence weighting mechanism
+- [x] Run Phase 2 tests (`test_phase2.py`)
 
 ### Phase 3: LangGraph Integration for Flow Control
 
