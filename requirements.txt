@@ -10,3 +10,4 @@ tqdm>=4.62.0
 seqeval>=1.2.2
 rouge-score>=0.1.2
 nltk>=3.7.0
+streamlit>=1.20.0

@@ -120,3 +120,44 @@ python chatbot_training.py --input_data conversations.json --output_dir ./output
 ```bash
 python chatbot_training.py --input_data conversations.json --output_dir ./output --augment_data --train_models
 ```
+
+## Streamlit Demo Application
+
+The project includes a Streamlit web application that allows you to interact with the trained models and compare different processing modes:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+### Features of the Demo:
+
+1. **Standard (Original) Mode**: Basic flow and intent classification pipeline
+2. **Context-Aware (Enhanced) Mode**: Advanced assistant that can:
+   - Track conversation context across multiple turns
+   - Detect topic/flow changes
+   - Identify contradictions in user statements
+   - Recognize negations and cancellations
+   - Maintain entity memory throughout the conversation
+
+### Debug Information
+
+The application includes a debug panel that shows:
+
+- Flow and intent predictions with confidence scores
+- Detected entities
+- Context switches, contradictions, and negations
+- Full conversation context history
+
+## LangGraph Integration
+
+Recent updates include experimental integration with LangGraph for even more sophisticated conversation management:
+
+```bash
+python run_chatbot.py
+```
+
+This integration enables:
+
+- Multi-agent collaboration between specialized components
+- More nuanced state management
+- Enhanced reasoning capabilities
