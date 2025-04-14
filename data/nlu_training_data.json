@@ -1,0 +1,110 @@
+[
+  {
+    "text": "I need a tow truck at 123 Main Street for my Honda Civic",
+    "intent": "towing_request_tow",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "123 Main Street"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Honda"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Civic"
+      }
+    ]
+  },
+  {
+    "text": "My battery is dead, can you send roadside assistance?",
+    "intent": "roadside_request_battery",
+    "entities": []
+  },
+  {
+    "text": "I want to schedule an appointment for an oil change next week",
+    "intent": "appointment_book_service",
+    "entities": []
+  },
+  {
+    "text": "What's the weather like today?",
+    "intent": "fallback_out_of_scope",
+    "entities": []
+  },
+  {
+    "text": "I need something but I'm not sure what",
+    "intent": "clarification_ambiguous_request",
+    "entities": []
+  },
+  {
+    "text": "My Toyota Camry has a flat tire on Interstate 95",
+    "intent": "roadside_request_tire",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Toyota"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Camry"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Interstate 95"
+      }
+    ]
+  },
+  {
+    "text": "I need to book a maintenance appointment at the downtown service center",
+    "intent": "appointment_book_service",
+    "entities": [
+      {
+        "entity": "service_location",
+        "value": "downtown service center"
+      }
+    ]
+  },
+  {
+    "text": "I'm locked out of my Ford F150",
+    "intent": "roadside_request_lockout",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Ford"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "F150"
+      }
+    ]
+  },
+  {
+    "text": "Can you help me with my Chevy Malibu? It won't start.",
+    "intent": "roadside_request_battery",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Chevy"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Malibu"
+      }
+    ]
+  },
+  {
+    "text": "I need a tow for my motorcycle at Maple Avenue",
+    "intent": "towing_request_tow",
+    "entities": [
+      {
+        "entity": "vehicle_type",
+        "value": "motorcycle"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Maple Avenue"
+      }
+    ]
+  }
+] 
