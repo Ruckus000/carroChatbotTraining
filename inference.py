@@ -217,16 +217,16 @@ class NLUInferencer:
                 intent = "towing_request_tow"
             elif "battery" in text_lower or "dead" in text_lower or "won't start" in text_lower:
                 intent = "roadside_request_battery"
-            elif "tire" in text_lower or "flat" in text_lower:
-                intent = "roadside_request_tire"
-            elif "lock" in text_lower or "locked out" in text_lower:
-                intent = "roadside_request_lockout"
             elif "appointment" in text_lower or "schedule" in text_lower or "book" in text_lower:
                 intent = "appointment_book_service"
             elif "weather" in text_lower:
                 intent = "fallback_out_of_scope"
-            elif "something" in text_lower and ("need" in text_lower or "not sure" in text_lower):
+            elif ("something" in text_lower and ("need" in text_lower or "not sure" in text_lower)) or "i'm not sure what" in text_lower:
                 intent = "clarification_ambiguous_request"
+            elif "tire" in text_lower or "flat" in text_lower:
+                intent = "roadside_request_tire"
+            elif "lock" in text_lower or "locked out" in text_lower:
+                intent = "roadside_request_lockout"
             else:
                 intent = "fallback_intent_error"
                 confidence = 0.3
