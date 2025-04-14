@@ -1,154 +1,163 @@
-# Simplified NLU System
+# Chatbot Training Framework
 
-A streamlined Natural Language Understanding (NLU) system that performs both intent classification and entity extraction for conversational AI applications. Built with PyTorch and Transformers, this system uses a simplified architecture with two separate models - one for intent detection and one for entity recognition.
+This framework provides a comprehensive solution for fine-tuning DistilBERT models to power a multi-flow chatbot system covering towing services, roadside assistance, and service appointment booking.
 
-## Installation
+## Features
 
-### Prerequisites
+- Multi-task hierarchical model training pipeline
+- Sophisticated data augmentation for improved robustness
+- Specialized fallback and clarification detection
+- Advanced entity extraction
+- Comprehensive evaluation framework for model testing
 
-- Python 3.8 or higher
-- pip package manager
+## Project Structure
 
-### Setup
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/simplified-nlu.git
-cd simplified-nlu
+```
+chatbot/
+├── chatbot_training.py       # Main orchestration script
+├── data_augmentation.py      # Data variation and noise functions
+├── model_training.py         # DistilBERT fine-tuning functions
+├── evaluation.py             # Testing and evaluation functions
+├── utils.py                  # Utility functions
+└── requirements.txt          # Dependencies
 ```
 
-2. Create a virtual environment:
+## Getting Started
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-3. Install dependencies:
+### 1. Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Data Format
+### 2. Prepare Data
 
-The system uses a simple JSON format for training data, stored in `data/nlu_training_data.json`. Each example has the following structure:
+Create a JSON file with your conversation data following this structure:
 
 ```json
-{
-  "text": "I need a tow truck at 123 Main Street for my Honda Civic",
-  "intent": "towing_request_tow",
-  "entities": [
-    {
-      "entity": "pickup_location",
-      "value": "123 Main Street"
-    },
-    {
-      "entity": "vehicle_make",
-      "value": "Honda"
-    },
-    {
-      "entity": "vehicle_model",
-      "value": "Civic"
-    }
-  ]
-}
+[
+  {
+    "flow": "towing",
+    "intent": "request_tow_basic",
+    "input": "I need a tow truck.",
+    "response": "I can help with that! Where should they pick up your vehicle and where should it be towed?",
+    "context": {"display_map": true},
+    "entities": []
+  },
+  ...
+]
 ```
 
-### Format Details:
-
-- `text`: The input text to analyze (string)
-- `intent`: The intent label for the entire utterance (string)
-- `entities`: List of entity objects, each with:
-  - `entity`: The entity type/label
-  - `value`: The extracted entity value
-
-## Training
-
-To train both intent and entity models:
+### 3. Run the Training Pipeline
 
 ```bash
-python train.py
+python chatbot_training.py --input_data path/to/conversations.json --output_dir ./output --augment_data --train_models
 ```
 
-This script will:
-
-1. Load training data from `data/nlu_training_data.json`
-2. Split data into training and validation sets
-3. Train separate models for intent classification and entity recognition
-4. Save trained models to `./trained_nlu_model/intent_model` and `./trained_nlu_model/entity_model`
-
-You can verify the models were trained correctly by running:
+### 4. Evaluate Models
 
 ```bash
-python test_phase2.py
+python chatbot_training.py --input_data path/to/conversations.json --output_dir ./output --augment_data --extreme_test
 ```
 
-## Inference
+## Key Components
 
-To use the trained models for inference:
+### Data Augmentation
 
-```python
-from inference import NLUInferencer
+The system provides extensive data augmentation techniques:
 
-# Initialize the inferencer
-inferencer = NLUInferencer()
+- Entity variations (missing, reordered, format changes)
+- Noise injection (typos, spacing issues, abbreviations)
+- Domain-specific text patterns (slang, shorthand)
+- Extreme test cases (terse inputs, run-on sentences)
 
-# Make predictions
-result = inferencer.predict("I need a tow truck at 123 Main Street for my Honda Civic")
-print(f"Intent: {result['intent']['name']} ({result['intent']['confidence']:.4f})")
-print(f"Entities: {result['entities']}")
-```
+### Hierarchical Model Architecture
 
-### Output Format:
+The framework trains several specialized models:
 
-The `predict` method returns a dictionary with:
+1. **Flow Classifier** - Routes requests to the appropriate conversation flow
+2. **Intent Classifiers** - Flow-specific models to identify detailed user intentions
+3. **Fallback Detector** - Identifies out-of-domain requests
+4. **Clarification Detector** - Recognizes ambiguous inputs requiring clarification
+5. **Entity Extractor** - Extracts structured information from natural language
 
-- `text`: The original input text
-- `intent`: A dictionary containing:
-  - `name`: The predicted intent label
-  - `confidence`: Confidence score (0-1)
-- `entities`: A list of extracted entities, each with:
-  - `entity`: The entity type
-  - `value`: The extracted value
+### Robustness Testing
 
-## Testing
+Comprehensive evaluation includes:
 
-The system includes several test scripts:
+- Standard classification metrics (precision, recall, F1)
+- Specialized robustness metrics for noise tolerance
+- Entity extraction quality assessment
+- Extreme case handling evaluation
+
+## Command Line Arguments
+
+- `--input_data`: Path to input conversation data JSON file
+- `--output_dir`: Directory to save processed data and models
+- `--test_size`: Proportion of data to use for testing (default: 0.15)
+- `--val_size`: Proportion of data to use for validation (default: 0.15)
+- `--random_seed`: Random seed for reproducibility (default: 42)
+- `--augment_data`: Apply data augmentation techniques
+- `--extreme_test`: Generate extreme test cases for robustness testing
+- `--train_models`: Train models after preprocessing data
+
+## Example Usage
+
+### Basic Preprocessing Only
 
 ```bash
-# Test data preparation
-python test_phase1.py
-
-# Test model training
-python test_phase2.py
-
-# Test inference implementation
-python test_phase3.py
-
-# Test integration of all components
-python test_integration.py
+python chatbot_training.py --input_data conversations.json --output_dir ./output
 ```
 
-To run all tests:
+### With Data Augmentation
 
 ```bash
-python -m unittest discover
+python chatbot_training.py --input_data conversations.json --output_dir ./output --augment_data
 ```
 
-## Project Structure
+### Full Pipeline with Training
 
+```bash
+python chatbot_training.py --input_data conversations.json --output_dir ./output --augment_data --train_models
 ```
-.
-├── data/
-│   └── nlu_training_data.json     # Consolidated training data
-├── trained_nlu_model/
-│   ├── intent_model/              # Intent classification model
-│   └── entity_model/              # Entity recognition model
-├── train.py                       # Training script
-├── inference.py                   # Inference implementation
-├── test_*.py                      # Test files
-├── requirements.txt               # Dependencies
-└── README.md                      # This file
+
+## Streamlit Demo Application
+
+The project includes a Streamlit web application that allows you to interact with the trained models and compare different processing modes:
+
+```bash
+streamlit run streamlit_app.py
 ```
+
+### Features of the Demo:
+
+1. **Standard (Original) Mode**: Basic flow and intent classification pipeline
+2. **Context-Aware (Enhanced) Mode**: Advanced assistant that can:
+   - Track conversation context across multiple turns
+   - Detect topic/flow changes
+   - Identify contradictions in user statements
+   - Recognize negations and cancellations
+   - Maintain entity memory throughout the conversation
+
+### Debug Information
+
+The application includes a debug panel that shows:
+
+- Flow and intent predictions with confidence scores
+- Detected entities
+- Context switches, contradictions, and negations
+- Full conversation context history
+
+## LangGraph Integration
+
+Recent updates include experimental integration with LangGraph for even more sophisticated conversation management:
+
+```bash
+python run_chatbot.py
+```
+
+This integration enables:
+
+- Multi-agent collaboration between specialized components
+- More nuanced state management
+- Enhanced reasoning capabilities
