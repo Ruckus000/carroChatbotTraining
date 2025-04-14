@@ -246,7 +246,7 @@ Phase 3 Test: (Test script remains the same as previously provided, including th
 
 Instruction: Create a new file named test_phase3.py. Paste the code provided in the previous response into it. DO NOT MODIFY THIS TEST SCRIPT. Run python test_phase3.py. If it fails, fix inference.py until the test passes.
 
-Phase 4: Integration and Basic Testing
+Phase 4: Integration and Basic Testing [COMPLETED]
 
 Goal: Create a minimal test script (test_integration.py) that uses the NLUInferencer to process a few sample inputs and checks if the output intent/entities are plausible.
 
