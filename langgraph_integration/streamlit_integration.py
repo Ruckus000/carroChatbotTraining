@@ -322,5 +322,14 @@ class StreamlitApp:
             
 def run_streamlit_app():
     """Entry point for running the Streamlit app"""
-    app = StreamlitApp()
-    app.render_chat_ui() 
+    try:
+        app = StreamlitApp()
+        app.render_chat_ui()
+    except Exception as e:
+        import traceback
+        print(f"Error running Streamlit app: {str(e)}")
+        traceback.print_exc()
+
+if __name__ == "__main__":
+    # This helps avoid import conflicts when running directly
+    run_streamlit_app() 

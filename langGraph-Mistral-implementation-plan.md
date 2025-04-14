@@ -1666,3 +1666,464 @@ pytest
 3. **Week 3**: Implement Phase 3 (LangGraph Integration for Flow Control)
 4. **Week 4**: Implement Phase 4 (Logging, Metrics, and Streamlit Integration)
 5. **Week 5**: Implement Phase 5 (Final Integration and Deployment)
+
+# Part 2: Critical Fixes for Chatbot Functionality
+
+This section outlines essential fixes and enhancements to address the core issues preventing the chatbot from generating meaningful responses and ensuring proper coordination between rule-based methods and ML enhancements.
+
+## 1. Fix Response Generation in Base Implementation
+
+The most critical issue is the missing response generation in the base `process_message_with_context` method. This must be fixed first, even before attempting to implement Mistral.
+
+```python
+# Add to the end of process_message_with_context in inference.py
+def process_message_with_context(self, text, context=None):
+    # [existing code processing intent, flow, etc.]
+
+    # Generate appropriate response based on intent and flow
+    response = None
+
+    # First check if we're handling a context switch
+    if context_switch_result["has_context_switch"]:
+        new_context = context_switch_result.get("new_context")
+        if new_context == "towing":
+            response = f"I understand you need towing service now. Where is your vehicle located?"
+        elif new_context == "roadside":
+            response = f"I'll help with roadside assistance instead. What specific issue are you experiencing?"
+        elif new_context == "appointment":
+            response = f"I'll help you schedule an appointment. What service does your vehicle need?"
+
+    # Check if we're handling a negation
+    elif negation_result["is_negation"]:
+        response = "I understand you don't need that. How else can I assist you?"
+
+        # More specific negation responses
+        if context.get("flow") == "towing":
+            response = "I understand you don't need a tow truck. Is there something else I can help with?"
+        elif context.get("flow") == "roadside":
+            response = "I understand you don't need roadside assistance. What can I help you with instead?"
+
+    # Handle normal flow responses
+    else:
+        if flow == "towing":
+            if location:
+                response = f"I'll arrange a tow truck to your location at {location}. Can you provide details about your vehicle?"
+            else:
+                response = "I can help arrange a tow truck. Where is your vehicle located?"
+
+        elif flow == "roadside":
+            if "tire" in text.lower() or intent == "tire_service":
+                response = "I'll send someone to help with your tire. Where are you located?"
+            elif "battery" in text.lower() or intent == "battery_service":
+                response = "I'll send someone to jump-start your battery. Where are you located?"
+            elif "gas" in text.lower() or "fuel" in text.lower():
+                response = "I'll send someone with fuel to your location. Where are you?"
+            else:
+                response = "I can help with roadside assistance. What specific issue are you experiencing?"
+
+        elif flow == "appointment":
+            response = "I can help schedule a service appointment. What type of service does your vehicle need?"
+
+    # Default response if none of the specific conditions were met
+    if not response:
+        if needs_clarification:
+            response = "I'd like to help you. Could you please let me know if you need roadside assistance, towing, or would like to schedule a service appointment?"
+        else:
+            response = "I'm here to help with roadside assistance, towing, or scheduling service appointments. What can I assist you with today?"
+
+    # Return complete result including the response
+    return {
+        "intent": intent,
+        "confidence": confidence,
+        "entities": entities,
+        "flow": flow,
+        "needs_clarification": needs_clarification,
+        "context_switch": context_switch_result["has_context_switch"],
+        "contradiction": contradiction_result["has_contradiction"],
+        "should_fallback": should_fallback,
+        "response": response,  # Add response to the result
+        "context": updated_context
+    }
+```
+
+## 2. Local Mistral Model Implementation
+
+Instead of relying on the Mistral API which requires an API key, implement a local model using llama.cpp for CPU optimization.
+
+### Installation
+
+```bash
+# Create models directory if it doesn't exist
+mkdir -p models/mistral
+
+# Download a quantized GGUF version of Mistral 7B
+# Q4_0 quantization offers good balance between quality and performance
+wget https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_0.gguf -O models/mistral/mistral-7b-instruct-v0.2.Q4_0.gguf
+
+# Install llama-cpp-python with CPU optimizations
+CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS" pip install llama-cpp-python
+```
+
+### Implementation
+
+```python
+# Replace mistral_integration.py with local model implementation
+import os
+from typing import Dict, Any, Optional
+import json
+from llama_cpp import Llama
+
+class MistralEnhancer:
+    """Enhanced language understanding using local Mistral model"""
+
+    def __init__(self, model_path: Optional[str] = None):
+        # Default model path
+        self.model_path = model_path or os.path.join(
+            "models", "mistral", "mistral-7b-instruct-v0.2.Q4_0.gguf"
+        )
+        self.model = None
+        self._load_model()
+
+    def _load_model(self) -> None:
+        """Load the local Mistral model"""
+        try:
+            if os.path.exists(self.model_path):
+                self.model = Llama(
+                    model_path=self.model_path,
+                    n_ctx=2048,         # Context size
+                    n_threads=4,        # CPU threads to use
+                    n_batch=512,        # Batch size for prompt processing
+                    verbose=False       # Set to True for debugging
+                )
+                print(f"Successfully loaded Mistral model from {self.model_path}")
+            else:
+                print(f"Model file not found at {self.model_path}")
+        except Exception as e:
+            print(f"Error loading Mistral model: {e}")
+
+    def is_available(self) -> bool:
+        """Check if Mistral is available"""
+        return self.model is not None
+
+    def _generate_completion(self, prompt: str, max_tokens: int = 100, temperature: float = 0.1) -> str:
+        """Generate completion using local Mistral model"""
+        if not self.is_available():
+            return ""
+
+        try:
+            # Format as an instruction prompt
+            formatted_prompt = f"<s>[INST] {prompt} [/INST]"
+
+            # Generate response
+            response = self.model(
+                formatted_prompt,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stop=["</s>", "[INST]"]  # Stop at end of generation or new instruction
+            )
+
+            # Extract generated text
+            if response and "choices" in response and len(response["choices"]) > 0:
+                return response["choices"][0]["text"].strip()
+            return ""
+        except Exception as e:
+            print(f"Error generating completion: {e}")
+            return ""
+
+    # [Keep existing methods with _chat_completion replaced by _generate_completion]
+```
+
+## 3. Enhanced LangGraph Response Node
+
+Create an enhanced response node that properly integrates both rule-based and ML approaches:
+
+```python
+# Add to langgraph_nodes.py
+def enhanced_response_node(
+    state: ConversationState,
+    existing_detector: ExistingDetectionAdapter,
+    mistral_enhancer: Optional[MistralEnhancer] = None,
+    flags: FeatureFlags = None
+) -> ConversationState:
+    """Generate response using hybrid approach incorporating both rule-based and ML systems"""
+    new_state = dict(state)
+    text = new_state.get("current_message", "")
+    context = new_state.get("context", {})
+    flow = new_state.get("flow", "unknown")
+    intent = new_state.get("intent", "unknown")
+
+    # Use confidence scores to guide response generation
+    rule_confidence = new_state.get("confidence_scores", {}).get("rule_based", 0.7)
+    ml_confidence = new_state.get("confidence_scores", {}).get("ml_based", 0.3)
+
+    # Process with existing system to get rule-based response
+    rule_result = existing_detector.process_message(text, context)
+    rule_response = rule_result.get("response", "")
+
+    # Get ML response if available
+    ml_response = ""
+    if flags and flags.is_enabled("use_mistral") and mistral_enhancer and mistral_enhancer.is_available():
+        # Create an appropriate prompt for response generation
+        prompt = f"""
+        Generate a helpful response to the user's message in the context of automotive assistance.
+        User message: "{text}"
+        Flow: {flow}
+        Intent: {intent}
+
+        Generate ONLY the direct response with no additional text.
+        """
+        ml_response = mistral_enhancer._generate_completion(prompt)
+
+    # Choose or combine responses based on confidence and availability
+    if not ml_response or not flags or not flags.is_enabled("use_mistral"):
+        # Use rule-based response if ML is unavailable
+        response = rule_response or "I'm here to help with your automotive needs."
+    elif not rule_response:
+        # Use ML response if rule-based fails
+        response = ml_response
+    else:
+        # Either combine or select based on confidence
+        if flags.is_enabled("hybrid_detection"):
+            # Option 1: Choose based on confidence
+            response = rule_response if rule_confidence >= ml_confidence else ml_response
+
+            # Option 2: For some flows, combine insights
+            if flow == "unknown" or new_state.get("needs_clarification", False):
+                # Use ML for more natural clarification questions
+                response = ml_response
+
+    # Ensure there's always a response
+    if not response:
+        if flow == "towing":
+            response = "I can help arrange a tow truck. Where is your vehicle located?"
+        elif flow == "roadside":
+            response = "I can help with roadside assistance. What specific issue are you experiencing?"
+        elif flow == "appointment":
+            response = "I can help schedule a service appointment. What type of service does your vehicle need?"
+        else:
+            response = "I'm here to help with roadside assistance, towing, or scheduling service appointments. What can I assist you with today?"
+
+    # Set response in state
+    new_state["response"] = response
+
+    # Add to message history
+    if "messages" not in new_state:
+        new_state["messages"] = []
+
+    new_state["messages"].append({
+        "role": "assistant",
+        "content": response
+    })
+
+    return new_state
+```
+
+## 4. Update LangGraph Workflow to Use Enhanced Response Node
+
+Modify the LangGraph workflow to properly integrate both rule-based and ML approaches:
+
+```python
+# Modify _build_graph in langgraph_workflow.py
+def _build_graph(self) -> StateGraph:
+    """Build the LangGraph workflow"""
+    # Create the workflow
+    workflow = StateGraph(ConversationState)
+
+    # Define node processors with dependencies
+    def detection_with_deps(state):
+        return detection_node(state, self.hybrid_system)
+
+    def response_with_deps(state):
+        return enhanced_response_node(
+            state,
+            self.existing_detector,
+            self.mistral_enhancer if self.flags.is_enabled("use_mistral") else None,
+            self.flags
+        )
+
+    # Add nodes
+    workflow.add_node("context_tracker", context_tracker_node)
+    workflow.add_node("detection", detection_with_deps)
+    workflow.add_node("negation_handler", negation_handler_node)
+    workflow.add_node("context_switch_handler", context_switch_handler_node)
+    workflow.add_node("regular_handler", regular_handler_node)
+    workflow.add_node("generate_response", response_with_deps)
+
+    # Add edges
+    workflow.add_edge("context_tracker", "detection")
+
+    # Define conditional routing based on detection results
+    def route_based_on_detection(state: ConversationState) -> Literal["negation_handler", "context_switch_handler", "regular_handler"]:
+        if state.get("detected_negation", False):
+            return "negation_handler"
+        elif state.get("detected_context_switch", False):
+            return "context_switch_handler"
+        else:
+            return "regular_handler"
+
+    # Add conditional edges
+    workflow.add_conditional_edges(
+        "detection",
+        route_based_on_detection
+    )
+
+    # Connect each handler to the response node
+    workflow.add_edge("negation_handler", "generate_response")
+    workflow.add_edge("context_switch_handler", "generate_response")
+    workflow.add_edge("regular_handler", "generate_response")
+
+    # Set entry point
+    workflow.set_entry_point("context_tracker")
+
+    return workflow.compile()
+```
+
+## 5. Add Response Templates to Handler Nodes
+
+Enhance handler nodes with response templates to guide response generation:
+
+```python
+# Modify negation_handler_node in langgraph_nodes.py
+def negation_handler_node(state: ConversationState) -> ConversationState:
+    """Handle negation cases"""
+    new_state = dict(state)
+
+    # Extract negated intent/flow from context
+    context = new_state.get("context", {})
+    last_intent = context.get("last_intent", "unknown")
+
+    # Update context
+    if "context" not in new_state:
+        new_state["context"] = {}
+
+    new_state["context"]["negated_intent"] = last_intent
+    new_state["context"]["requires_clarification"] = True
+
+    return new_state
+
+# Modify context_switch_handler_node in langgraph_nodes.py
+def context_switch_handler_node(state: ConversationState) -> ConversationState:
+    """Handle context switch cases"""
+    new_state = dict(state)
+    context = new_state.get("context", {})
+
+    # Track the switch
+    if "context" not in new_state:
+        new_state["context"] = {}
+
+    new_state["context"]["previous_flow"] = context.get("flow", "unknown")
+    new_state["context"]["context_switch_count"] = context.get("context_switch_count", 0) + 1
+
+    # Preserve entities from previous context if flag is enabled
+    new_state["context"]["previous_entities"] = context.get("entities", {})
+
+    # Add response templates based on new flow
+    flow = new_state.get("flow", "unknown")
+    if flow == "towing":
+        new_state["response_template"] = "I'll help you with towing service instead. Where is your vehicle located?"
+    elif flow == "roadside":
+        new_state["response_template"] = "I'll help with roadside assistance. What specific issue are you experiencing?"
+    elif flow == "appointment":
+        new_state["response_template"] = "I'll help you schedule an appointment instead. What service does your vehicle need?"
+    else:
+        new_state["response_template"] = "I understand you want to discuss something else. How can I assist you?"
+
+    return new_state
+```
+
+## 6. Dynamic Weight Adjustment for Hybrid Detection
+
+Add dynamic weight adjustment to the HybridDetectionSystem:
+
+```python
+# Add to hybrid_detection.py
+def adjust_weights_dynamically(self, state: Dict[str, Any]) -> None:
+    """Dynamically adjust weights based on conversation state"""
+    # Increase ML weight as conversation progresses
+    turn_count = state.get("turn_count", 0)
+    if turn_count > 3:
+        # Gradually increase ML confidence after initial turns
+        self.ml_weight = min(0.5, 0.3 + (turn_count - 3) * 0.05)
+        self.rule_weight = 1.0 - self.ml_weight
+
+    # Adjust weights based on previous confidence in the conversation
+    if state.get("confidence_scores", {}).get("rule_based_decision") and state.get("confidence_scores", {}).get("rule_confidence", 0) < 0.4:
+        # If rule-based previously had low confidence, give ML more weight
+        self.ml_weight = min(0.7, self.ml_weight)
+        self.rule_weight = 1.0 - self.ml_weight
+
+    # Adjust weights based on flow type
+    flow = state.get("flow", "unknown")
+    if flow == "unknown":
+        # For unknown flows, give ML more weight for better exploration
+        self.ml_weight = max(0.4, self.ml_weight)
+        self.rule_weight = 1.0 - self.ml_weight
+    elif flow in ["towing", "roadside"]:
+        # For critical services, keep rule-based methods with higher weight
+        self.rule_weight = max(0.6, self.rule_weight)
+        self.ml_weight = 1.0 - self.rule_weight
+```
+
+## 7. Fix Streamlit Integration for Response Handling
+
+Update the StreamlitApp to ensure proper response handling:
+
+```python
+# In langgraph_integration/streamlit_integration.py, update the response handling
+# Inside the process_message block:
+
+try:
+    result_state = self._workflow.invoke(langgraph_state)
+
+    # Convert back to context
+    self.st.session_state.context = self._state_converter.to_context(result_state)
+
+    # Get response with verification and fallback
+    if "response" in result_state and result_state["response"]:
+        response = result_state["response"]
+    else:
+        # Add critical fallback response generation
+        flow = result_state.get("flow", "unknown")
+        if flow == "roadside":
+            response = "I can help with roadside assistance. What specific issue are you experiencing?"
+        elif flow == "towing":
+            response = "I can help arrange a tow truck. Where is your vehicle located?"
+        elif flow == "appointment":
+            response = "I can help schedule a service appointment. What type of service does your vehicle need?"
+        else:
+            response = "I'm here to help with roadside assistance, towing, or scheduling service appointments. What can I assist you with today?"
+
+    # Record metrics
+    latency = time.time() - start_time
+    self._monitoring.track_response(
+        self.st.session_state.conversation_id,
+        response,
+        latency,
+        result_state
+    )
+
+    # Update streamlit state
+    self.st.session_state.messages.append({
+        "role": "assistant",
+        "content": response,
+        "debug_info": debug_info
+    })
+
+    # Display assistant response
+    with self.st.chat_message("assistant"):
+        self.st.write(response)
+```
+
+## Implementation Order
+
+To fix the chatbot functionality, implement these changes in this specific order:
+
+1. First, add the response generation to `process_message_with_context` in inference.py
+2. Implement the enhanced LangGraph response node and update the workflow
+3. Add response templates to handler nodes
+4. Add dynamic weight adjustment to the hybrid detection system
+5. Implement the local Mistral model to replace the API-dependent version
+6. Update StreamlitApp to handle responses correctly, with proper fallbacks
+7. Add detailed logging for debugging response issues
+
+These changes will ensure the chatbot provides meaningful responses in all scenarios, whether using rule-based methods, local ML models, or a combination of both. The LangGraph pipeline will properly integrate both approaches, with the rule-based methods serving as the primary system and ML enhancing the capabilities where appropriate.
