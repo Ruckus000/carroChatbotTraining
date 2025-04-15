@@ -5,80 +5,72 @@ import sys
 
 def main():
     """
-    Clean up the project by removing obsolete files and updating requirements.txt
+    Clean up the project by removing obsolete code, data, and documentation,
+    leaving only the simplified NLU components.
     """
     print("Starting cleanup process...")
     
-    # Files to delete
-    files_to_delete = [
-        # Context integration files
-        "context-integration.md",
-        "context1-implementation.md",
-        "context1.js",
-        "README-CONTEXT.md",
-        "test_context_integration.py",
-        "test_context_integration_comprehensive.py",
-        "run_context_integration.sh",
-        "train_context_models.py",
-        "train_context_models copy.py",
-        "train_context_models copy.md",
-        "evaluate_context_models.py",
-        
-        # Unused utility scripts
-        "chatbot_training.py",
-        "model_training.py",
-        "evaluation.py",
-        "streamlit_app.py",
-        "chatbot-booking-process.md",
-        "langGraph-Mistral-implementation-plan.md",
-        "data_augmentation.py",
-        "augment_conversations.py",
-        "custom_trainer.py",
-        "fix_indent.py",
-        "plan2fixshit.md",
-        
-        # Unused deployment/setup scripts
-        "setup.py",
-        "deploy.sh",
-        "run_chatbot.py",
-        "run_training.sh",
+    # Files to explicitly preserve
+    files_to_preserve = [
+        "train.py",
+        "inference.py",
+        "test_integration.py",
+        "data/nlu_training_data.json",
+        "requirements.txt",
+        "README.md",
+        ".gitignore",
+        # Test files
+        "test_phase1.py",
+        "test_phase2.py",
+        "test_phase3.py"
     ]
     
-    # Directories to delete
+    # Directories to explicitly delete
     dirs_to_delete = [
-        "langgraph_integration"
+        "langgraph_integration/",
+        "data/context_integration/",
+        "output/"
     ]
-    
-    # Delete files
-    for file in files_to_delete:
-        if os.path.exists(file):
-            try:
-                os.remove(file)
-                print(f"Deleted: {file}")
-            except Exception as e:
-                print(f"Error deleting {file}: {e}")
-        else:
-            print(f"Skipped (not found): {file}")
     
     # Delete directories
     for directory in dirs_to_delete:
         if os.path.exists(directory):
             try:
-                shutil.rmtree(directory)
+                shutil.rmtree(directory, ignore_errors=True)
                 print(f"Deleted directory: {directory}")
             except Exception as e:
                 print(f"Error deleting directory {directory}: {e}")
         else:
             print(f"Skipped directory (not found): {directory}")
     
+    # Find all files in the project
+    all_files = []
+    for root, dirs, files in os.walk('.'):
+        # Skip .git directory and trained_nlu_model
+        if '.git' in root or 'trained_nlu_model' in root or '__pycache__' in root:
+            continue
+        for file in files:
+            file_path = os.path.join(root, file).replace('./', '')
+            all_files.append(file_path)
+    
+    # Delete files that are not in the preserve list
+    for file in all_files:
+        if file not in files_to_preserve and 'cleanup.py' not in file and file != 'plan3fixshit.md':
+            if os.path.exists(file):
+                try:
+                    os.remove(file)
+                    print(f"Deleted: {file}")
+                except Exception as e:
+                    print(f"Error deleting {file}: {e}")
+    
     # Update requirements.txt
     requirements = [
-        "transformers==4.30.2",
-        "torch==2.0.1",
-        "datasets==2.12.0",
-        "scikit-learn==1.2.2",
-        "numpy==1.24.3",
-        "seqeval==1.2.2"
+        "transformers>=4.30.0",
+        "torch>=2.0.0",
+        "datasets>=2.12.0",
+        "scikit-learn>=1.2.0",
+        "numpy>=1.24.0",
+        "seqeval>=1.2.0"
     ]
     
     try:
@@ -125,7 +117,7 @@ python train.py
 
 This will generate intent and entity models in the `trained_nlu_model` directory.
 
-## Usage
+## Inference
 ```python
 from inference import NLUInferencer
 
