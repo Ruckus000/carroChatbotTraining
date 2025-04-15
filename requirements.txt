@@ -4,4 +4,3 @@ datasets
 scikit-learn
 numpy
 seqeval
-accelerate

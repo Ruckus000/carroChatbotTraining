@@ -40,27 +40,44 @@ def convert_text_entities_to_bio(text, entities):
         if not isinstance(entity, dict) or 'entity' not in entity or 'value' not in entity:
             continue
             
-        entity_type = entity['entity']
+        # Get entity type, sanitize it for BIO tagging (remove spaces, special chars)
+        entity_type = entity['entity'].strip()
+        if not entity_type:
+            continue  # Skip empty entity types
+            
+        # Get entity value
         entity_value = entity['value']
         
         # Skip if entity_value is not a string
         if not isinstance(entity_value, str):
             continue
+            
+        # Skip empty values
+        if not entity_value.strip():
+            continue
         
         # Find where the entity appears in the words
-        entity_words = entity_value.split()
-        entity_len = len(entity_words)
-        
-        for i in range(len(words) - entity_len + 1):
-            # Try to match the entire phrase
-            potential_match = ' '.join(words[i:i+entity_len])
-            if potential_match.lower() == entity_value.lower():
-                # Mark the first word as B-entity
-                tags[i] = f'B-{entity_type}'
-                # Mark subsequent words as I-entity
-                for j in range(1, entity_len):
-                    tags[i+j] = f'I-{entity_type}'
-                break
+        try:
+            entity_words = entity_value.split()
+            entity_len = len(entity_words)
+            
+            # Skip if no words in entity value
+            if entity_len == 0:
+                continue
+                
+            for i in range(len(words) - entity_len + 1):
+                # Try to match the entire phrase
+                potential_match = ' '.join(words[i:i+entity_len])
+                if potential_match.lower() == entity_value.lower():
+                    # Mark the first word as B-entity
+                    tags[i] = f'B-{entity_type}'
+                    # Mark subsequent words as I-entity
+                    for j in range(1, entity_len):
+                        tags[i+j] = f'I-{entity_type}'
+                    break
+        except Exception as e:
+            # Just skip this entity if there are any issues
+            continue
     
     return words, tags
 
@@ -275,16 +292,36 @@ if __name__ == "__main__":
     
     val_texts = [example['text'] for example in val_data]
     val_intent_ids = []
+    
+    # Add a fallback intent if it doesn't exist
+    fallback_intents = ['fallback_low_confidence', 'fallback_out_of_domain', 'fallback_out_of_scope']
+    fallback_id = None
+    
+    # Find an existing fallback intent or use the first intent as default
+    for fallback in fallback_intents:
+        if fallback in intent2id:
+            fallback_id = intent2id[fallback]
+            break
+    
+    if fallback_id is None:
+        fallback_id = 0  # Default to first intent if no fallback exists
+        
+    # Process validation intents
+    unseen_intents = set()
     for example in val_data:
         intent = example['intent']
         # Handle unseen intents in validation set
         if intent not in intent2id:
-            print(f"Warning: Unseen intent '{intent}' in validation set. Mapping to fallback.")
-            # Map to a fallback intent ID if it exists, or to the first intent as default
-            fallback_id = intent2id.get('fallback_out_of_domain', 0)
+            unseen_intents.add(intent)
             val_intent_ids.append(fallback_id)
         else:
             val_intent_ids.append(intent2id[intent])
+    
+    # Print summary of unseen intents
+    if unseen_intents:
+        print(f"Found {len(unseen_intents)} unseen intents in validation set. Mapping to fallback (ID: {fallback_id}).")
+        for intent in sorted(unseen_intents):
+            print(f"Warning: Unseen intent '{intent}' in validation set. Mapping to fallback.")
     
     # Tokenize for intent classification
     train_intent_encodings = intent_tokenizer(train_texts, truncation=True, padding=True)
@@ -370,7 +407,7 @@ if __name__ == "__main__":
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model='f1',
-        use_cpu=True
+        no_cuda=True
     )
     
     entity_training_args = TrainingArguments(
@@ -386,7 +423,7 @@ if __name__ == "__main__":
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model='f1',
-        use_cpu=True
+        no_cuda=True
     )
     
     # Create trainers

@@ -15,8 +15,6 @@ pip install -r requirements.txt
 
 ## Training Data
 
-### Current Data Structure
-
 The training data is stored in `data/nlu_training_data.json` in the following format:
 
 ```json
@@ -72,7 +70,7 @@ This will:
 ### Training Parameters
 
 - Training runs for 2 epochs by default
-- Models run on CPU (`use_cpu=True`)
+- Models run on CPU only (`no_cuda=True`)
 - Uses DistilBERT as the base model for lightweight performance
 
 ## Usage
@@ -86,6 +84,25 @@ nlu = NLUInferencer()
 # Make a prediction
 result = nlu.predict("I need a tow truck at 123 Main Street")
 print(result)
+
+# Example output:
+# {
+#   "text": "I need a tow truck at 123 Main Street",
+#   "intent": {
+#     "name": "towing_request_tow",
+#     "confidence": 0.87
+#   },
+#   "entities": [
+#     {
+#       "entity": "service_type",
+#       "value": "tow truck"
+#     },
+#     {
+#       "entity": "pickup_location",
+#       "value": "123 Main Street"
+#     }
+#   ]
+# }
 ```
 
 ## Testing
@@ -95,6 +112,27 @@ To run the integration test:
 ```bash
 python test_integration.py
 ```
+
+## Structure
+
+This project has a clean, minimalist structure:
+
+- `data/nlu_training_data.json`: Training data
+- `train.py`: Script to train both intent and entity models
+- `inference.py`: Contains the NLUInferencer class for making predictions
+- `test_integration.py`: Tests the inference on sample inputs
+- `trained_nlu_model/`: Directory containing trained models
+  - `intent_model/`: The intent classification model
+  - `entity_model/`: The entity recognition model
+
+## About the Implementation
+
+This implementation focuses on simplicity and efficiency:
+
+- Uses the BIO tagging scheme for entity recognition
+- Provides fallback intents for low confidence predictions
+- Handles entity grouping from BIO tags automatically
+- Runs efficiently on CPU-only environments
 
 ## Expanding the Training Data
 
