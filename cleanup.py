@@ -22,14 +22,16 @@ def main():
         # Test files
         "test_phase1.py",
         "test_phase2.py",
-        "test_phase3.py"
+        "test_phase3.py",
+        "test_phase5.py"
     ]
     
     # Directories to explicitly delete
     dirs_to_delete = [
         "langgraph_integration/",
         "data/context_integration/",
-        "output/"
+        "output/",
+        "tests/"
     ]
     
     # Delete directories

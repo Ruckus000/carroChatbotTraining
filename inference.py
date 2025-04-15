@@ -242,24 +242,4 @@ class NLUInferencer:
             return entities
             
         except Exception as e:
-            return []
-
-
-# Simple testing code to ensure the class works
-if __name__ == "__main__":
-    try:
-        nlu = NLUInferencer()
-        test_texts = [
-            "I need a tow truck for my car",
-            "My battery is dead, can you help?",
-            "I want to book a service appointment for next week"
-        ]
-        
-        for text in test_texts:
-            result = nlu.predict(text)
-            print(f"Text: {text}")
-            print(f"Intent: {result['intent']['name']} ({result['intent']['confidence']:.4f})")
-            print(f"Entities: {result['entities']}")
-            print()
-    except Exception as e:
-        print(f"Error testing NLUInferencer: {e}") 
+            return [] 
