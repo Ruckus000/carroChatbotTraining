@@ -1,167 +1,148 @@
-# LangGraph Mistral Integration Chatbot
+# Simple NLU System
 
-A sophisticated chatbot implementation that integrates LangGraph for conversation flow control with Mistral's large language model capabilities. This system provides robust intent recognition, context management, and performance optimizations.
+## Overview
 
-## Features
+This is a simple Natural Language Understanding (NLU) system that performs intent detection and entity recognition for vehicle service requests. The system uses two separate transformer-based models:
 
-- **Hybrid Intent Detection**: Combines rule-based and ML-based intent detection
-- **Advanced Context Management**: Tracks conversation context and handles context switches
-- **LangGraph Integration**: Uses LangGraph for conversation flow control
-- **Mistral 7B Integration**: Leverages Mistral's language model for natural language processing
-- **Performance Optimizations**: CPU-optimized processing for efficient resource usage
-- **Streamlit UI**: Clean, modern user interface for chatbot interactions
-- **Comprehensive Monitoring**: Structured logging and performance metrics collection
-- **Feature Flags**: Granular control over system features and fallbacks
+1. **Intent Classification Model**: Detects the user's intent (towing, roadside assistance, appointment, etc.)
+2. **Entity Recognition Model**: Extracts relevant entities like locations, vehicle information, and service types
 
-## Installation
-
-### Prerequisites
-
-- Python 3.8 or higher
-- Pip package manager
-- Mistral API key (for non-mock usage)
-
-### Setup
-
-1. Clone the repository:
+## Setup
 
 ```bash
-git clone https://github.com/yourusername/langgraph-mistral-chatbot.git
-cd langgraph-mistral-chatbot
+pip install -r requirements.txt
 ```
 
-2. Run the deployment script to set up the environment:
+## Training Data
+
+### Current Data Structure
+
+The training data is stored in `data/nlu_training_data.json` in the following format:
+
+```json
+[
+  {
+    "text": "I need a tow truck",
+    "intent": "towing_request_tow",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "tow truck"
+      }
+    ]
+  }
+]
+```
+
+### Intent Categories
+
+The current training data includes several intent categories:
+
+- **Towing**: `towing_request_tow`, `towing_flatbed_request`, etc.
+- **Roadside Assistance**: `roadside_request_battery`, `roadside_request_roadside_fuel`, etc.
+- **Appointments**: `appointment_book_service`, `appointment_seasonal_recommendation`, etc.
+- **Fallback**: `fallback_out_of_domain`, `fallback_low_confidence`, etc.
+
+### Entity Types
+
+Common entity types in the dataset:
+
+- `pickup_location`: Location for towing or service
+- `vehicle_make`: Make of the vehicle (Honda, Toyota, etc.)
+- `vehicle_model`: Model of the vehicle (Civic, Corolla, etc.)
+- `service_type`: Type of service requested
+- `time`: Time information
+- `date`: Date information
+
+## Training
+
+To train the NLU models:
 
 ```bash
-./deploy.sh development
+python train.py
 ```
 
 This will:
 
-- Create a virtual environment
-- Install all dependencies
-- Generate environment-specific settings
-- Run tests
-- Start the development server
+1. Load and standardize the training data
+2. Split into training and validation sets
+3. Train separate models for intent classification and entity recognition
+4. Save the models to the `trained_nlu_model` directory
 
-### Manual Setup
+### Training Parameters
 
-If you prefer to set up manually:
-
-1. Create a virtual environment:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-2. Install dependencies:
-
-```bash
-pip install -e .
-```
-
-3. Set environment variables:
-
-```bash
-export MISTRAL_API_KEY="your-api-key-here"
-```
+- Training runs for 2 epochs by default
+- Models run on CPU (`use_cpu=True`)
+- Uses DistilBERT as the base model for lightweight performance
 
 ## Usage
 
-### Starting the Chatbot
+```python
+from inference import NLUInferencer
 
-After installation, you can run the chatbot with:
+# Initialize the inferencer
+nlu = NLUInferencer()
 
-```bash
-python -m streamlit run langgraph_integration/streamlit_integration.py
+# Make a prediction
+result = nlu.predict("I need a tow truck at 123 Main Street")
+print(result)
 ```
 
-### Chatbot Configuration
+## Testing
 
-You can configure the chatbot by:
-
-1. **Environment Variables**:
-
-   - `MISTRAL_API_KEY`: Your Mistral API key
-   - `ENABLE_USE_LANGGRAPH`: Set to "true" to enable LangGraph integration
-   - `ENABLE_USE_MISTRAL`: Set to "true" to enable Mistral integration
-
-2. **Configuration Files**:
-   - Create `config/deployment.{environment}.yaml` files with settings
-
-### Development
-
-#### Running Tests
+To run the integration test:
 
 ```bash
-# Run all tests
-python -m pytest
-
-# Run specific phase tests
-python -m pytest tests/test_phase1.py -v
-python -m pytest tests/test_phase2.py -v
-python -m pytest tests/test_phase3.py -v
-python -m pytest tests/test_phase4.py -v
-python -m pytest tests/test_phase5.py -v
-
-# Run integration tests
-python -m pytest tests/test_integration.py -v
+python test_integration.py
 ```
 
-#### Feature Flags
+## Expanding the Training Data
 
-Feature flags allow you to enable or disable specific features:
+### Suggestions for Improvement
 
-- `use_langgraph`: Enables the LangGraph workflow for conversation control
-- `use_mistral`: Enables Mistral AI integration
-- `enable_monitoring`: Enables logging and metrics collection
-- `enable_cpu_optimizations`: Enables CPU optimizations for better performance
+1. **Add More Diverse Examples**:
 
-## Architecture
+   - Include multiple ways to express the same intent
+   - Add examples with different entity values
+   - Include examples with multiple entities
 
-The system is built with a modular architecture:
+2. **Balance Intent Categories**:
 
-1. **Core Components**:
+   - Ensure each intent has a sufficient number of examples
+   - Add more examples for less common intents
 
-   - `adapters.py`: Base adapter interface
-   - `feature_flags.py`: Feature flag configuration
-   - `langgraph_state.py`: State definitions for LangGraph
+3. **Expand Entity Coverage**:
 
-2. **ML Integration**:
+   - Add more vehicle makes and models
+   - Include different location formats (addresses, landmarks, GPS coordinates)
+   - Add time expressions (morning, afternoon, specific times)
 
-   - `mistral_integration.py`: Mistral AI integration
-   - `hybrid_detection.py`: Hybrid rule-based and ML-based detection
+4. **Add Edge Cases**:
 
-3. **LangGraph Components**:
+   - Misspellings and typos
+   - Incomplete or ambiguous requests
+   - Requests with irrelevant information
 
-   - `langgraph_nodes.py`: Node definitions for the LangGraph workflow
-   - `state_converter.py`: Converts between different state representations
-   - `langgraph_workflow.py`: Main workflow implementation
+5. **Data Generation Techniques**:
+   - Template-based generation with slot filling
+   - Paraphrasing existing examples
+   - Back-translation (translate to another language and back)
+   - Using LLMs to generate variations of existing examples
 
-4. **Performance & Monitoring**:
+### Example Data Expansion
 
-   - `monitoring.py`: Metrics collection and logging
-   - `cpu_optimizations.py`: CPU-optimized routines
+To add new examples, append to the `data/nlu_training_data.json` file:
 
-5. **UI Integration**:
-   - `streamlit_integration.py`: Streamlit UI implementation
-
-## Deployment
-
-For production deployment:
-
-```bash
-./deploy.sh production
+```json
+{
+  "text": "My Honda Civic broke down at 456 Oak Street, I need a tow truck ASAP",
+  "intent": "towing_request_tow",
+  "entities": [
+    { "entity": "vehicle_make", "value": "Honda" },
+    { "entity": "vehicle_model", "value": "Civic" },
+    { "entity": "pickup_location", "value": "456 Oak Street" }
+  ]
+}
 ```
 
-This script:
-
-- Runs critical tests
-- Sets up appropriate environment settings
-- Deploys the application as a background service
-- Saves logs to the `logs` directory
-
-## License
-
-[MIT License](LICENSE)
+After adding new data, retrain the models using `python train.py`.

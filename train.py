@@ -36,15 +36,23 @@ def convert_text_entities_to_bio(text, entities):
     tags = ['O'] * len(words)
     
     for entity in entities:
+        # Skip if entity doesn't have the required fields
+        if not isinstance(entity, dict) or 'entity' not in entity or 'value' not in entity:
+            continue
+            
         entity_type = entity['entity']
         entity_value = entity['value']
         
+        # Skip if entity_value is not a string
+        if not isinstance(entity_value, str):
+            continue
+        
         # Find where the entity appears in the words
-        # This is a simplistic approach and may not work for all cases
         entity_words = entity_value.split()
         entity_len = len(entity_words)
         
         for i in range(len(words) - entity_len + 1):
+            # Try to match the entire phrase
             potential_match = ' '.join(words[i:i+entity_len])
             if potential_match.lower() == entity_value.lower():
                 # Mark the first word as B-entity
@@ -150,14 +158,23 @@ def prepare_entity_dataset(examples, tokenizer, tag2id):
             word_label_ids = []
             
             for word, tag in zip(words, tags):
+                # Handle empty words (shouldn't happen but just in case)
+                if not word:
+                    continue
+                
                 # Tokenize the word into subwords
                 subwords = tokenizer.tokenize(word)
+                if not subwords:  # Handle cases where tokenization returns empty
+                    subwords = [tokenizer.unk_token]
                 
                 # Add the subwords and their label
                 word_tokens.extend(subwords)
                 
+                # Get tag ID, default to O if not found
+                tag_id = tag2id.get(tag, tag2id['O'])
+                
                 # Add the tag ID for the first subword
-                word_label_ids.append(tag2id[tag])
+                word_label_ids.append(tag_id)
                 
                 # Add -100 for the remaining subwords (to be ignored in loss)
                 word_label_ids.extend([-100] * (len(subwords) - 1))
@@ -184,6 +201,10 @@ def prepare_entity_dataset(examples, tokenizer, tag2id):
             print(f"Error preparing entity example {i}: {e}")
             # Skip this example
             continue
+    
+    # Ensure we have at least one example
+    if len(tokenized_inputs["input_ids"]) == 0:
+        raise ValueError("No valid examples after preprocessing. Check entity format.")
     
     # Convert lists to tensors
     tokenized_inputs["input_ids"] = torch.stack(tokenized_inputs["input_ids"])
@@ -345,11 +366,11 @@ if __name__ == "__main__":
         weight_decay=0.01,
         logging_dir='./trained_nlu_model/intent_logs',
         logging_steps=10,
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model='f1',
-        no_cuda=True  # Force CPU
+        use_cpu=True
     )
     
     entity_training_args = TrainingArguments(
@@ -361,11 +382,11 @@ if __name__ == "__main__":
         weight_decay=0.01,
         logging_dir='./trained_nlu_model/entity_logs',
         logging_steps=10,
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model='f1',
-        no_cuda=True  # Force CPU
+        use_cpu=True
     )
     
     # Create trainers

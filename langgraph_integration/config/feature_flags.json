@@ -1,8 +1,0 @@
-{
-  "use_langgraph": true,
-  "use_mistral": true,
-  "hybrid_detection": true,
-  "enhanced_logging": true,
-  "retain_entities": true,
-  "async_processing": false
-}
