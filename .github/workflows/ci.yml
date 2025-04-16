@@ -31,7 +31,7 @@ jobs:
         run: |
           python test_integration.py
 
-      - name: Run cleanup tests
+      - name: Run deployment tests
         run: |
           python test_phase5.py
 
