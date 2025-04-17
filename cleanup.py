@@ -3,13 +3,14 @@ import os
 import shutil
 import sys
 
+
 def main():
     """
     Clean up the project by removing obsolete code, data, and documentation,
     leaving only the simplified NLU components.
     """
     print("Starting cleanup process...")
-    
+
     # Files to explicitly preserve
     files_to_preserve = [
         "train.py",
@@ -23,17 +24,17 @@ def main():
         "test_phase1.py",
         "test_phase2.py",
         "test_phase3.py",
-        "test_phase5.py"
+        "test_phase5.py",
     ]
-    
+
     # Directories to explicitly delete
     dirs_to_delete = [
         "langgraph_integration/",
         "data/context_integration/",
         "output/",
-        "tests/"
+        "tests/",
     ]
-    
+
     # Delete directories
     for directory in dirs_to_delete:
         if os.path.exists(directory):
@@ -44,27 +45,31 @@ def main():
                 print(f"Error deleting directory {directory}: {e}")
         else:
             print(f"Skipped directory (not found): {directory}")
-    
+
     # Find all files in the project
     all_files = []
-    for root, dirs, files in os.walk('.'):
+    for root, dirs, files in os.walk("."):
         # Skip .git directory and trained_nlu_model
-        if '.git' in root or 'trained_nlu_model' in root or '__pycache__' in root:
+        if ".git" in root or "trained_nlu_model" in root or "__pycache__" in root:
             continue
         for file in files:
-            file_path = os.path.join(root, file).replace('./', '')
+            file_path = os.path.join(root, file).replace("./", "")
             all_files.append(file_path)
-    
+
     # Delete files that are not in the preserve list
     for file in all_files:
-        if file not in files_to_preserve and 'cleanup.py' not in file and file != 'plan3fixshit.md':
+        if (
+            file not in files_to_preserve
+            and "cleanup.py" not in file
+            and file != "plan3fixshit.md"
+        ):
             if os.path.exists(file):
                 try:
                     os.remove(file)
                     print(f"Deleted: {file}")
                 except Exception as e:
                     print(f"Error deleting {file}: {e}")
-    
+
     # Update requirements.txt
     requirements = [
         "transformers>=4.30.0",
@@ -72,16 +77,16 @@ def main():
         "datasets>=2.12.0",
         "scikit-learn>=1.2.0",
         "numpy>=1.24.0",
-        "seqeval>=1.2.0"
+        "seqeval>=1.2.0",
     ]
-    
+
     try:
         with open("requirements.txt", "w") as f:
             f.write("\n".join(requirements))
         print("Updated requirements.txt")
     except Exception as e:
         print(f"Error updating requirements.txt: {e}")
-    
+
     # Create a new README.md
     readme_content = """# Simple NLU System
 
@@ -137,15 +142,16 @@ To run the integration test:
 python test_integration.py
 ```
 """
-    
+
     try:
         with open("README.md", "w") as f:
             f.write(readme_content)
         print("Created new README.md")
     except Exception as e:
         print(f"Error creating README.md: {e}")
-    
+
     print("Cleanup complete!")
 
+
 if __name__ == "__main__":
-    main() 
+    main()

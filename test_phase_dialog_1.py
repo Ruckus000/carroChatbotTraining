@@ -4,7 +4,8 @@ import os
 import sys
 
 # Ensure root directory is in path to find inference
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 
 # Mock NLUInferencer for testing DialogManager structure without full NLU
 class MockNLUInferencer:
@@ -15,29 +16,38 @@ class MockNLUInferencer:
             return {
                 "text": text,
                 "intent": {"name": "towing_request_tow_basic", "confidence": 0.9},
-                "entities": [{"entity": "service_type", "value": "tow"}] if "tow" in text else []
+                "entities": (
+                    [{"entity": "service_type", "value": "tow"}]
+                    if "tow" in text
+                    else []
+                ),
             }
         elif "battery" in text.lower():
-             return {
+            return {
                 "text": text,
                 "intent": {"name": "roadside_request_battery", "confidence": 0.85},
-                "entities": [{"entity": "service_type", "value": "battery"}]
+                "entities": [{"entity": "service_type", "value": "battery"}],
             }
         elif "appointment" in text.lower():
-             return {
+            return {
                 "text": text,
-                "intent": {"name": "appointment_book_service_basic", "confidence": 0.92},
-                "entities": []
+                "intent": {
+                    "name": "appointment_book_service_basic",
+                    "confidence": 0.92,
+                },
+                "entities": [],
             }
         else:
             return {
                 "text": text,
                 "intent": {"name": "fallback_low_confidence", "confidence": 0.3},
-                "entities": []
+                "entities": [],
             }
+
 
 # Temporarily replace NLUInferencer during import
 import inference
+
 original_nlu_inferencer = inference.NLUInferencer
 inference.NLUInferencer = MockNLUInferencer
 
@@ -70,7 +80,7 @@ class TestPhase1DialogSetup(unittest.TestCase):
         """Test DialogManager initialization."""
         print("\nTesting DialogManager Initialization...")
         manager = DialogManager()
-        self.assertIsNotNone(manager.nlu) # Should be MockNLUInferencer instance
+        self.assertIsNotNone(manager.nlu)  # Should be MockNLUInferencer instance
         self.assertIsInstance(manager.nlu, MockNLUInferencer)
         self.assertEqual(manager.states, {})
         print("DialogManager Initialization Test PASSED.")
@@ -89,7 +99,7 @@ class TestPhase1DialogSetup(unittest.TestCase):
         self.assertNotEqual(state1, state2)
 
         state1_retrieved = manager.get_or_create_state("conv1")
-        self.assertEqual(state1, state1_retrieved) # Should be the same object
+        self.assertEqual(state1, state1_retrieved)  # Should be the same object
         print("State Creation/Retrieval Test PASSED.")
 
     def test_state_update_from_nlu(self):
@@ -101,14 +111,16 @@ class TestPhase1DialogSetup(unittest.TestCase):
             "intent": {"name": "towing_request_tow_vehicle", "confidence": 0.88},
             "entities": [
                 {"entity": "vehicle_make", "value": "Honda"},
-                {"entity": "service_type", "value": "tow"}
-            ]
+                {"entity": "service_type", "value": "tow"},
+            ],
         }
         state.update_from_nlu(mock_nlu_result)
 
         self.assertEqual(state.current_intent, "towing_request_tow_vehicle")
         self.assertEqual(state.intent_confidence, 0.88)
-        self.assertEqual(state.entities, {"vehicle_make": "Honda", "service_type": "tow"})
+        self.assertEqual(
+            state.entities, {"vehicle_make": "Honda", "service_type": "tow"}
+        )
         self.assertEqual(state.filled_slots, {"vehicle_make", "service_type"})
         self.assertIsNone(state.fallback_reason)
         print("State Update from NLU Test PASSED.")
@@ -118,18 +130,18 @@ class TestPhase1DialogSetup(unittest.TestCase):
         print("\nTesting State Update for Fallback...")
         state = DialogState("test_id_3")
         mock_nlu_result = {
-             "text": "asdsd",
-             "intent": {"name": "fallback_low_confidence", "confidence": 0.2},
-             "entities": []
+            "text": "asdsd",
+            "intent": {"name": "fallback_low_confidence", "confidence": 0.2},
+            "entities": [],
         }
         state.update_from_nlu(mock_nlu_result)
         self.assertEqual(state.fallback_reason, "low_confidence")
 
         state = DialogState("test_id_4")
         mock_nlu_result_2 = {
-             "text": "weather?",
-             "intent": {"name": "fallback_out_of_scope_weather", "confidence": 0.9},
-             "entities": []
+            "text": "weather?",
+            "intent": {"name": "fallback_out_of_scope_weather", "confidence": 0.9},
+            "entities": [],
         }
         state.update_from_nlu(mock_nlu_result_2)
         self.assertEqual(state.fallback_reason, "out_of_scope")
@@ -148,7 +160,9 @@ class TestPhase1DialogSetup(unittest.TestCase):
         self.assertIn("pickup_location", roadside_slots)
         self.assertNotIn("destination", roadside_slots)
 
-        appointment_slots = manager.define_required_slots("appointment_book_service_full")
+        appointment_slots = manager.define_required_slots(
+            "appointment_book_service_full"
+        )
         self.assertIn("service_type", appointment_slots)
         self.assertIn("appointment_date", appointment_slots)
 
@@ -169,12 +183,13 @@ class TestPhase1DialogSetup(unittest.TestCase):
         self.assertIn("type", result["action"])
         print("process_turn Basic Structure Test PASSED.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print("--- Running Phase 1 Dialog Manager Tests ---")
     # Restore NLUInferencer before running tests if modified globally
-    if 'original_nlu_inferencer' in globals():
+    if "original_nlu_inferencer" in globals():
         inference.NLUInferencer = original_nlu_inferencer
     unittest.main()
     # Restore again after tests if needed
-    if 'original_nlu_inferencer' in globals():
-        inference.NLUInferencer = original_nlu_inferencer 
+    if "original_nlu_inferencer" in globals():
+        inference.NLUInferencer = original_nlu_inferencer
