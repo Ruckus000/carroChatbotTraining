@@ -1,124 +1,55 @@
-# Chatbot Training Framework
+# Simple NLU System
 
-This framework provides a comprehensive solution for fine-tuning DistilBERT models to power a multi-flow chatbot system covering towing services, roadside assistance, and service appointment booking.
+## Overview
+This is a simple Natural Language Understanding (NLU) system that performs intent detection and entity recognition.
 
-## Features
-
-- Multi-task hierarchical model training pipeline
-- Sophisticated data augmentation for improved robustness
-- Specialized fallback and clarification detection
-- Advanced entity extraction
-- Comprehensive evaluation framework for model testing
-
-## Project Structure
-
-```
-chatbot/
-├── chatbot_training.py       # Main orchestration script
-├── data_augmentation.py      # Data variation and noise functions
-├── model_training.py         # DistilBERT fine-tuning functions
-├── evaluation.py             # Testing and evaluation functions
-├── utils.py                  # Utility functions
-└── requirements.txt          # Dependencies
-```
-
-## Getting Started
-
-### 1. Installation
-
+## Setup
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Prepare Data
-
-Create a JSON file with your conversation data following this structure:
-
+## Data Format
+The training data is stored in `data/nlu_training_data.json` in the following format:
 ```json
 [
   {
-    "flow": "towing",
-    "intent": "request_tow_basic",
-    "input": "I need a tow truck.",
-    "response": "I can help with that! Where should they pick up your vehicle and where should it be towed?",
-    "context": {"display_map": true},
-    "entities": []
+    "text": "I need a tow truck",
+    "intent": "towing_request_tow",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "tow truck"
+      }
+    ]
   },
   ...
 ]
 ```
 
-### 3. Run the Training Pipeline
-
+## Training
+To train the NLU models:
 ```bash
-python chatbot_training.py --input_data path/to/conversations.json --output_dir ./output --augment_data --train_models
+python train.py
 ```
 
-### 4. Evaluate Models
+This will generate intent and entity models in the `trained_nlu_model` directory.
 
-```bash
-python chatbot_training.py --input_data path/to/conversations.json --output_dir ./output --augment_data --extreme_test
+## Inference
+```python
+from inference import NLUInferencer
+
+# Initialize the inferencer
+nlu = NLUInferencer()
+
+# Make a prediction
+result = nlu.predict("I need a tow truck at 123 Main Street")
+print(result)
 ```
 
-## Key Components
-
-### Data Augmentation
-
-The system provides extensive data augmentation techniques:
-
-- Entity variations (missing, reordered, format changes)
-- Noise injection (typos, spacing issues, abbreviations)
-- Domain-specific text patterns (slang, shorthand)
-- Extreme test cases (terse inputs, run-on sentences)
-
-### Hierarchical Model Architecture
-
-The framework trains several specialized models:
-
-1. **Flow Classifier** - Routes requests to the appropriate conversation flow
-2. **Intent Classifiers** - Flow-specific models to identify detailed user intentions
-3. **Fallback Detector** - Identifies out-of-domain requests
-4. **Clarification Detector** - Recognizes ambiguous inputs requiring clarification
-5. **Entity Extractor** - Extracts structured information from natural language
-
-### Robustness Testing
-
-Comprehensive evaluation includes:
-
-- Standard classification metrics (precision, recall, F1)
-- Specialized robustness metrics for noise tolerance
-- Entity extraction quality assessment
-- Extreme case handling evaluation
-
-## Command Line Arguments
-
-- `--input_data`: Path to input conversation data JSON file
-- `--output_dir`: Directory to save processed data and models
-- `--test_size`: Proportion of data to use for testing (default: 0.15)
-- `--val_size`: Proportion of data to use for validation (default: 0.15)
-- `--random_seed`: Random seed for reproducibility (default: 42)
-- `--augment_data`: Apply data augmentation techniques
-- `--extreme_test`: Generate extreme test cases for robustness testing
-- `--train_models`: Train models after preprocessing data
-
-## Example Usage
-
-### Basic Preprocessing Only
-
+## Testing
+To run the integration test:
 ```bash
-python chatbot_training.py --input_data conversations.json --output_dir ./output
-```
-
-### With Data Augmentation
-
-```bash
-python chatbot_training.py --input_data conversations.json --output_dir ./output --augment_data
-```
-
-### Full Pipeline with Training
-
-```bash
-python chatbot_training.py --input_data conversations.json --output_dir ./output --augment_data --train_models
+python test_integration.py
 ```
 
 ## Streamlit Demo Application

@@ -1,11 +1,30 @@
 [
   {
-    "text": "I need a tow truck at 123 Main Street for my Honda Civic",
-    "intent": "towing_request_tow",
+    "text": "I need a tow truck.",
+    "intent": "towing_request_tow_basic",
+    "entities": []
+  },
+  {
+    "text": "I need a tow from 123 Main Street to ABC Auto Shop.",
+    "intent": "towing_request_tow_location",
     "entities": [
       {
         "entity": "pickup_location",
         "value": "123 Main Street"
+      },
+      {
+        "entity": "destination",
+        "value": "ABC Auto Shop"
+      }
+    ]
+  },
+  {
+    "text": "My 2018 Honda Civic broke down and needs a tow.",
+    "intent": "towing_request_tow_vehicle",
+    "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2018"
       },
       {
         "entity": "vehicle_make",
@@ -18,29 +37,13 @@
     ]
   },
   {
-    "text": "My battery is dead, can you send roadside assistance?",
-    "intent": "roadside_request_battery",
-    "entities": []
-  },
-  {
-    "text": "I want to schedule an appointment for an oil change next week",
-    "intent": "appointment_book_service",
-    "entities": []
-  },
-  {
-    "text": "What's the weather like today?",
-    "intent": "fallback_out_of_scope",
-    "entities": []
-  },
-  {
-    "text": "I need something but I'm not sure what",
-    "intent": "clarification_ambiguous_request",
-    "entities": []
-  },
-  {
-    "text": "My Toyota Camry has a flat tire on Interstate 95",
-    "intent": "roadside_request_tire",
+    "text": "My 2020 Toyota Camry broke down at 456 Oak Avenue. I need it towed to City Repair Shop on 789 Elm Street.",
+    "intent": "towing_request_tow_full",
     "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2020"
+      },
       {
         "entity": "vehicle_make",
         "value": "Toyota"
@@ -51,60 +54,1211 @@
       },
       {
         "entity": "pickup_location",
-        "value": "Interstate 95"
+        "value": "456 Oak Avenue"
+      },
+      {
+        "entity": "destination",
+        "value": "City Repair Shop on 789 Elm Street"
       }
     ]
   },
   {
-    "text": "I need to book a maintenance appointment at the downtown service center",
-    "intent": "appointment_book_service",
+    "text": "I need an emergency tow ASAP! I'm stranded on Highway 101 mile marker 25.",
+    "intent": "towing_request_tow_urgent",
     "entities": [
       {
-        "entity": "service_location",
-        "value": "downtown service center"
+        "entity": "pickup_location",
+        "value": "Highway 101 mile marker 25"
+      },
+      {
+        "entity": "urgency",
+        "value": "emergency"
       }
     ]
   },
   {
-    "text": "I'm locked out of my Ford F150",
-    "intent": "roadside_request_lockout",
+    "text": "My car broke down.",
+    "intent": "towing_request_tow_basic",
+    "entities": []
+  },
+  {
+    "text": "I'm stranded on the highway and need help ASAP!",
+    "intent": "towing_request_tow_urgent",
     "entities": [
+      {
+        "entity": "urgency",
+        "value": "urgent"
+      }
+    ]
+  },
+  {
+    "text": "I need a tow truck at 123 Main Street.",
+    "intent": "towing_request_tow_location_partial",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "123 Main Street"
+      }
+    ]
+  },
+  {
+    "text": "[User selects pickup and drop-off locations on map]",
+    "intent": "towing_location_map_selection",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "[Pickup Location]"
+      },
+      {
+        "entity": "destination",
+        "value": "[Drop-off Location]"
+      }
+    ]
+  },
+  {
+    "text": "I can't use the map right now.",
+    "intent": "towing_map_interface_issue",
+    "entities": []
+  },
+  {
+    "text": "I need a tow from 789 Mountain Road.",
+    "intent": "towing_location_outside_service",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "789 Mountain Road"
+      }
+    ]
+  },
+  {
+    "text": "Actually, I need to change the pickup location.",
+    "intent": "towing_location_change",
+    "entities": []
+  },
+  {
+    "text": "I need a tow from Springfield Mall.",
+    "intent": "towing_ambiguous_location",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "Springfield Mall"
+      }
+    ]
+  },
+  {
+    "text": "It's a 2018 Honda Civic.",
+    "intent": "towing_vehicle_info_request",
+    "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2018"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Honda"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Civic"
+      }
+    ]
+  },
+  {
+    "text": "It's a Toyota.",
+    "intent": "towing_vehicle_info_incomplete",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Toyota"
+      }
+    ]
+  },
+  {
+    "text": "It's a 2022 Ford F-350 dually truck.",
+    "intent": "towing_vehicle_specialty",
+    "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2022"
+      },
       {
         "entity": "vehicle_make",
         "value": "Ford"
       },
       {
         "entity": "vehicle_model",
-        "value": "F150"
+        "value": "F-350 dually truck"
       }
     ]
   },
   {
-    "text": "Can you help me with my Chevy Malibu? It won't start.",
-    "intent": "roadside_request_battery",
+    "text": "I'm not sure about the year, it's my friend's car.",
+    "intent": "towing_vehicle_unknown_details",
+    "entities": []
+  },
+  {
+    "text": "My car has a flat tire and it's stuck in a tight parking spot.",
+    "intent": "towing_vehicle_condition_query",
     "entities": [
       {
-        "entity": "vehicle_make",
-        "value": "Chevy"
+        "entity": "vehicle_condition",
+        "value": "flat tire"
       },
       {
-        "entity": "vehicle_model",
-        "value": "Malibu"
+        "entity": "location_constraint",
+        "value": "tight parking spot"
       }
     ]
   },
   {
-    "text": "I need a tow for my motorcycle at Maple Avenue",
-    "intent": "towing_request_tow",
+    "text": "How soon can they get here?",
+    "intent": "towing_service_availability",
     "entities": [
       {
-        "entity": "vehicle_type",
-        "value": "motorcycle"
+        "entity": "eta",
+        "value": "20 minutes"
+      },
+      {
+        "entity": "price_range",
+        "value": "$75-$120"
+      }
+    ]
+  },
+  {
+    "text": "I need a tow truck right now.",
+    "intent": "towing_service_limited_availability",
+    "entities": [
+      {
+        "entity": "eta",
+        "value": "45 minutes"
+      }
+    ]
+  },
+  {
+    "text": "What's the cost for my tow?",
+    "intent": "towing_service_high_price",
+    "entities": [
+      {
+        "entity": "price_range",
+        "value": "$180-$220"
+      }
+    ]
+  },
+  {
+    "text": "That's too expensive.",
+    "intent": "towing_price_concern",
+    "entities": []
+  },
+  {
+    "text": "Can you check how soon a truck can get here?",
+    "intent": "towing_api_failure",
+    "entities": []
+  },
+  {
+    "text": "Why does it cost that much?",
+    "intent": "towing_price_breakdown",
+    "entities": [
+      {
+        "entity": "base_fee",
+        "value": "$50"
+      },
+      {
+        "entity": "per_mile_charge",
+        "value": "$4"
+      },
+      {
+        "entity": "distance",
+        "value": "15 miles"
+      }
+    ]
+  },
+  {
+    "text": "Yes, that works for me.",
+    "intent": "towing_booking_confirmation",
+    "entities": [
+      {
+        "entity": "eta",
+        "value": "20 minutes"
+      }
+    ]
+  },
+  {
+    "text": "Actually, I need to cancel this.",
+    "intent": "towing_booking_cancellation",
+    "entities": []
+  },
+  {
+    "text": "I need to change the drop-off location.",
+    "intent": "towing_booking_change",
+    "entities": []
+  },
+  {
+    "text": "Please book the tow truck now.",
+    "intent": "towing_booking_confirmation_failed",
+    "entities": []
+  },
+  {
+    "text": "Can they also jump start my car?",
+    "intent": "towing_additional_service",
+    "entities": [
+      {
+        "entity": "additional_service",
+        "value": "jump start"
+      },
+      {
+        "entity": "additional_service_price",
+        "value": "$30"
+      }
+    ]
+  },
+  {
+    "text": "Is the tow truck still coming?",
+    "intent": "towing_eta_update",
+    "entities": [
+      {
+        "entity": "new_eta",
+        "value": "6:45 PM"
+      },
+      {
+        "entity": "delay",
+        "value": "10 minutes"
+      }
+    ]
+  },
+  {
+    "text": "Can I contact the driver directly?",
+    "intent": "towing_driver_contact",
+    "entities": [
+      {
+        "entity": "driver_name",
+        "value": "Michael"
+      },
+      {
+        "entity": "driver_phone",
+        "value": "(555) 123-4567"
+      }
+    ]
+  },
+  {
+    "text": "I need to cancel the tow, my friend got my car started.",
+    "intent": "towing_cancel_after_dispatch",
+    "entities": [
+      {
+        "entity": "cancellation_fee",
+        "value": "$25"
+      }
+    ]
+  },
+  {
+    "text": "The tow truck just left with my car.",
+    "intent": "towing_service_completed",
+    "entities": [
+      {
+        "entity": "final_charge",
+        "value": "$95"
+      }
+    ]
+  },
+  {
+    "text": "Does my insurance cover this tow?",
+    "intent": "towing_insurance_coverage",
+    "entities": []
+  },
+  {
+    "text": "I need to tow two cars from the same location.",
+    "intent": "towing_multiple_vehicle_tow",
+    "entities": [
+      {
+        "entity": "vehicle_count",
+        "value": "2"
+      }
+    ]
+  },
+  {
+    "text": "I need a tow truck at midnight.",
+    "intent": "towing_after_hours_service",
+    "entities": [
+      {
+        "entity": "time",
+        "value": "midnight"
+      },
+      {
+        "entity": "surcharge",
+        "value": "$35"
+      },
+      {
+        "entity": "total_price_range",
+        "value": "$110-$155"
+      }
+    ]
+  },
+  {
+    "text": "How long until the tow truck arrives?",
+    "intent": "towing_weather_delay",
+    "entities": [
+      {
+        "entity": "weather_condition",
+        "value": "severe"
+      },
+      {
+        "entity": "eta_range",
+        "value": "35-45 minutes"
+      }
+    ]
+  },
+  {
+    "text": "My car is in an underground parking garage with height restrictions.",
+    "intent": "towing_vehicle_access_issue",
+    "entities": [
+      {
+        "entity": "access_limitation",
+        "value": "height restrictions"
+      },
+      {
+        "entity": "location_type",
+        "value": "underground parking garage"
+      }
+    ]
+  },
+  {
+    "text": "I don't have the keys to my car.",
+    "intent": "towing_key_availability",
+    "entities": [
+      {
+        "entity": "key_status",
+        "value": "unavailable"
+      }
+    ]
+  },
+  {
+    "text": "I'm at the red gas station on Highway 7, not sure of the exact address.",
+    "intent": "towing_location_description",
+    "entities": [
+      {
+        "entity": "location_description",
+        "value": "red gas station on Highway 7"
+      }
+    ]
+  },
+  {
+    "text": "I need a flatbed tow truck specifically.",
+    "intent": "towing_flatbed_request",
+    "entities": [
+      {
+        "entity": "truck_type",
+        "value": "flatbed"
+      }
+    ]
+  },
+  {
+    "text": "Do you take American Express?",
+    "intent": "towing_payment_method",
+    "entities": [
+      {
+        "entity": "payment_method",
+        "value": "American Express"
+      }
+    ]
+  },
+  {
+    "text": "Actually, I just need help changing a flat tire, not a tow.",
+    "intent": "towing_no_tow_needed",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "flat tire"
+      },
+      {
+        "entity": "price_range",
+        "value": "$60-$75"
+      }
+    ]
+  },
+  {
+    "text": "I need roadside assistance.",
+    "intent": "roadside_request_roadside_basic",
+    "entities": []
+  },
+  {
+    "text": "My car battery is dead and I need a jump start.",
+    "intent": "roadside_request_roadside_battery",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "jump start"
+      }
+    ]
+  },
+  {
+    "text": "I have a flat tire and need help changing it.",
+    "intent": "roadside_request_roadside_tire",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "flat tire"
+      }
+    ]
+  },
+  {
+    "text": "I locked my keys in my car at the shopping mall.",
+    "intent": "roadside_request_roadside_keys",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "lockout"
       },
       {
         "entity": "pickup_location",
-        "value": "Maple Avenue"
+        "value": "shopping mall"
       }
     ]
+  },
+  {
+    "text": "My car ran out of gas on Interstate 95 near exit 42.",
+    "intent": "roadside_request_roadside_fuel",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "fuel"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Interstate 95 near exit 42"
+      }
+    ]
+  },
+  {
+    "text": "My 2019 Ford F-150 has a flat tire at Walmart parking lot on 123 Commerce Drive. I need help changing it.",
+    "intent": "roadside_request_roadside_full",
+    "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2019"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Ford"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "F-150"
+      },
+      {
+        "entity": "service_type",
+        "value": "flat tire"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Walmart parking lot on 123 Commerce Drive"
+      }
+    ]
+  },
+  {
+    "text": "I need to book service for my car.",
+    "intent": "appointment_book_service_basic",
+    "entities": []
+  },
+  {
+    "text": "I need an oil change for my car.",
+    "intent": "appointment_book_service_type",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "oil change"
+      }
+    ]
+  },
+  {
+    "text": "I'd like to book a brake inspection for next Tuesday.",
+    "intent": "appointment_book_service_date",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "brake inspection"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "next Tuesday"
+      }
+    ]
+  },
+  {
+    "text": "I need a tire rotation on Friday at 2pm.",
+    "intent": "appointment_book_service_time",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "tire rotation"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "Friday"
+      },
+      {
+        "entity": "appointment_time",
+        "value": "2pm"
+      }
+    ]
+  },
+  {
+    "text": "I need to schedule an oil change and tire rotation for my 2021 Hyundai Sonata on Thursday morning around 9am.",
+    "intent": "appointment_book_service_full",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "oil change and tire rotation"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2021"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Hyundai"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Sonata"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "Thursday"
+      },
+      {
+        "entity": "appointment_time",
+        "value": "9am"
+      }
+    ]
+  },
+  {
+    "text": "What's the weather forecast for tomorrow?",
+    "intent": "fallback_out_of_domain",
+    "entities": []
+  },
+  {
+    "text": "Can you order me a pizza?",
+    "intent": "fallback_out_of_domain",
+    "entities": []
+  },
+  {
+    "text": "I need service.",
+    "intent": "clarification_ambiguous_request",
+    "entities": []
+  },
+  {
+    "text": "My car isn't working.",
+    "intent": "clarification_ambiguous_request",
+    "entities": []
+  },
+  {
+    "text": "My car isn't working.",
+    "intent": "roadside_initial_vague_request",
+    "entities": []
+  },
+  {
+    "text": "I'm stranded with my kids and it's freezing outside!",
+    "intent": "roadside_emergency_situation",
+    "entities": [
+      {
+        "entity": "urgency",
+        "value": "emergency"
+      },
+      {
+        "entity": "weather_condition",
+        "value": "freezing"
+      }
+    ]
+  },
+  {
+    "text": "I need someone to jump start my car.",
+    "intent": "roadside_battery_service_specific",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "jump start"
+      }
+    ]
+  },
+  {
+    "text": "I have a flat tire on my 2019 Ford Explorer at 456 Oak Avenue.",
+    "intent": "roadside_complete_info_initial",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "flat tire"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2019"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Ford"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Explorer"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "456 Oak Avenue"
+      }
+    ]
+  },
+  {
+    "text": "My tire is flat and I think my battery might be dead too.",
+    "intent": "roadside_multiple_issues",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "flat tire"
+      },
+      {
+        "entity": "additional_service",
+        "value": "battery check"
+      }
+    ]
+  },
+  {
+    "text": "My car just stopped working while driving.",
+    "intent": "roadside_uncertain_issue",
+    "entities": []
+  },
+  {
+    "text": "My car slid into a ditch.",
+    "intent": "roadside_specialized_service",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "winching"
+      },
+      {
+        "entity": "vehicle_condition",
+        "value": "in ditch"
+      }
+    ]
+  },
+  {
+    "text": "I'm in a parking garage at the mall.",
+    "intent": "roadside_location_parking_garage",
+    "entities": [
+      {
+        "entity": "location_type",
+        "value": "parking garage"
+      },
+      {
+        "entity": "location_description",
+        "value": "mall"
+      }
+    ]
+  },
+  {
+    "text": "I'm on Interstate 95.",
+    "intent": "roadside_highway_location",
+    "entities": [
+      {
+        "entity": "location_type",
+        "value": "highway"
+      },
+      {
+        "entity": "highway_name",
+        "value": "Interstate 95"
+      }
+    ]
+  },
+  {
+    "text": "It's a 2022 Tesla Model 3.",
+    "intent": "roadside_electric_vehicle",
+    "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2022"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Tesla"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Model 3"
+      },
+      {
+        "entity": "vehicle_type",
+        "value": "electric"
+      }
+    ]
+  },
+  {
+    "text": "How long until help arrives?",
+    "intent": "roadside_service_eta_weather",
+    "entities": [
+      {
+        "entity": "weather_condition",
+        "value": "severe"
+      },
+      {
+        "entity": "eta",
+        "value": "50 minutes"
+      }
+    ]
+  },
+  {
+    "text": "I don't feel safe waiting here alone.",
+    "intent": "roadside_safety_concern",
+    "entities": [
+      {
+        "entity": "safety_status",
+        "value": "unsafe"
+      }
+    ]
+  },
+  {
+    "text": "The technician just finished helping me.",
+    "intent": "roadside_service_completion",
+    "entities": [
+      {
+        "entity": "final_charge",
+        "value": "$75"
+      }
+    ]
+  },
+  {
+    "text": "My car needs to be checked.",
+    "intent": "appointment_initial_vague_request",
+    "entities": []
+  },
+  {
+    "text": "My check engine light just came on and the car is making a strange noise!",
+    "intent": "appointment_urgent_repair_request",
+    "entities": [
+      {
+        "entity": "issue_type",
+        "value": "check engine light"
+      },
+      {
+        "entity": "issue_type",
+        "value": "strange noise"
+      },
+      {
+        "entity": "urgency",
+        "value": "immediate"
+      }
+    ]
+  },
+  {
+    "text": "I need to schedule an oil change for my 2019 Honda Civic at the downtown service center next Tuesday.",
+    "intent": "appointment_complete_info_initial",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "oil change"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2019"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Honda"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Civic"
+      },
+      {
+        "entity": "location",
+        "value": "downtown service center"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "next Tuesday"
+      }
+    ]
+  },
+  {
+    "text": "I need an oil change and tire rotation, plus my wipers need replacing.",
+    "intent": "appointment_multiple_services",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "oil change"
+      },
+      {
+        "entity": "service_type",
+        "value": "tire rotation"
+      },
+      {
+        "entity": "service_type",
+        "value": "wiper replacement"
+      }
+    ]
+  },
+  {
+    "text": "My car is making a grinding noise when I turn.",
+    "intent": "appointment_uncertain_service_needs",
+    "entities": [
+      {
+        "entity": "issue_description",
+        "value": "grinding noise when turning"
+      },
+      {
+        "entity": "potential_system",
+        "value": "steering"
+      },
+      {
+        "entity": "potential_system",
+        "value": "suspension"
+      }
+    ]
+  },
+  {
+    "text": "I got a recall notice for my airbag.",
+    "intent": "appointment_warranty_recall_service",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "recall"
+      },
+      {
+        "entity": "recall_component",
+        "value": "airbag"
+      }
+    ]
+  },
+  {
+    "text": "I think I'm due for my 30,000-mile service.",
+    "intent": "appointment_maintenance_package",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "30000-mile service"
+      },
+      {
+        "entity": "mileage",
+        "value": "30000"
+      }
+    ]
+  },
+  {
+    "text": "It's a Toyota, not sure which year exactly.",
+    "intent": "appointment_incomplete_vehicle_info",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Toyota"
+      }
+    ]
+  },
+  {
+    "text": "I just bought this car used, so I'm not sure about its service history.",
+    "intent": "appointment_new_vehicle_service",
+    "entities": [
+      {
+        "entity": "vehicle_status",
+        "value": "recently purchased"
+      },
+      {
+        "entity": "vehicle_type",
+        "value": "used"
+      }
+    ]
+  },
+  {
+    "text": "My car has a custom exhaust system and tuned ECU.",
+    "intent": "appointment_modified_vehicle",
+    "entities": [
+      {
+        "entity": "modification",
+        "value": "custom exhaust"
+      },
+      {
+        "entity": "modification",
+        "value": "tuned ECU"
+      }
+    ]
+  },
+  {
+    "text": "Which location has the earliest availability?",
+    "intent": "appointment_location_availability",
+    "entities": [
+      {
+        "entity": "location_1",
+        "value": "downtown center"
+      },
+      {
+        "entity": "time_1",
+        "value": "tomorrow 9:00 AM"
+      },
+      {
+        "entity": "location_2",
+        "value": "west side location"
+      },
+      {
+        "entity": "time_2",
+        "value": "day after tomorrow 7:30 AM"
+      }
+    ]
+  },
+  {
+    "text": "How long will the service take? I need my car back by 3pm.",
+    "intent": "appointment_service_duration",
+    "entities": [
+      {
+        "entity": "service_duration",
+        "value": "45-60 minutes"
+      },
+      {
+        "entity": "buffer_time",
+        "value": "30 minutes"
+      },
+      {
+        "entity": "deadline",
+        "value": "3:00 PM"
+      }
+    ]
+  },
+  {
+    "text": "Can I set up regular appointments for every 6 months?",
+    "intent": "appointment_recurring_appointment",
+    "entities": [
+      {
+        "entity": "schedule_type",
+        "value": "recurring"
+      },
+      {
+        "entity": "interval",
+        "value": "6 months"
+      }
+    ]
+  },
+  {
+    "text": "How much will this cost?",
+    "intent": "appointment_service_cost_inquiry",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "oil change"
+      },
+      {
+        "entity": "base_price",
+        "value": "$49.95"
+      },
+      {
+        "entity": "includes",
+        "value": "oil filter"
+      },
+      {
+        "entity": "includes",
+        "value": "basic inspection"
+      }
+    ]
+  },
+  {
+    "text": "Please don't call me, just send text messages.",
+    "intent": "appointment_contact_preference",
+    "entities": [
+      {
+        "entity": "contact_method",
+        "value": "text"
+      },
+      {
+        "entity": "phone",
+        "value": "555-123-4567"
+      }
+    ]
+  },
+  {
+    "text": "My wife will be dropping off the car.",
+    "intent": "appointment_alternate_contact",
+    "entities": [
+      {
+        "entity": "contact_type",
+        "value": "alternate"
+      },
+      {
+        "entity": "relationship",
+        "value": "wife"
+      }
+    ]
+  },
+  {
+    "text": "I don't want to give my email.",
+    "intent": "appointment_privacy_concern",
+    "entities": [
+      {
+        "entity": "privacy_preference",
+        "value": "no email"
+      }
+    ]
+  },
+  {
+    "text": "I've been there before, you should have my information.",
+    "intent": "appointment_existing_customer",
+    "entities": [
+      {
+        "entity": "customer_status",
+        "value": "returning"
+      }
+    ]
+  },
+  {
+    "text": "Yes, there's a slight vibration when braking.",
+    "intent": "appointment_additional_concerns",
+    "entities": [
+      {
+        "entity": "issue_description",
+        "value": "vibration when braking"
+      },
+      {
+        "entity": "system_affected",
+        "value": "brakes"
+      }
+    ]
+  },
+  {
+    "text": "Yes, I'll need the shuttle service.",
+    "intent": "appointment_transportation_needs",
+    "entities": [
+      {
+        "entity": "transportation_type",
+        "value": "shuttle"
+      },
+      {
+        "entity": "service_radius",
+        "value": "5-mile"
+      }
+    ]
+  },
+  {
+    "text": "I have a garage opener in the car that they shouldn't touch.",
+    "intent": "appointment_special_instructions",
+    "entities": [
+      {
+        "entity": "special_note",
+        "value": "do not disturb garage opener"
+      }
+    ]
+  },
+  {
+    "text": "This is a reminder about your oil change appointment tomorrow at 9:30 AM.",
+    "intent": "appointment_appointment_reminder",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "oil change"
+      },
+      {
+        "entity": "appointment_time",
+        "value": "9:30 AM"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "Thursday, March 27th"
+      },
+      {
+        "entity": "location",
+        "value": "Downtown Service Center"
+      }
+    ]
+  },
+  {
+    "text": "I need to reschedule my appointment for tomorrow.",
+    "intent": "appointment_last_minute_reschedule",
+    "entities": [
+      {
+        "entity": "request_type",
+        "value": "reschedule"
+      },
+      {
+        "entity": "original_date",
+        "value": "tomorrow"
+      }
+    ]
+  },
+  {
+    "text": "Is my car ready?",
+    "intent": "appointment_service_completion",
+    "entities": [
+      {
+        "entity": "service_status",
+        "value": "completed"
+      },
+      {
+        "entity": "total_cost",
+        "value": "$49.95"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2018"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Honda"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Accord"
+      }
+    ]
+  },
+  {
+    "text": "How was your recent service experience?",
+    "intent": "appointment_feedback_request",
+    "entities": [
+      {
+        "entity": "feedback_type",
+        "value": "satisfaction survey"
+      },
+      {
+        "entity": "rating_scale",
+        "value": "0-10"
+      }
+    ]
+  },
+  {
+    "text": "When is my next service due?",
+    "intent": "appointment_maintenance_reminder",
+    "entities": [
+      {
+        "entity": "last_service_date",
+        "value": "three months ago"
+      },
+      {
+        "entity": "next_service_due",
+        "value": "three months"
+      },
+      {
+        "entity": "service_type",
+        "value": "oil change"
+      }
+    ]
+  },
+  {
+    "text": "Do I need to prepare my car for winter?",
+    "intent": "appointment_seasonal_recommendation",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "winter preparation"
+      },
+      {
+        "entity": "season",
+        "value": "winter"
+      },
+      {
+        "entity": "checks_included",
+        "value": [
+          "battery",
+          "antifreeze",
+          "heating",
+          "tires"
+        ]
+      }
+    ]
+  },
+  {
+    "text": "What's the weather like?",
+    "intent": "fallback_out_of_scope_weather",
+    "entities": []
   }
-] 
+]

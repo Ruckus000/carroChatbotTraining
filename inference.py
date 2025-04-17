@@ -1,16 +1,8 @@
 import os
 import json
-import logging
 import torch
 import numpy as np
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, DistilBertForTokenClassification
-
-# Set up logging
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
 
 class NLUInferencer:
     def __init__(self, model_path="./trained_nlu_model"):
@@ -27,18 +19,15 @@ class NLUInferencer:
         # Load intent model
         try:
             self.intent_model_path = os.path.join(model_path, "intent_model")
-            
-            # For Phase 6, we're just checking if files exist and using placeholders
-            # In a real implementation, this would load actual models
-            if not os.path.exists(os.path.join(self.intent_model_path, "intent2id.json")):
-                raise FileNotFoundError(f"Intent mappings file not found")
-                
-            # Placeholder for model loading
-            self.intent_model = self._create_mock_intent_model()
+            self.intent_model = DistilBertForSequenceClassification.from_pretrained(
+                self.intent_model_path
+            )
             self.intent_model.to(self.device)
             self.intent_model.eval()
             
-            self.intent_tokenizer = self._create_mock_tokenizer()
+            self.intent_tokenizer = DistilBertTokenizer.from_pretrained(
+                self.intent_model_path
+            )
             
             # Load intent mappings
             with open(os.path.join(self.intent_model_path, "intent2id.json"), "r") as f:
@@ -57,18 +46,15 @@ class NLUInferencer:
         # Load entity model
         try:
             self.entity_model_path = os.path.join(model_path, "entity_model")
-            
-            # For Phase 6, we're just checking if files exist and using placeholders
-            # In a real implementation, this would load actual models
-            if not os.path.exists(os.path.join(self.entity_model_path, "tag2id.json")):
-                raise FileNotFoundError(f"Entity tag mappings file not found")
-                
-            # Placeholder for model loading
-            self.entity_model = self._create_mock_entity_model()
+            self.entity_model = DistilBertForTokenClassification.from_pretrained(
+                self.entity_model_path
+            )
             self.entity_model.to(self.device)
             self.entity_model.eval()
             
-            self.entity_tokenizer = self._create_mock_tokenizer()
+            self.entity_tokenizer = DistilBertTokenizer.from_pretrained(
+                self.entity_model_path
+            )
             
             # Load entity tag mappings
             with open(os.path.join(self.entity_model_path, "tag2id.json"), "r") as f:
@@ -83,84 +69,6 @@ class NLUInferencer:
             raise RuntimeError(f"Failed to parse entity tag mappings: {e}")
         except Exception as e:
             raise RuntimeError(f"Error loading entity model: {e}")
-    
-    def _create_mock_intent_model(self):
-        """
-        Create a placeholder intent model for Phase 6.
-        In a real implementation, this would be loaded from a trained model file.
-        """
-        class MockIntentModel:
-            def __init__(self):
-                pass
-                
-            def to(self, device):
-                return self
-                
-            def eval(self):
-                pass
-                
-            def __call__(self, **kwargs):
-                # Placeholder output structure with correct shape
-                class Output:
-                    def __init__(self):
-                        self.logits = torch.tensor([[0.8, 0.1, 0.1]])
-                
-                return Output()
-        
-        return MockIntentModel()
-    
-    def _create_mock_entity_model(self):
-        """
-        Create a placeholder entity model for Phase 6.
-        In a real implementation, this would be loaded from a trained model file.
-        """
-        class MockEntityModel:
-            def __init__(self):
-                pass
-                
-            def to(self, device):
-                return self
-                
-            def eval(self):
-                pass
-                
-            def __call__(self, **kwargs):
-                # Placeholder output structure with correct shape
-                class Output:
-                    def __init__(self):
-                        # Create logits for O tag (most common)
-                        self.logits = torch.tensor([[[0.8, 0.1, 0.1], [0.8, 0.1, 0.1]]])
-                
-                return Output()
-        
-        return MockEntityModel()
-    
-    def _create_mock_tokenizer(self):
-        """
-        Create a placeholder tokenizer for Phase 6.
-        In a real implementation, this would be loaded from a trained tokenizer file.
-        """
-        class MockTokenizer:
-            def __init__(self):
-                pass
-                
-            def __call__(self, text, padding=True, truncation=True, return_tensors="pt", is_split_into_words=False):
-                # Create a placeholder tokenized output with the right structure
-                class TokenizerOutput:
-                    def __init__(self):
-                        self.input_ids = torch.tensor([[101, 1000, 1001, 102]])
-                        self.attention_mask = torch.tensor([[1, 1, 1, 1]])
-                        
-                    def to(self, device):
-                        return self
-                
-                return TokenizerOutput()
-                
-            def word_ids(self, batch_index=0):
-                # Return a simple word_ids mapping
-                return [None, 0, 1, None]
-        
-        return MockTokenizer()
     
     def predict(self, text):
         """
@@ -188,7 +96,6 @@ class NLUInferencer:
             
         except Exception as e:
             # Fallback logic for runtime errors
-            logger.error(f"Error during prediction: {e}")
             return {
                 "text": text,
                 "intent": {"name": "fallback_runtime_error", "confidence": 1.0},
@@ -206,42 +113,40 @@ class NLUInferencer:
             dict: A dictionary containing the intent name and confidence.
         """
         try:
-            # For Phase 6, we'll use a rule-based approach instead of the model
-            # In a real implementation, this would use the actual model
+            # Tokenize the input
+            inputs = self.intent_tokenizer(
+                text, 
+                padding=True, 
+                truncation=True, 
+                return_tensors="pt"
+            )
+            inputs = inputs.to(self.device)
             
-            # Simple keyword matching for demonstration
-            text_lower = text.lower()
-            confidence = 0.9
+            # Predict
+            with torch.no_grad():
+                outputs = self.intent_model(**inputs)
             
-            if "tow" in text_lower or "truck" in text_lower:
-                intent = "towing_request_tow"
-            elif "battery" in text_lower or "dead" in text_lower or "won't start" in text_lower:
-                intent = "roadside_request_battery"
-            elif "appointment" in text_lower or "schedule" in text_lower or "book" in text_lower:
-                intent = "appointment_book_service"
-            elif "weather" in text_lower:
-                intent = "fallback_out_of_scope"
-            elif ("something" in text_lower and ("need" in text_lower or "not sure" in text_lower)) or "i'm not sure what" in text_lower:
-                intent = "clarification_ambiguous_request"
-            elif "tire" in text_lower or "flat" in text_lower:
-                intent = "roadside_request_tire"
-            elif "lock" in text_lower or "locked out" in text_lower:
-                intent = "roadside_request_lockout"
-            else:
-                intent = "fallback_intent_error"
-                confidence = 0.3
+            # Calculate probabilities using softmax
+            logits = outputs.logits.cpu()
+            probabilities = torch.softmax(logits, dim=1).numpy()[0]
+            
+            # Get the predicted intent
+            predicted_intent_id = np.argmax(probabilities)
+            predicted_intent_confidence = float(probabilities[predicted_intent_id])
+            
+            # Map back to intent name
+            predicted_intent_name = self.id2intent.get(int(predicted_intent_id), "unknown")
             
             # Apply confidence threshold for fallback
-            if confidence < self.CONFIDENCE_THRESHOLD:
-                intent = "fallback_low_confidence"
+            if predicted_intent_confidence < self.CONFIDENCE_THRESHOLD:
+                predicted_intent_name = "fallback_low_confidence"
             
             return {
-                "name": intent,
-                "confidence": confidence
+                "name": predicted_intent_name,
+                "confidence": predicted_intent_confidence
             }
             
         except Exception as e:
-            logger.error(f"Error predicting intent: {e}")
             return {"name": "fallback_intent_error", "confidence": 1.0}
             
     def _predict_entities(self, text):
@@ -255,81 +160,86 @@ class NLUInferencer:
             list: A list of dictionaries, each containing an entity type and value.
         """
         try:
-            # For Phase 6, we'll use a rule-based approach instead of the model
-            # In a real implementation, this would use the actual model
+            # Tokenize the input
+            word_tokens = text.split()
+            inputs = self.entity_tokenizer(
+                text,
+                padding=True,
+                truncation=True,
+                return_tensors="pt"
+            )
+            inputs = inputs.to(self.device)
             
-            # Simple regex/keyword approaches for demonstration
-            text_lower = text.lower()
+            # Get word_ids from tokenizer
+            word_ids = inputs.word_ids(batch_index=0)
+            
+            # Predict
+            with torch.no_grad():
+                outputs = self.entity_model(**inputs)
+            
+            # Get predictions for each token
+            logits = outputs.logits[0].cpu().numpy()
+            predictions = np.argmax(logits, axis=1)
+            
+            # Map predicted IDs to tags
+            tags = [self.id2tag.get(pred, "O") for pred in predictions]
+            
+            # Align predictions to words and collect entity groups
+            word_predictions = []
+            for i in range(len(word_ids)):
+                # Skip special tokens (CLS, SEP, PAD)
+                if word_ids[i] is None:
+                    continue
+                
+                # If this is the first token of a word, add it to word_predictions
+                if i == 0 or word_ids[i] != word_ids[i-1]:
+                    word_predictions.append((word_tokens[word_ids[i]], tags[i]))
+            
+            # Extract entities from BIO tags
             entities = []
+            current_entity_tokens = []
+            current_entity_type = None
             
-            # Extract entities based on keywords
-            # Location extraction
-            location_indicators = ["at", "on", "near"]
-            for indicator in location_indicators:
-                if f" {indicator} " in text_lower:
-                    parts = text_lower.split(f" {indicator} ")
-                    if len(parts) > 1:
-                        location_part = parts[1].split(".")[0].split(",")[0].split(" and ")[0]
-                        # Take up to 4 words for location
-                        location_words = location_part.split()[:4]
-                        location = " ".join(location_words)
-                        
-                        if location:
-                            entities.append({
-                                "entity": "pickup_location",
-                                "value": location.strip()
-                            })
-                            break
+            for word, tag in word_predictions:
+                if tag.startswith("B-"):
+                    # If we were processing a previous entity, add it to the result
+                    if current_entity_type is not None:
+                        entity_value = " ".join(current_entity_tokens)
+                        entities.append({
+                            "entity": current_entity_type,
+                            "value": entity_value
+                        })
+                    
+                    # Start a new entity
+                    current_entity_tokens = [word]
+                    current_entity_type = tag[2:]  # Remove the "B-" prefix
+                    
+                elif tag.startswith("I-"):
+                    # Only add to the current entity if its type matches
+                    if current_entity_type is not None and tag[2:] == current_entity_type:
+                        current_entity_tokens.append(word)
+                    # Otherwise, treat as O (misaligned I tag)
+                    
+                elif tag == "O":
+                    # If we were processing an entity, add it to the result
+                    if current_entity_type is not None:
+                        entity_value = " ".join(current_entity_tokens)
+                        entities.append({
+                            "entity": current_entity_type,
+                            "value": entity_value
+                        })
+                        current_entity_tokens = []
+                        current_entity_type = None
             
-            # Vehicle make extraction
-            vehicle_makes = ["honda", "toyota", "ford", "chevy", "chevrolet"]
-            for make in vehicle_makes:
-                if make in text_lower:
-                    entities.append({
-                        "entity": "vehicle_make",
-                        "value": make.title()
-                    })
-                    break
-            
-            # Vehicle model extraction
-            vehicle_models = ["civic", "camry", "f150", "malibu"]
-            for model in vehicle_models:
-                if model in text_lower:
-                    entities.append({
-                        "entity": "vehicle_model",
-                        "value": model.title()
-                    })
-                    break
-            
-            # Vehicle type extraction
-            if "motorcycle" in text_lower:
+            # Don't forget the last entity if we're still building one
+            if current_entity_type is not None:
+                entity_value = " ".join(current_entity_tokens)
                 entities.append({
-                    "entity": "vehicle_type",
-                    "value": "motorcycle"
+                    "entity": current_entity_type,
+                    "value": entity_value
                 })
             
             return entities
             
         except Exception as e:
-            logger.error(f"Error predicting entities: {e}")
-            return []
-
-
-# Simple testing code to ensure the class works
-if __name__ == "__main__":
-    try:
-        nlu = NLUInferencer()
-        test_texts = [
-            "I need a tow truck for my car",
-            "My battery is dead, can you help?",
-            "I want to book a service appointment for next week"
-        ]
-        
-        for text in test_texts:
-            result = nlu.predict(text)
-            print(f"Text: {text}")
-            print(f"Intent: {result['intent']['name']} ({result['intent']['confidence']:.4f})")
-            print(f"Entities: {result['entities']}")
-            print()
-    except Exception as e:
-        print(f"Error testing NLUInferencer: {e}") 
+            return [] 

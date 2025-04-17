@@ -25,6 +25,7 @@ htmlcov/
 output/
 chatbot_training.log
 .ipynb_checkpoints/
+trained_nlu_model/
 
 # Distribution / packaging
 dist/

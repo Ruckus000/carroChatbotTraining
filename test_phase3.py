@@ -1,24 +1,51 @@
+import unittest
 import os
 import json
-import unittest
 from unittest.mock import patch, MagicMock
 import torch
 import numpy as np
 
-# Mock classes for testing
+# Create directory mocking for tests that might not have trained models
+os.makedirs('./trained_nlu_model/intent_model', exist_ok=True)
+os.makedirs('./trained_nlu_model/entity_model', exist_ok=True)
+
+# Mock data for intent model
+intent2id = {
+    "towing_request_tow": 0,
+    "roadside_request_battery": 1,
+    "appointment_book_service": 2,
+    "fallback_out_of_scope": 3,
+    "clarification_ambiguous_request": 4
+}
+
+# Mock data for entity model
+tag2id = {
+    "O": 0,
+    "B-pickup_location": 1,
+    "I-pickup_location": 2,
+    "B-vehicle_make": 3,
+    "I-vehicle_make": 4,
+    "B-vehicle_model": 5,
+    "I-vehicle_model": 6
+}
+
+# Create mock files if they don't exist
+if not os.path.exists('./trained_nlu_model/intent_model/intent2id.json'):
+    with open('./trained_nlu_model/intent_model/intent2id.json', 'w') as f:
+        json.dump(intent2id, f)
+
+if not os.path.exists('./trained_nlu_model/entity_model/tag2id.json'):
+    with open('./trained_nlu_model/entity_model/tag2id.json', 'w') as f:
+        json.dump(tag2id, f)
+
+# Mock the transformers module
 class MockModule:
-    def __init__(self):
-        self.logits = torch.tensor([[0.8, 0.1, 0.1]])
-        
-    def cpu(self):
-        return self
-        
-    def to(self, device):
-        return self
+    pass
 
 class MockModelForSequenceClassification:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.outputs = MockModule()
+        self.outputs.logits = torch.tensor([[2.0, 1.0, 0.5, 0.2, 0.1]])
     
     def __call__(self, **kwargs):
         return self.outputs
@@ -30,10 +57,30 @@ class MockModelForSequenceClassification:
         pass
 
 class MockModelForTokenClassification:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.outputs = MockModule()
-        # Add a second dimension for token-level predictions
-        self.outputs.logits = torch.tensor([[[0.8, 0.1, 0.1], [0.1, 0.8, 0.1]]])
+        # Create sample logits for entity detection
+        # We'll make a simple pattern where every third token is a B-pickup_location 
+        # and every third+1 token is I-pickup_location
+        sample_logits = []
+        for i in range(20):  # Reasonable sequence length
+            if i % 3 == 1:
+                # Make B-pickup_location the highest logit
+                token_logits = [0.0] * len(tag2id)
+                token_logits[1] = 5.0  # B-pickup_location
+                sample_logits.append(token_logits)
+            elif i % 3 == 2:
+                # Make I-pickup_location the highest logit
+                token_logits = [0.0] * len(tag2id)
+                token_logits[2] = 5.0  # I-pickup_location
+                sample_logits.append(token_logits)
+            else:
+                # Make O the highest logit
+                token_logits = [0.0] * len(tag2id)
+                token_logits[0] = 5.0  # O
+                sample_logits.append(token_logits)
+        
+        self.outputs.logits = torch.tensor([sample_logits])
     
     def __call__(self, **kwargs):
         return self.outputs
@@ -45,18 +92,28 @@ class MockModelForTokenClassification:
         pass
 
 class MockTokenizer:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         pass
     
     def __call__(self, text, padding=True, truncation=True, return_tensors="pt", is_split_into_words=False):
         result = MockModule()
-        result.input_ids = torch.tensor([[101, 1000, 1001, 102]])  # CLS, two tokens, SEP
-        result.attention_mask = torch.tensor([[1, 1, 1, 1]])
+        result.input_ids = torch.tensor([[101, 2054, 2003, 1037, 2943, 4178, 102]])
+        result.attention_mask = torch.tensor([[1, 1, 1, 1, 1, 1, 1]])
+        
+        # For the word_ids method
+        result._word_ids = {}
+        
+        # Create word mapping for tokens
+        if isinstance(text, str):
+            words = text.split()
+            # Create a simple mapping where each word corresponds to a token
+            # (this is a simplification, in reality, tokenizers can split words)
+            result._word_ids[0] = [None] + [i for i in range(len(words))] + [None]
+            
         return result
     
     def word_ids(self, batch_index=0):
-        # Return a simple word_ids mapping
-        return [None, 0, 1, None]  # CLS, two word ids, SEP
+        return self._word_ids.get(batch_index, [None, 0, 0, 1, 1, 2, None])
 
 # Apply the mocks
 patch('transformers.DistilBertForSequenceClassification.from_pretrained', 
