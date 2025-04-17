@@ -1,0 +1,23 @@
+[flake8]
+max-line-length = 120
+ignore = 
+    # Line too long
+    E501,
+    # f-string without any placeholders
+    F541,
+    # Local variable assigned but never used
+    F841,
+    # Import not used
+    F401,
+    # Line break before binary operator
+    W503,
+    # Module level import not at top of file
+    E402,
+    # Redefinition of unused variable
+    F811,
+    # Missing whitespace after comma
+    E231,
+    # Missing whitespace around arithmetic operator
+    E226,
+    # Whitespace before colon
+    E203 
