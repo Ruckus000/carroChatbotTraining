@@ -56,11 +56,20 @@ It does **NOT** handle dialog state management, response generation, complex con
     source venv/bin/activate  # On Linux/macOS
     # venv\Scripts\activate    # On Windows
     ```
+    **IMPORTANT:** Always activate the virtual environment when working on this project. This isolates your dependencies and avoids conflicts with system Python packages.
 3.  **Install dependencies:**
+
     ```bash
     pip install -r requirements.txt
     ```
-    This installs `transformers`, `torch`, `datasets`, `scikit-learn`, `numpy`, and `seqeval`. **CPU is assumed.** Training/inference are configured for CPU execution.
+
+    This installs `transformers`, `torch`, `datasets`, `scikit-learn`, `numpy`, `seqeval`, and `black` for code formatting. **CPU is assumed.** Training/inference are configured for CPU execution.
+
+4.  **Code Formatting:**
+    ```bash
+    black .
+    ```
+    Run this to format your code according to the project style guidelines before committing changes.
 
 ---
 
@@ -234,4 +243,5 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` automatically runs lin
 *   **Scikit-learn:** For data splitting
 *   **Seqeval:** For entity recognition metrics (used during training)
 *   **NumPy:** Numerical operations
+*   **Black:** Code formatting
 ````
