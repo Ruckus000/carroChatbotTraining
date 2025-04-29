@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  nlu-api:
+    build: .
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./trained_nlu_model:/app/trained_nlu_model
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Add any other environment variables here if needed
