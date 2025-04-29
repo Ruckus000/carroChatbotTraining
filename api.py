@@ -6,6 +6,7 @@ import logging
 from typing import Dict, List, Optional, Any
 from inference import NLUInferencer
 from dialog_manager import DialogManager
+import uuid
 
 # Configure logging
 logging.basicConfig(
@@ -55,26 +56,21 @@ class DialogResponse(BaseModel):
     text: str
     conversation_id: str
 
-class TowingState:
-    def __init__(self):
-        self.locations = {}  # conversation_id -> location
-        self.confirmations = set()  # set of confirmed conversation_ids
-
 # Initialize the NLU model
 try:
-    nlu_model = NLUInferencer()
+    nlu_inferencer = NLUInferencer()
     logger.info("NLU model loaded successfully")
 except Exception as e:
     logger.error(f"Failed to load NLU model: {e}")
     raise RuntimeError(f"Failed to load NLU model: {e}")
 
-# Initialize the Dialog Manager
+# Initialize the Dialog Manager with NLU
 try:
-    dialog_manager = DialogManager()
+    dialog_manager = DialogManager(nlu_inferencer=nlu_inferencer)
     logger.info("Dialog Manager initialized successfully")
 except Exception as e:
     logger.error(f"Failed to initialize Dialog Manager: {e}")
-    dialog_manager = None  # Continue without dialog management
+    raise RuntimeError(f"Failed to initialize Dialog Manager: {e}")
 
 @app.get("/")
 async def root():
@@ -86,7 +82,7 @@ async def process_text(request: NLURequest):
     
     try:
         # Process the text through NLU
-        result = nlu_model.predict(request.text)
+        result = nlu_inferencer.predict(request.text)
         logger.info(f"NLU result: {result}")
         return result
     except Exception as e:
@@ -95,136 +91,38 @@ async def process_text(request: NLURequest):
 
 @app.post("/api/dialog", response_model=DialogResponse)
 async def process_dialog(request: DialogRequest):
-    logger.info(f"Processing dialog: {request.text}")
-    
-    # Create a global state for towing conversations if it doesn't exist
-    if not hasattr(app, "towing_state"):
-        app.towing_state = TowingState()
-    
-    # Hard-coded towing dialog flow
-    text = request.text.lower()
-    cid = request.conversation_id or "default"
-    
-    # Check for towing/breakdown related words
-    towing_keywords = ["tow", "broke down", "broken down", "not starting", "won't start", "flat tire"]
-    
-    # If this conversation already has a location stored
-    if cid in app.towing_state.locations:
-        location = app.towing_state.locations[cid]
+    """Process a dialog turn through the dialog manager."""
+    conversation_id = request.conversation_id or str(uuid.uuid4())
+    logger.info(f"Processing dialog for conv_id '{conversation_id}': '{request.text}'")
+
+    try:
+        # Process the turn through the dialog manager
+        result = dialog_manager.process_turn(request.text, conversation_id)
         
-        # If they've already confirmed 
-        if cid in app.towing_state.confirmations:
-            return {
-                "text": f"Your tow truck has been dispatched to {location} and should arrive within 30-45 minutes. Is there anything else you need help with?",
-                "conversation_id": cid
-            }
-        
-        # User is confirming
-        if any(word in text for word in ["yes", "correct", "right", "confirm", "ok", "okay", "sure", "good"]):
-            app.towing_state.confirmations.add(cid)
-            return {
-                "text": f"Great! I've dispatched a tow truck to {location}. It should arrive within 30-45 minutes. Is there anything else you need help with?",
-                "conversation_id": cid
-            }
-        
-        # User is declining or changing location
-        if any(word in text for word in ["no", "wrong", "incorrect", "change", "different"]):
-            app.towing_state.locations.pop(cid)
-            return {
-                "text": "I understand. Could you please provide the correct location where you need the tow truck?",
-                "conversation_id": cid
-            }
-        
-        # Otherwise, we're waiting for confirmation
-        return {
-            "text": f"Just to confirm, you need a tow truck at {location}. Is that correct?",
-            "conversation_id": cid
-        }
-    
-    # Initial towing request
-    elif any(keyword in text for keyword in towing_keywords):
-        # Check if location is in the message
-        location_markers = ["at ", "on ", "near ", "by ", "close to "]
-        location = ""
-        
-        for marker in location_markers:
-            if marker in text:
-                parts = text.split(marker, 1)
-                if len(parts) > 1:
-                    location = marker + parts[1]
-                    break
-        
-        if location:
-            app.towing_state.locations[cid] = location
-            return {
-                "text": f"I see you're {location}. I'll send a tow truck to that location. Is that correct?",
-                "conversation_id": cid
-            }
+        # Extract the response text
+        if isinstance(result, dict) and "bot_response" in result:
+            response_text = result.get("bot_response", "Error: No response generated.")
+            # Optional: Log state or action details for debugging
+            logger.debug(f"DM Action for {conversation_id}: {result.get('action')}")
         else:
-            return {
-                "text": "I can help you with towing. Can you please provide your current location so I can dispatch a tow truck?",
-                "conversation_id": cid
-            }
-    
-    # Location provided after towing request
-    elif app.towing_state.locations.get(cid, "") == "":
-        # Assume this is a location response
-        app.towing_state.locations[cid] = request.text
-        return {
-            "text": f"Thank you. I'll send a tow truck to {request.text}. Is that correct?",
-            "conversation_id": cid
-        }
-    
-    # Fallback to the regular dialog manager if available
-    if dialog_manager:
-        try:
-            # Process the text through the dialog manager
-            result = dialog_manager.process_turn(request.text, request.conversation_id)
-            logger.info(f"Dialog result: {result}")
-            
-            # In case of error or None result, provide a fallback response
-            if result is None:
-                return {
-                    "text": "I'm sorry, I'm having trouble processing your request right now. Could you try again?",
-                    "conversation_id": request.conversation_id or "default_session"
-                }
-            
-            # Extract the response
-            response_text = "I'm sorry, I didn't understand that."
-            
-            # Try different fields where the response might be
-            if "bot_response" in result:
-                response_text = result["bot_response"]
-            elif "response" in result:
-                response_text = result["response"]
-            elif "action" in result and "text" in result["action"]:
-                response_text = result["action"]["text"]
-            
-            # If we're supposed to ask for a slot, do simple default responses
-            if "action" in result and result["action"].get("type") == "REQUEST_SLOT":
-                slot = result["action"].get("slot_name", "")
-                if slot == "pickup_location":
-                    response_text = "Please provide your current location so I can send a tow truck."
-                elif "destination" in slot:
-                    response_text = "Where would you like your vehicle to be towed to?"
-                elif "vehicle" in slot:
-                    response_text = f"What is the {slot.replace('vehicle_', '').replace('_', ' ')} of your vehicle?"
-            
-            return {
-                "text": response_text,
-                "conversation_id": request.conversation_id or "default_session"
-            }
-        except Exception as e:
-            logger.error(f"Error processing dialog: {e}")
-            return {
-                "text": "I apologize, but I encountered an error. Let's start fresh. How can I help you?",
-                "conversation_id": request.conversation_id or "default_session"
-            }
-    else:
-        return {
-            "text": "I'm sorry, I'm having trouble processing your request right now. Could you try again later?",
-            "conversation_id": request.conversation_id or "default_session"
-        }
+            logger.error(f"DialogManager returned unexpected/invalid result for {conversation_id}: {result}")
+            response_text = "I'm sorry, I encountered an internal processing issue. Could you please try again?"
+
+        # Ensure response_text is always a string
+        if not isinstance(response_text, str):
+            logger.error(f"Generated response is not a string for {conversation_id}: {type(response_text)}")
+            response_text = "Error: Invalid response format."
+
+        return DialogResponse(text=response_text, conversation_id=conversation_id)
+
+    except Exception as e:
+        # Log the full exception details for server-side debugging
+        logger.error(f"Unhandled error processing dialog turn for {conversation_id}: {e}", exc_info=True)
+        # Return a generic, user-friendly error response
+        return DialogResponse(
+            text="I apologize, but an unexpected internal error occurred. Please try again later.",
+            conversation_id=conversation_id
+        )
 
 @app.get("/api/health")
 async def health_check():
