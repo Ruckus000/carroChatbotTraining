@@ -5,6 +5,36 @@
     "entities": []
   },
   {
+    "text": "My car isn't starting and I need a tow truck.",
+    "intent": "towing_request_tow_basic",
+    "entities": []
+  },
+  {
+    "text": "My car broke down on the highway and I need a tow.",
+    "intent": "towing_request_tow_basic",
+    "entities": []
+  },
+  {
+    "text": "Car won't start, need towing please.",
+    "intent": "towing_request_tow_basic",
+    "entities": []
+  },
+  {
+    "text": "I got a flat tire and need a tow.",
+    "intent": "towing_request_tow_basic",
+    "entities": []
+  },
+  {
+    "text": "Engine died, I need towing service.",
+    "intent": "towing_request_tow_basic",
+    "entities": []
+  },
+  {
+    "text": "My vehicle broke down, can I get a tow?",
+    "intent": "towing_request_tow_basic",
+    "entities": []
+  },
+  {
     "text": "I need a tow from 123 Main Street to ABC Auto Shop.",
     "intent": "towing_request_tow_location",
     "entities": [

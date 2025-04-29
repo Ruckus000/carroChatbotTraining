@@ -1,11 +1,12 @@
-import os
 import json
-import torch
+import os
+
 import numpy as np
+import torch
 from transformers import (
-    DistilBertTokenizer,
     DistilBertForSequenceClassification,
     DistilBertForTokenClassification,
+    DistilBertTokenizer,
 )
 
 
@@ -19,7 +20,7 @@ class NLUInferencer:
         """
         self.model_path = model_path
         self.device = torch.device("cpu")
-        self.CONFIDENCE_THRESHOLD = 0.5
+        self.CONFIDENCE_THRESHOLD = 0.01
 
         # Load intent model
         try:

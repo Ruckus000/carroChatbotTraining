@@ -9,6 +9,8 @@ RUN pip install --no-cache-dir -r requirements-api.txt
 # Copy the NLU model and code
 COPY api.py .
 COPY inference.py .
+COPY dialog_manager.py .
+COPY response_generator.py .
 COPY trained_nlu_model/ ./trained_nlu_model/
 
 # Expose the port the app runs on
