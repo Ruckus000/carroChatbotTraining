@@ -1,18 +1,20 @@
 import json
 import os
+
 import numpy as np
 import torch
+from datasets import Dataset
+from seqeval.metrics import classification_report
+from seqeval.metrics import f1_score as seqeval_f1_score
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.model_selection import train_test_split
 from transformers import (
-    DistilBertTokenizer,
     DistilBertForSequenceClassification,
     DistilBertForTokenClassification,
-    TrainingArguments,
+    DistilBertTokenizer,
     Trainer,
+    TrainingArguments,
 )
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from datasets import Dataset
-from seqeval.metrics import classification_report, f1_score as seqeval_f1_score
 
 
 def load_data(filepath):

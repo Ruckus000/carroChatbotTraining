@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
+import json
 import os
 import unittest
-import json
 
 
 class TestPhase5(unittest.TestCase):

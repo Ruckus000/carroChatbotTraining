@@ -1,7 +1,7 @@
 # test_phase_dialog_3.py
-import unittest
 import os
 import sys
+import unittest
 from unittest.mock import patch
 
 # Ensure root directory is in path to find inference and dialog_manager
@@ -74,7 +74,7 @@ original_nlu_inferencer = inference.NLUInferencer
 inference.NLUInferencer = MockNLUInferencer
 
 # Now import DialogManager after mocking NLU
-from dialog_manager import DialogState, DialogManager
+from dialog_manager import DialogManager, DialogState
 from response_generator import ResponseGenerator  # Import ResponseGenerator
 
 # Restore original NLUInferencer if needed elsewhere

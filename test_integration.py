@@ -1,9 +1,10 @@
-import os
 import json
-import torch
-import numpy as np
-import traceback
+import os
 import sys
+import traceback
+
+import numpy as np
+import torch
 
 # Enable debug output
 DEBUG = True

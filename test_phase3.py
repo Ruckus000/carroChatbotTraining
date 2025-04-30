@@ -1,9 +1,10 @@
-import unittest
-import os
 import json
-from unittest.mock import patch, MagicMock
-import torch
+import os
+import unittest
+from unittest.mock import MagicMock, patch
+
 import numpy as np
+import torch
 
 # Create directory mocking for tests that might not have trained models
 os.makedirs("./trained_nlu_model/intent_model", exist_ok=True)

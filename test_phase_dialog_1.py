@@ -1,7 +1,7 @@
 # test_phase_dialog_1.py
-import unittest
 import os
 import sys
+import unittest
 
 # Ensure root directory is in path to find inference
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -52,7 +52,7 @@ original_nlu_inferencer = inference.NLUInferencer
 inference.NLUInferencer = MockNLUInferencer
 
 # Now import DialogManager after mocking NLU
-from dialog_manager import DialogState, DialogManager
+from dialog_manager import DialogManager, DialogState
 
 # Restore original NLUInferencer if needed elsewhere (though not needed for this test)
 inference.NLUInferencer = original_nlu_inferencer

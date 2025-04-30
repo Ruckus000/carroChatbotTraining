@@ -1,0 +1,21 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Strict Sequential Execution: Execute phases and steps strictly in the order presented. Do NOT skip steps or jump between phases.
+Targeted Modifications ONLY: Modify ONLY the files and specific functions/lines mentioned in each step. Do NOT modify any other files or code sections.
+No Unsolicited Code: Do NOT add any new features, classes, functions, complex logic, or optimizations beyond precisely what is described in the step. Adhere strictly to the provided code snippets or implementation descriptions.
+Mandatory Verification: After completing the action(s) in a step, perform ALL verification actions for that step. Do NOT proceed if verification fails.
+Test Integrity: Execute test commands exactly as written. DO NOT MODIFY ANY TEST SCRIPTS (test_*.py) unless explicitly instructed by a future plan revision after reporting a fundamental issue with a test.
+Limited Debugging Protocol:
+If a command fails (e.g., python, pytest), report the full command and error message and STOP.
+If a verification step fails, report the failed verification and the actual outcome, then STOP.
+If a test fails, report the full test output. Review ONLY the code modified in the immediately preceding action steps of the current phase. Attempt one targeted fix based only on the plan's instructions for that code. Rerun the test. If it still fails, STOP and report the failure and the attempted fix. Do NOT attempt broad debugging or modify unrelated code.
+STOP on Error/Uncertainty: If any command fails, verification fails, a test fails after one targeted fix attempt, or if instructions are unclear/ambiguous, STOP EXECUTION IMMEDIATELY.
+Clear Reporting: When Stopping (Rule 7), report:
+The Phase and Step number where the issue occurred.
+The exact command run or verification attempted.
+The FULL error message, verification failure details, or test failure output.
+Confirm that ONLY the files/code specified in the preceding steps of the current phase were modified.
+Confirm Phase Completion: After successfully completing all steps in a phase, including passing all associated tests and verifications, explicitly state: "Phase [X] completed successfully. All actions performed and verified."
