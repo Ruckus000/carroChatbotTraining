@@ -142,13 +142,22 @@ class ResponseGenerator:
         # Only use special handling for the first message
         if state.turn_count <= 1 and state.history and "user" in state.history[-1]:
             user_text = state.history[-1]["user"].lower()
-            if "tow" in user_text or "broke down" in user_text or "car won't start" in user_text or "flat tire" in user_text:
+            if (
+                "tow" in user_text
+                or "broke down" in user_text
+                or "car won't start" in user_text
+                or "flat tire" in user_text
+            ):
                 # Force a towing response for first message only
                 return "I can help you with towing your vehicle. To get started, please provide your current location."
-            
-            if "battery" in user_text or "jump start" in user_text or "won't turn on" in user_text:
+
+            if (
+                "battery" in user_text
+                or "jump start" in user_text
+                or "won't turn on" in user_text
+            ):
                 return "I can send someone to help with your battery issue. Can you provide your current location?"
-            
+
         if action_type in self.templates:
             templates_for_action = self.templates[action_type]
 

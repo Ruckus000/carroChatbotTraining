@@ -97,7 +97,9 @@ class DialogManager:
         if not nlu_inferencer:
             raise ValueError("NLUInferencer instance is required for DialogManager.")
         self.nlu = nlu_inferencer
-        self.states = {}  # Stores states per conversation_id: {conversation_id: DialogState}
+        self.states = (
+            {}
+        )  # Stores states per conversation_id: {conversation_id: DialogState}
         self.response_generator = ResponseGenerator()
         print("DEBUG: DialogManager initialized with provided NLUInferencer.")
         # DO NOT add any other initialization logic here.
@@ -153,11 +155,11 @@ class DialogManager:
             return {"response": "Error: NLU system not available.", "state": None}
 
         state = self.get_or_create_state(conversation_id)
-        
+
         # Store previous state before updates
         previous_intent = state.current_intent
         previous_step = state.current_step
-        
+
         # Increment turn count at the beginning
         state.turn_count += 1
 
@@ -174,54 +176,68 @@ class DialogManager:
             }
 
         # Detect out-of-scope queries that are clearly not automotive related
-        out_of_scope_patterns = ["chocolate", "cake", "bake", "weather", "recipe", "movie", "music", 
-                               "politics", "sports", "game", "restaurant", "food"]
-        is_out_of_scope = any(pattern in user_input.lower() for pattern in out_of_scope_patterns)
-        
+        out_of_scope_patterns = [
+            "chocolate",
+            "cake",
+            "bake",
+            "weather",
+            "recipe",
+            "movie",
+            "music",
+            "politics",
+            "sports",
+            "game",
+            "restaurant",
+            "food",
+        ]
+        is_out_of_scope = any(
+            pattern in user_input.lower() for pattern in out_of_scope_patterns
+        )
+
         if is_out_of_scope:
             state.fallback_reason = "out_of_scope"
             state.current_intent = "fallback_out_of_scope"
         # Check for towing keywords only if not out of scope
-        elif any(word in user_input.lower() for word in ["tow", "broke down", "broken down"]):
+        elif any(
+            word in user_input.lower() for word in ["tow", "broke down", "broken down"]
+        ):
             state.current_intent = "towing_request_tow_basic"
-            state.required_slots = self.define_required_slots("towing_request_tow_basic")
+            state.required_slots = self.define_required_slots(
+                "towing_request_tow_basic"
+            )
             state.fallback_reason = None  # Clear any fallback since we detected towing
 
         # Update State with NLU result
         state.update_from_nlu(nlu_result)
-        
+
         # If we're in a towing flow, maintain context even with low confidence
         if previous_intent and previous_intent.startswith("towing_"):
             if state.fallback_reason == "low_confidence":
                 # Clear fallback and maintain towing context
                 state.fallback_reason = None
                 state.current_intent = previous_intent
-        
+
         # If no intent is set yet but we got entities, use a generic intent
         if not state.current_intent or state.current_intent == "unknown":
             if nlu_result.get("entities"):
                 state.current_intent = "entity_only"
-                
+
         # Set required slots if needed
         if state.current_intent and not state.required_slots:
             state.required_slots = self.define_required_slots(state.current_intent)
-        
+
         # Determine next action based on updated state
         action = self.determine_next_action(state, state.current_intent, user_input)
         print(f"DEBUG Action decided: {action}")
-        
+
         # Generate response based on action
         bot_response = self.response_generator.generate_response(action, state)
-        
+
         # Add the interaction to history
         state.add_history(user_input, bot_response)
-        
+
         # Return the complete result
-        return {
-            "state": state,
-            "action": action,
-            "bot_response": bot_response
-        }
+        return {"state": state, "action": action, "bot_response": bot_response}
 
     def determine_next_action(self, state, nlu_intent, user_input):
         """Determine the next action based on state and NLU intent."""
@@ -234,9 +250,21 @@ class DialogManager:
             return {"type": "RESPOND_RESTART_FLOW"}
 
         # Handle clearly out-of-scope queries
-        out_of_scope_patterns = ["chocolate", "cake", "bake", "weather", "recipe", "movie", "music", 
-                               "politics", "sports", "game", "restaurant", "food"]
-        
+        out_of_scope_patterns = [
+            "chocolate",
+            "cake",
+            "bake",
+            "weather",
+            "recipe",
+            "movie",
+            "music",
+            "politics",
+            "sports",
+            "game",
+            "restaurant",
+            "food",
+        ]
+
         if any(pattern in user_input.lower() for pattern in out_of_scope_patterns):
             return {"type": "RESPOND_FALLBACK", "reason": "out_of_scope"}
 
@@ -247,7 +275,10 @@ class DialogManager:
         # Initial case with no intent yet - try to detect one
         if not state.current_intent or state.current_intent == "unknown":
             # Check for towing keywords in the input
-            if any(word in user_input.lower() for word in ["tow", "broke down", "broken down"]):
+            if any(
+                word in user_input.lower()
+                for word in ["tow", "broke down", "broken down"]
+            ):
                 state.current_intent = "towing_request_tow_basic"
                 state.required_slots = self.define_required_slots(state.current_intent)
             else:
@@ -378,7 +409,7 @@ class DialogManager:
                 missing_slots = state.get_missing_slots()
                 if missing_slots:
                     return {"type": "REQUEST_SLOT", "slot_name": missing_slots[0]}
-            
+
             # Otherwise, need clarification
             return {
                 "type": "RESPOND_FALLBACK",
@@ -390,10 +421,10 @@ class DialogManager:
         # Handle direct towing response for the hack added above
         if action.get("type") == "RESPOND_WITH_TOWING":
             return action.get("text")
-        # Handle location confirmation    
+        # Handle location confirmation
         elif action.get("type") == "RESPOND_WITH_TOWING_LOCATION":
             return action.get("text")
-            
+
         # Generate responses for normal actions
         response = self.response_generator.generate_response(action, state)
         return response
