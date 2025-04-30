@@ -1,18 +1,20 @@
 # NLU Chatbot Integration Guide
 
-This document outlines how to integrate the NLU chatbot with your React Native frontend. The NLU API server is already running via Docker and provides intent detection and entity extraction for text messages.
+This document outlines how to integrate the NLU chatbot with your React Native frontend. The API server provides intent detection, entity extraction, and dialog management for conversations.
 
 ## API Overview
 
-The NLU chatbot API is a standalone service that:
+The chatbot API is a standalone service that:
 
 - Analyzes text to determine user intent
 - Extracts entities from user messages
+- Manages conversation state across multiple turns
+- Generates appropriate responses based on context
 - Provides a simple REST interface
 
 ## API Server Status
 
-The NLU chatbot API server is **already running via Docker** at `http://localhost:8000`. You don't need to set up or deploy this service - it's ready to use.
+The API server is **already running via Docker** at `http://localhost:8000`. You don't need to set up or deploy this service - it's ready to use.
 
 ## API Endpoints
 
@@ -25,7 +27,7 @@ The following endpoints are available:
 - **Response**: `{"status": "healthy"}`
 - **Purpose**: Verify the API server is running and responsive
 
-### Process Text
+### Process Text (NLU Only)
 
 - **URL**: `/api/nlu`
 - **Method**: `POST`
@@ -59,6 +61,30 @@ The following endpoints are available:
   }
   ```
 
+### Process Dialog (Full Conversation)
+
+- **URL**: `/api/dialog`
+- **Method**: `POST`
+- **Headers**: `Content-Type: application/json`
+- **Body**:
+  ```json
+  {
+    "text": "Your text message here",
+    "conversation_id": "optional_conversation_id"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "text": "Bot response text",
+    "conversation_id": "conversation_id"
+  }
+  ```
+- **Notes**:
+  - If `conversation_id` is not provided, a new one will be generated
+  - The same `conversation_id` should be used for multiple turns in the same conversation
+  - The dialog endpoint maintains state between turns
+
 ## Testing the API
 
 You can test the already-running API using cURL:
@@ -67,10 +93,15 @@ You can test the already-running API using cURL:
 # Health check
 curl -X GET http://localhost:8000/api/health
 
-# Process text
+# Process text (NLU only)
 curl -X POST http://localhost:8000/api/nlu \
   -H "Content-Type: application/json" \
   -d '{"text": "My car broke down on the highway, I need a tow"}'
+
+# Process dialog (with conversation state)
+curl -X POST http://localhost:8000/api/dialog \
+  -H "Content-Type: application/json" \
+  -d '{"text": "My car broke down on the highway, I need a tow", "conversation_id": "test123"}'
 ```
 
 ## React Native Integration
@@ -80,12 +111,16 @@ curl -X POST http://localhost:8000/api/nlu \
 Create a service to handle API calls in your React Native project:
 
 ```javascript
-// src/services/nluService.js
-const API_URL = 'http://localhost:8000/api/nlu'
+// src/services/chatbotService.js
+const API_BASE_URL = 'http://localhost:8000/api'
+const API_NLU_URL = `${API_BASE_URL}/nlu`
+const API_DIALOG_URL = `${API_BASE_URL}/dialog`
+const API_HEALTH_URL = `${API_BASE_URL}/health`
 
-export const processUserMessage = async (text) => {
+// Process text through NLU only (no conversation state)
+export const processTextNLU = async (text) => {
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(API_NLU_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -109,15 +144,43 @@ export const processUserMessage = async (text) => {
   }
 }
 
+// Process dialog with conversation state
+export const processDialog = async (text, conversationId = null) => {
+  try {
+    const body = { text }
+    if (conversationId) {
+      body.conversation_id = conversationId
+    }
+
+    const response = await fetch(API_DIALOG_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.detail || 'Network response was not ok')
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error processing dialog:', error)
+    return {
+      text: 'Sorry, I encountered an error processing your request.',
+      conversation_id: conversationId || 'error',
+    }
+  }
+}
+
 // Check if API is available
 export const checkApiHealth = async () => {
   try {
-    const response = await fetch(
-      `${API_URL.substring(0, API_URL.lastIndexOf('/'))}/health`,
-      {
-        method: 'GET',
-      }
-    )
+    const response = await fetch(API_HEALTH_URL, {
+      method: 'GET',
+    })
     return response.ok
   } catch (error) {
     console.error('API health check failed:', error)
@@ -128,7 +191,7 @@ export const checkApiHealth = async () => {
 
 ### 2. Chat Component Implementation
 
-Use the service in your chat component:
+Here's a basic chat component that uses the dialog endpoint to maintain conversation state:
 
 ```javascript
 // src/components/Chat.js
@@ -142,13 +205,14 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native'
-import { processUserMessage, checkApiHealth } from '../services/nluService'
+import { processDialog, checkApiHealth } from '../services/chatbotService'
 
 const Chat = () => {
   const [messages, setMessages] = useState([])
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [apiAvailable, setApiAvailable] = useState(true)
+  const [conversationId, setConversationId] = useState(null)
 
   // Check API health on component mount
   useEffect(() => {
@@ -174,32 +238,19 @@ const Chat = () => {
     setIsLoading(true)
 
     try {
-      // Process with NLU API
-      const nluResult = await processUserMessage(inputText)
+      // Process with dialog API
+      const result = await processDialog(inputText, conversationId)
 
-      // Create response based on intent and entities
-      let responseText = ''
-
-      if (nluResult.intent.name.includes('fallback')) {
-        responseText = "I'm not sure I understand. Could you rephrase that?"
-      } else {
-        // Here you would implement logic to generate responses based on intents
-        responseText = `I detected: ${nluResult.intent.name}`
-
-        // Example of using entities in response
-        if (nluResult.entities.length > 0) {
-          const entityText = nluResult.entities
-            .map((entity) => `${entity.entity}: ${entity.value}`)
-            .join(', ')
-          responseText += `\nWith entities: ${entityText}`
-        }
+      // Store conversation ID for subsequent messages
+      if (result.conversation_id && !conversationId) {
+        setConversationId(result.conversation_id)
       }
 
       const botMessage = {
         id: (Date.now() + 1).toString(),
-        text: responseText,
+        text: result.text,
         sender: 'bot',
-        nluData: nluResult,
+        conversationId: result.conversation_id,
       }
 
       setMessages((prevMessages) => [...prevMessages, botMessage])
@@ -351,56 +402,7 @@ export default Chat
 
 ### 3. Environment Configuration
 
-Configure API URLs for different environments:
-
-```javascript
-// src/config/api.js
-const API_CONFIG = {
-  development: {
-    // For iOS simulator
-    ios: 'http://localhost:8000/api',
-    // For Android emulator (redirects to host machine's localhost)
-    android: 'http://10.0.2.2:8000/api',
-  },
-  production: {
-    // Your production API URL
-    ios: 'https://your-production-api.com/api',
-    android: 'https://your-production-api.com/api',
-  },
-}
-
-// Determine platform and environment
-const platform = Platform.OS
-const environment = __DEV__ ? 'development' : 'production'
-
-// Export the appropriate URL
-export const API_BASE_URL = API_CONFIG[environment][platform]
-export const API_NLU_URL = `${API_BASE_URL}/nlu`
-export const API_HEALTH_URL = `${API_BASE_URL}/health`
-```
-
-Then update your service:
-
-```javascript
-// src/services/nluService.js
-import { API_NLU_URL, API_HEALTH_URL } from '../config/api';
-
-export const processUserMessage = async (text) => {
-  try {
-    const response = await fetch(API_NLU_URL, {
-      // ... rest of the code
-    });
-    // ...
-  }
-};
-
-export const checkApiHealth = async () => {
-  try {
-    const response = await fetch(API_HEALTH_URL);
-    // ...
-  }
-};
-```
+Configure API URLs for different environments as in previous examples.
 
 ## Testing in Development
 
@@ -416,6 +418,7 @@ When testing locally:
 ## Important Notes
 
 1. **The API is already running** - You don't need to start it manually, the Docker container is handling this
-2. **API Response Format** - The API returns both intent and entities, use them to build your response logic
-3. **Error Handling** - Always implement proper error handling as shown in the example
-4. **Connectivity Issues** - Test your app's behavior when the API is unreachable
+2. **Conversation State** - The dialog endpoint maintains state between turns when you provide the same conversation_id
+3. **Dialog Flow** - The system will guide users through required information for different flows (towing, roadside assistance, etc.)
+4. **Error Handling** - Always implement proper error handling as shown in the example
+5. **Connectivity Issues** - Test your app's behavior when the API is unreachable

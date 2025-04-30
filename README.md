@@ -2,12 +2,14 @@
 
 ## Overview
 
-This repository contains a **simplified** Natural Language Understanding (NLU) system built using Python and Hugging Face Transformers (specifically DistilBERT). Its sole purpose is to take a piece of text (like user input to a chatbot) and figure out:
+This repository contains a **simplified** Natural Language Understanding (NLU) system built using Python and Hugging Face Transformers (specifically DistilBERT). It provides:
 
-1.  **Intent:** What is the user trying to _do_? (e.g., request a tow, ask about battery)
+1.  **Intent Detection:** What is the user trying to _do_? (e.g., request a tow, ask about battery)
 2.  **Entities:** What are the key pieces of information in the text? (e.g., location, vehicle type)
+3.  **Dialog Management:** A unified dialog management system that handles conversation state and determines appropriate actions
+4.  **Response Generation:** Generates appropriate responses based on the dialog state and determined actions
 
-It does **NOT** handle dialog state management, response generation, complex context tracking, or anything beyond this core NLU task. The training process generates two primary models: one for intent classification and one for entity recognition (using token classification with BIO tagging).
+The system features a clean architecture with dependency injection, making it flexible and testable.
 
 ---
 
@@ -15,31 +17,55 @@ It does **NOT** handle dialog state management, response generation, complex con
 
 - **Intent Detection:** Classifies the input text into a predefined set of intents. Intents are expected to follow a `flow_subintent` naming convention (e.g., `towing_request_tow_basic`, `roadside_request_battery`). If the model's confidence is below a threshold (currently hardcoded at 0.5 in `inference.py`), it defaults to a `fallback_low_confidence` intent.
 - **Entity Recognition:** Identifies and extracts named entities from the text. It uses the **BIO (Beginning, Inside, Outside)** tagging scheme. For example, "123 Main Street" might be tagged as `B-pickup_location I-pickup_location I-pickup_location`. The inference script then groups these tags into entity dictionaries like `{"entity": "pickup_location", "value": "123 Main Street"}`.
+- **Dialog Management:** The `DialogManager` class manages conversation state for multiple conversations, determines appropriate actions based on intents and entities, and coordinates the flow of the conversation.
+- **Response Generation:** The `ResponseGenerator` class generates human-readable responses based on the determined action and current dialog state.
 
 ---
 
-## Project Structure (What Actually Matters)
+## Project Structure
 
 ```
 .
 ├── .github/
 │   └── workflows/
-│       └── ci.yml            # GitHub Actions CI configuration
+│       └── ci.yml              # GitHub Actions CI configuration
 ├── data/
-│   └── nlu_training_data.json # THE ONLY TRAINING DATA FILE
-├── trained_nlu_model/        # Output directory for trained models
-│   ├── intent_model/         # Intent classification model files
-│   └── entity_model/         # Entity recognition (token classification) model files
-├── .gitignore                # Standard Git ignore file
-├── inference.py              # Loads models and performs NLU prediction
-├── README.md                 # This file
-├── requirements.txt          # Python dependencies
-├── test_integration.py       # Basic integration test for NLUInferencer
-├── test_phase*.py            # Historical/developmental test scripts (ignore for usage)
-└── train.py                  # Script to train the NLU models
+│   └── nlu_training_data.json  # THE ONLY TRAINING DATA FILE
+├── trained_nlu_model/          # Output directory for trained models
+│   ├── intent_model/           # Intent classification model files
+│   └── entity_model/           # Entity recognition model files
+├── .gitignore                  # Standard Git ignore file
+├── inference.py                # Loads models and performs NLU prediction
+├── dialog_manager.py           # Manages conversation state and determines actions
+├── response_generator.py       # Generates human-readable responses
+├── api.py                      # FastAPI server for exposing functionality
+├── README.md                   # This file
+├── API_README.md               # API documentation for frontend integration
+├── requirements.txt            # Full Python dependencies including dev/testing
+├── requirements-api.txt        # Runtime dependencies for the API server
+├── test_integration.py         # Basic integration test for NLUInferencer
+├── test_api_integration.py     # API integration tests
+├── test_dialog_manager_unified.py # Tests for the unified DialogManager
+└── train.py                    # Script to train the NLU models
 ```
 
-**Gone:** `cleanup.py`, `dialog_manager.py`, `response_generator.py`, `plan*.md`, `imp-rules.md`, and other older test/utility/data files are remnants or process artifacts and **not part of the core NLU system described here.**
+---
+
+## Architecture
+
+The system follows a modular architecture with clear separation of concerns:
+
+1. **NLU Layer (`inference.py`):** Handles text processing, intent detection, and entity extraction.
+2. **Dialog Management Layer (`dialog_manager.py`):** Manages conversation state, determines actions based on intents/entities.
+3. **Response Generation Layer (`response_generator.py`):** Creates natural language responses based on actions.
+4. **API Layer (`api.py`):** Exposes the functionality via a REST API using FastAPI.
+
+Key architectural features:
+
+- **Dependency Injection:** The DialogManager requires an NLUInferencer instance to be provided at initialization, allowing for loose coupling and easier testing.
+- **State Management:** Conversation state is maintained per conversation ID, allowing for multiple simultaneous conversations.
+- **Action Determination:** Based on the current state and NLU results, the DialogManager determines appropriate actions.
+- **Templated Responses:** The ResponseGenerator uses templates to create varied and context-appropriate responses.
 
 ---
 
@@ -63,7 +89,7 @@ It does **NOT** handle dialog state management, response generation, complex con
     pip install -r requirements.txt
     ```
 
-    This installs `transformers`, `torch`, `datasets`, `scikit-learn`, `numpy`, `seqeval`, and `black` for code formatting. **CPU is assumed.** Training/inference are configured for CPU execution.
+    This installs all required dependencies for development, training, and testing.
 
 4.  **Code Formatting:**
     ```bash
@@ -110,12 +136,6 @@ This is the **only** file used for training. It's a JSON list of dictionaries, e
 ]
 ```
 
-**CRITICAL:**
-
-- `text`: The raw input string.
-- `intent`: A single string identifying the user's goal, using `_` to separate flow/sub-intent.
-- `entities`: A list of dictionaries. Each dictionary MUST have `entity` (type name) and `value` (the exact text span from `text`).
-
 ---
 
 ## Training the Models
@@ -134,114 +154,58 @@ python train.py
 4.  **Trains Entity Model:** Fine-tunes a `DistilBertForTokenClassification` model using the `text` and `entities` fields (converting entities to BIO tags internally).
 5.  Saves the trained models, tokenizers, and necessary configuration/mapping files into `./trained_nlu_model/intent_model/` and `./trained_nlu_model/entity_model/`.
 
-**Output:** The `./trained_nlu_model/` directory will contain:
-
-- `intent_model/`: Files for the intent classifier (`pytorch_model.bin` or `model.safetensors`, `config.json`, `tokenizer_config.json`, `vocab.txt`, `special_tokens_map.json`, `intent2id.json`).
-- `entity_model/`: Files for the entity recognizer (similar structure, plus `tag2id.json`).
-
 ---
 
-## Performing NLU Inference
+## Running the API Server
 
-Use the `NLUInferencer` class from `inference.py` to get predictions on new text.
+To run the API server:
 
-```python
-from inference import NLUInferencer
-import json # For pretty printing
-
-# 1. Initialize (loads models from the default './trained_nlu_model' path)
-#    This will likely take a few seconds the first time.
-try:
-    nlu = NLUInferencer()
-    print("NLUInferencer initialized successfully.")
-except Exception as e:
-    print(f"Failed to initialize NLUInferencer: {e}")
-    exit()
-
-# 2. Predict on new text
-input_text = "My 2022 Ford F-150 needs a tow to Bob's Garage"
-try:
-    result = nlu.predict(input_text)
-
-    # 3. Analyze the result
-    print("\n--- NLU Result ---")
-    print(json.dumps(result, indent=2))
-    print("------------------")
-
-    intent_name = result.get("intent", {}).get("name", "unknown")
-    intent_confidence = result.get("intent", {}).get("confidence", 0.0)
-    entities_found = result.get("entities", [])
-
-    print(f"Detected Intent: {intent_name} (Confidence: {intent_confidence:.4f})")
-    if entities_found:
-        print("Detected Entities:")
-        for entity in entities_found:
-            print(f"  - {entity['entity']}: {entity['value']}")
-    else:
-        print("No entities detected.")
-
-except Exception as e:
-    print(f"Error during prediction: {e}")
-
+```bash
+python api.py
 ```
 
-**Expected Output Format from `nlu.predict(text)`:**
+This starts a FastAPI server on http://localhost:8000 that provides:
 
-```json
-{
-  "text": "My 2022 Ford F-150 needs a tow to Bob's Garage",
-  "intent": {
-    "name": "towing_request_tow_full", // Predicted intent label
-    "confidence": 0.9876 // Model's confidence score (0.0 to 1.0)
-  },
-  "entities": [
-    // List of extracted entities
-    {
-      "entity": "vehicle_year",
-      "value": "2022"
-    },
-    {
-      "entity": "vehicle_make",
-      "value": "Ford"
-    },
-    {
-      "entity": "vehicle_model",
-      "value": "F-150"
-    },
-    {
-      "entity": "destination",
-      "value": "Bob's Garage"
-    }
-  ]
-}
-```
+- `/api/health` - Health check endpoint
+- `/api/nlu` - NLU processing endpoint
+- `/api/dialog` - Dialog processing endpoint that maintains conversation state
+
+See the `API_README.md` file for detailed API documentation and integration examples.
 
 ---
 
 ## Testing
 
-The primary test to verify basic NLU functionality after training is:
+Several test suites are available to verify different components of the system:
 
-````bash
-python test_integration.py```
+```bash
+# Basic NLU integration test
+python test_integration.py
 
-This script uses the `NLUInferencer` to check predictions on a few hardcoded examples. Other `test_phase*.py` scripts exist from previous development phases but are not essential for verifying the current system's basic operation.
+# Test the unified DialogManager
+python -m unittest test_dialog_manager_unified.py
+
+# Run API integration tests (requires the API server to be running)
+python -m pytest test_api_integration.py
+```
 
 ---
 
 ## CI Workflow
 
-The GitHub Actions workflow in `.github/workflows/ci.yml` automatically runs linters (`flake8`, `black`, `isort`) and the `test_integration.py` script on pushes and pull requests to the `main` and `development` branches.
+The GitHub Actions workflow in `.github/workflows/ci.yml` automatically runs linters (`flake8`, `black`, `isort`) and the test scripts on pushes and pull requests to the `main` and `development` branches.
 
 ---
 
 ## Technology Stack
 
-*   **Python:** Core language
-*   **Hugging Face Transformers:** For DistilBERT models and tokenizers
-*   **PyTorch:** Backend for Transformers
-*   **Scikit-learn:** For data splitting
-*   **Seqeval:** For entity recognition metrics (used during training)
-*   **NumPy:** Numerical operations
-*   **Black:** Code formatting
-````
+- **Python:** Core language
+- **Hugging Face Transformers:** For DistilBERT models and tokenizers
+- **PyTorch:** Backend for Transformers
+- **FastAPI:** REST API framework
+- **Uvicorn:** ASGI server for FastAPI
+- **Scikit-learn:** For data splitting
+- **Seqeval:** For entity recognition metrics (used during training)
+- **NumPy:** Numerical operations
+- **Black:** Code formatting
+- **Pytest:** For testing
