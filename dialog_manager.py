@@ -173,8 +173,16 @@ class DialogManager:
                 "entities": [],
             }
 
-        # Check for towing keywords first
-        if any(word in user_input.lower() for word in ["tow", "broke down", "broken down"]):
+        # Detect out-of-scope queries that are clearly not automotive related
+        out_of_scope_patterns = ["chocolate", "cake", "bake", "weather", "recipe", "movie", "music", 
+                               "politics", "sports", "game", "restaurant", "food"]
+        is_out_of_scope = any(pattern in user_input.lower() for pattern in out_of_scope_patterns)
+        
+        if is_out_of_scope:
+            state.fallback_reason = "out_of_scope"
+            state.current_intent = "fallback_out_of_scope"
+        # Check for towing keywords only if not out of scope
+        elif any(word in user_input.lower() for word in ["tow", "broke down", "broken down"]):
             state.current_intent = "towing_request_tow_basic"
             state.required_slots = self.define_required_slots("towing_request_tow_basic")
             state.fallback_reason = None  # Clear any fallback since we detected towing
@@ -224,6 +232,13 @@ class DialogManager:
         if nlu_intent.startswith("restart") or nlu_intent.startswith("cancel"):
             state.reset_flow()  # Reset the state
             return {"type": "RESPOND_RESTART_FLOW"}
+
+        # Handle clearly out-of-scope queries
+        out_of_scope_patterns = ["chocolate", "cake", "bake", "weather", "recipe", "movie", "music", 
+                               "politics", "sports", "game", "restaurant", "food"]
+        
+        if any(pattern in user_input.lower() for pattern in out_of_scope_patterns):
+            return {"type": "RESPOND_FALLBACK", "reason": "out_of_scope"}
 
         # Only fallback if we have no context and get a low confidence result
         if state.fallback_reason and not state.current_intent:
