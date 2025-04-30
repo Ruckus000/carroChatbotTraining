@@ -161,14 +161,17 @@ python train.py
 To run the API server:
 
 ```bash
-python api.py
+# Use port 8001 to avoid conflicts with the Docker container that uses port 8000
+python -c "import uvicorn; import api; uvicorn.run(api.app, host='127.0.0.1', port=8001)"
 ```
 
-This starts a FastAPI server on http://localhost:8000 that provides:
+This starts a FastAPI server on http://localhost:8001 that provides:
 
 - `/api/health` - Health check endpoint
 - `/api/nlu` - NLU processing endpoint
 - `/api/dialog` - Dialog processing endpoint that maintains conversation state
+
+**IMPORTANT NOTE**: There is a Docker container running on port 8000 with an older version of the API. For development and testing, use the local API on port 8001 as shown above. This ensures you're working with the latest version of the code.
 
 See the `API_README.md` file for detailed API documentation and integration examples.
 

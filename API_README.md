@@ -2,6 +2,17 @@
 
 This document outlines how to integrate the NLU chatbot with your React Native frontend. The API server provides intent detection, entity extraction, and dialog management for conversations.
 
+## IMPORTANT: Use Local API for Development
+
+**CRITICAL UPDATE**: While there is a Docker container running on port 8000, it contains an older version of the API code. For development and testing, use the local API on port 8001:
+
+```bash
+# Start the local API server on port 8001
+python -c "import uvicorn; import api; uvicorn.run(api.app, host='127.0.0.1', port=8001)"
+```
+
+All examples and code in this document have been updated to use port 8001. If you need to use the Docker version on port 8000 for any reason, replace 8001 with 8000 in the examples.
+
 ## API Overview
 
 The chatbot API is a standalone service that:
@@ -14,7 +25,9 @@ The chatbot API is a standalone service that:
 
 ## API Server Status
 
-The API server is **already running via Docker** at `http://localhost:8000`. You don't need to set up or deploy this service - it's ready to use.
+~~The API server is **already running via Docker** at `http://localhost:8000`. You don't need to set up or deploy this service - it's ready to use.~~
+
+**Updated**: Run the local API server as described above on port 8001. This ensures you're using the latest version with all improvements.
 
 ## API Endpoints
 
@@ -112,7 +125,7 @@ Create a service to handle API calls in your React Native project:
 
 ```javascript
 // src/services/chatbotService.js
-const API_BASE_URL = 'http://localhost:8000/api'
+const API_BASE_URL = 'http://localhost:8001/api'
 const API_NLU_URL = `${API_BASE_URL}/nlu`
 const API_DIALOG_URL = `${API_BASE_URL}/dialog`
 const API_HEALTH_URL = `${API_BASE_URL}/health`
@@ -408,16 +421,19 @@ Configure API URLs for different environments as in previous examples.
 
 When testing locally:
 
-1. **Ensure the Docker container is running**:
-   You should see the Docker container logs indicating the API is available on port 8000
+1. **Start the local API server**:
 
-2. **For iOS simulator**: Use 'http://localhost:8000/api' as the base URL
-3. **For Android emulator**: Use 'http://10.0.2.2:8000/api' as the base URL
-4. **For physical devices on the same WiFi**: Use your computer's local IP address: 'http://192.168.x.x:8000/api'
+   ```bash
+   python -c "import uvicorn; import api; uvicorn.run(api.app, host='127.0.0.1', port=8001)"
+   ```
+
+2. **For iOS simulator**: Use 'http://localhost:8001/api' as the base URL
+3. **For Android emulator**: Use 'http://10.0.2.2:8001/api' as the base URL
+4. **For physical devices on the same WiFi**: Use your computer's local IP address: 'http://192.168.x.x:8001/api'
 
 ## Important Notes
 
-1. **The API is already running** - You don't need to start it manually, the Docker container is handling this
+1. **Use the local API on port 8001** - Do not use the Docker container on port 8000 as it contains an older version
 2. **Conversation State** - The dialog endpoint maintains state between turns when you provide the same conversation_id
 3. **Dialog Flow** - The system will guide users through required information for different flows (towing, roadside assistance, etc.)
 4. **Error Handling** - Always implement proper error handling as shown in the example
