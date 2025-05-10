@@ -100,37 +100,41 @@ The following endpoints are available:
 
 ## Testing the API
 
-You can test the already-running API using cURL:
+You can test the local API using cURL:
 
 ```bash
 # Health check
-curl -X GET http://localhost:8000/api/health
+curl -X GET http://localhost:8001/api/health
 
 # Process text (NLU only)
-curl -X POST http://localhost:8000/api/nlu \
+curl -X POST http://localhost:8001/api/nlu \
   -H "Content-Type: application/json" \
   -d '{"text": "My car broke down on the highway, I need a tow"}'
 
 # Process dialog (with conversation state)
-curl -X POST http://localhost:8000/api/dialog \
+curl -X POST http://localhost:8001/api/dialog \
   -H "Content-Type: application/json" \
   -d '{"text": "My car broke down on the highway, I need a tow", "conversation_id": "test123"}'
 ```
 
 ## React Native Integration
 
-### 1. Create API Service
+### 1. Create API Service Module
 
-Create a service to handle API calls in your React Native project:
+Create a dedicated service module to handle API calls in your React Native project:
 
 ```javascript
 // src/services/chatbotService.js
-const API_BASE_URL = 'http://localhost:8001/api'
+const API_BASE_URL = 'http://localhost:8001/api' // Updated to use port 8001
 const API_NLU_URL = `${API_BASE_URL}/nlu`
 const API_DIALOG_URL = `${API_BASE_URL}/dialog`
 const API_HEALTH_URL = `${API_BASE_URL}/health`
 
-// Process text through NLU only (no conversation state)
+/**
+ * Process text through NLU only (no conversation state)
+ * @param {string} text - User message to analyze
+ * @returns {Promise<Object>} - NLU result with intent and entities
+ */
 export const processTextNLU = async (text) => {
   try {
     const response = await fetch(API_NLU_URL, {
@@ -157,7 +161,12 @@ export const processTextNLU = async (text) => {
   }
 }
 
-// Process dialog with conversation state
+/**
+ * Process dialog with conversation state
+ * @param {string} text - User message
+ * @param {string} conversationId - Optional conversation ID for maintaining context
+ * @returns {Promise<Object>} - Bot response and conversation ID
+ */
 export const processDialog = async (text, conversationId = null) => {
   try {
     const body = { text }
@@ -188,7 +197,10 @@ export const processDialog = async (text, conversationId = null) => {
   }
 }
 
-// Check if API is available
+/**
+ * Check if API is available
+ * @returns {Promise<boolean>} - True if API is healthy
+ */
 export const checkApiHealth = async () => {
   try {
     const response = await fetch(API_HEALTH_URL, {
@@ -200,15 +212,38 @@ export const checkApiHealth = async () => {
     return false
   }
 }
+
+/**
+ * Initialize conversation with API
+ * Performs health check and returns a new conversation ID
+ * @returns {Promise<string|null>} - New conversation ID or null if API unavailable
+ */
+export const initializeConversation = async () => {
+  try {
+    // First check API health
+    const isHealthy = await checkApiHealth()
+    if (!isHealthy) {
+      console.error('API is not healthy, cannot initialize conversation')
+      return null
+    }
+
+    // Start a conversation with a greeting
+    const result = await processDialog('Hello', null)
+    return result.conversation_id
+  } catch (error) {
+    console.error('Failed to initialize conversation:', error)
+    return null
+  }
+}
 ```
 
 ### 2. Chat Component Implementation
 
-Here's a basic chat component that uses the dialog endpoint to maintain conversation state:
+Here's a complete Chat component that integrates with the API service:
 
 ```javascript
 // src/components/Chat.js
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   View,
   Text,
@@ -217,8 +252,15 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
 } from 'react-native'
-import { processDialog, checkApiHealth } from '../services/chatbotService'
+import {
+  processDialog,
+  checkApiHealth,
+  initializeConversation,
+} from '../services/chatbotService'
 
 const Chat = () => {
   const [messages, setMessages] = useState([])
@@ -226,18 +268,53 @@ const Chat = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [apiAvailable, setApiAvailable] = useState(true)
   const [conversationId, setConversationId] = useState(null)
+  const [isInitializing, setIsInitializing] = useState(true)
 
-  // Check API health on component mount
+  const flatListRef = useRef(null)
+
+  // Initialize conversation and check API health
   useEffect(() => {
-    const checkHealth = async () => {
+    const initialize = async () => {
+      setIsInitializing(true)
+
+      // Check API health
       const isHealthy = await checkApiHealth()
       setApiAvailable(isHealthy)
+
+      if (isHealthy) {
+        // Initialize a conversation
+        const newConversationId = await initializeConversation()
+        if (newConversationId) {
+          setConversationId(newConversationId)
+
+          // Add welcome message
+          setMessages([
+            {
+              id: Date.now().toString(),
+              text: 'Welcome! How can I assist you with your vehicle today?',
+              sender: 'bot',
+            },
+          ])
+        }
+      }
+
+      setIsInitializing(false)
     }
-    checkHealth()
+
+    initialize()
   }, [])
 
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messages.length > 0 && flatListRef.current) {
+      setTimeout(() => {
+        flatListRef.current.scrollToEnd({ animated: true })
+      }, 100)
+    }
+  }, [messages])
+
   const handleSend = async () => {
-    if (!inputText.trim() || !apiAvailable) return
+    if (!inputText.trim() || !apiAvailable || isLoading) return
 
     // Add user message
     const userMessage = {
@@ -255,7 +332,10 @@ const Chat = () => {
       const result = await processDialog(inputText, conversationId)
 
       // Store conversation ID for subsequent messages
-      if (result.conversation_id && !conversationId) {
+      if (
+        result.conversation_id &&
+        (!conversationId || conversationId === 'error')
+      ) {
         setConversationId(result.conversation_id)
       }
 
@@ -276,22 +356,55 @@ const Chat = () => {
         isError: true,
       }
       setMessages((prevMessages) => [...prevMessages, errorMessage])
+
+      // Check if API is still available
+      const isHealthy = await checkApiHealth()
+      setApiAvailable(isHealthy)
     } finally {
       setIsLoading(false)
     }
   }
 
+  // Retry connecting to API
+  const handleRetryConnection = async () => {
+    const isHealthy = await checkApiHealth()
+    setApiAvailable(isHealthy)
+
+    if (isHealthy && !conversationId) {
+      const newConversationId = await initializeConversation()
+      if (newConversationId) {
+        setConversationId(newConversationId)
+      }
+    }
+  }
+
+  if (isInitializing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0084ff" />
+        <Text style={styles.loadingText}>Connecting to chatbot...</Text>
+      </View>
+    )
+  }
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {!apiAvailable && (
         <View style={styles.apiWarning}>
           <Text style={styles.apiWarningText}>
             Cannot connect to the chatbot API. Please check your connection.
           </Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={handleRetryConnection}
+          >
+            <Text style={styles.retryButtonText}>Retry Connection</Text>
+          </TouchableOpacity>
         </View>
       )}
 
       <FlatList
+        ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -302,39 +415,58 @@ const Chat = () => {
               item.isError && styles.errorBubble,
             ]}
           >
-            <Text style={styles.messageText}>{item.text}</Text>
+            <Text
+              style={[
+                styles.messageText,
+                item.sender === 'user'
+                  ? styles.userMessageText
+                  : styles.botMessageText,
+              ]}
+            >
+              {item.text}
+            </Text>
           </View>
         )}
         style={styles.messageList}
+        contentContainerStyle={styles.messageListContent}
       />
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={inputText}
-          onChangeText={setInputText}
-          placeholder="Type a message..."
-          placeholderTextColor="#999"
-          onSubmitEditing={handleSend}
-          editable={!isLoading && apiAvailable}
-        />
-        {isLoading ? (
-          <ActivityIndicator
-            size="small"
-            color="#0084ff"
-            style={styles.sendButton}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      >
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={inputText}
+            onChangeText={setInputText}
+            placeholder="Type a message..."
+            placeholderTextColor="#999"
+            onSubmitEditing={handleSend}
+            editable={!isLoading && apiAvailable}
+            multiline
           />
-        ) : (
-          <TouchableOpacity
-            style={[styles.sendButton, !apiAvailable && styles.disabledButton]}
-            onPress={handleSend}
-            disabled={!apiAvailable}
-          >
-            <Text style={styles.sendButtonText}>Send</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
+          {isLoading ? (
+            <ActivityIndicator
+              size="small"
+              color="#0084ff"
+              style={styles.sendButton}
+            />
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                !apiAvailable && styles.disabledButton,
+              ]}
+              onPress={handleSend}
+              disabled={!apiAvailable || !inputText.trim()}
+            >
+              <Text style={styles.sendButtonText}>Send</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   )
 }
 
@@ -343,24 +475,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
   apiWarning: {
     backgroundColor: '#ffcccc',
-    padding: 10,
+    padding: 15,
     alignItems: 'center',
   },
   apiWarningText: {
     color: '#cc0000',
     fontSize: 14,
+    marginBottom: 8,
+  },
+  retryButton: {
+    backgroundColor: '#cc0000',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   messageList: {
     flex: 1,
+  },
+  messageListContent: {
     padding: 10,
+    paddingBottom: 15,
   },
   messageBubble: {
     borderRadius: 20,
     padding: 15,
     marginVertical: 5,
     maxWidth: '80%',
+    minWidth: 100,
     alignSelf: 'flex-start',
   },
   userBubble: {
@@ -375,7 +533,12 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 16,
-    color: '#000',
+  },
+  userMessageText: {
+    color: 'white',
+  },
+  botMessageText: {
+    color: '#333',
   },
   inputContainer: {
     flexDirection: 'row',
@@ -393,11 +556,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     marginRight: 10,
     fontSize: 16,
+    maxHeight: 100,
   },
   sendButton: {
     backgroundColor: '#0084ff',
     borderRadius: 20,
     width: 60,
+    height: 45,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -413,9 +578,123 @@ const styles = StyleSheet.create({
 export default Chat
 ```
 
-### 3. Environment Configuration
+### 3. Adding the Chat Component to Your App
 
-Configure API URLs for different environments as in previous examples.
+To add the Chat component to your app, simply import it and include it in your navigation or screen:
+
+```javascript
+// App.js or your navigation component
+import React from 'react'
+import { StyleSheet, View, Text } from 'react-native'
+import { NavigationContainer } from '@react-navigation/native'
+import { createStackNavigator } from '@react-navigation/stack'
+import Chat from './src/components/Chat'
+
+const Stack = createStackNavigator()
+
+const HomeScreen = ({ navigation }) => (
+  <View style={styles.homeContainer}>
+    <Text style={styles.title}>Roadside Assistance Chatbot</Text>
+    <TouchableOpacity
+      style={styles.chatButton}
+      onPress={() => navigation.navigate('Chat')}
+    >
+      <Text style={styles.chatButtonText}>Start Chat</Text>
+    </TouchableOpacity>
+  </View>
+)
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{ title: 'Auto Assistance' }}
+        />
+        <Stack.Screen
+          name="Chat"
+          component={Chat}
+          options={{ title: 'Chat with Assistant' }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  )
+}
+
+const styles = StyleSheet.create({
+  homeContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  chatButton: {
+    backgroundColor: '#0084ff',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+  },
+  chatButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+})
+```
+
+### 4. Environment Configuration
+
+Create an environment configuration file to manage API URLs for different environments:
+
+```javascript
+// src/config/env.js
+const ENV = {
+  dev: {
+    apiUrl: 'http://localhost:8001/api',
+  },
+  staging: {
+    apiUrl: 'http://staging-server:8001/api',
+  },
+  prod: {
+    apiUrl: 'https://production-server/api',
+  },
+}
+
+// For React Native, determine which platform to use
+const getEnvVars = (env = process.env.NODE_ENV || 'development') => {
+  if (env === 'development') {
+    return ENV.dev
+  } else if (env === 'staging') {
+    return ENV.staging
+  } else if (env === 'production') {
+    return ENV.prod
+  }
+}
+
+export default getEnvVars
+```
+
+Then update your chatbotService.js to use this configuration:
+
+```javascript
+// src/services/chatbotService.js
+import getEnvVars from '../config/env'
+
+const { apiUrl } = getEnvVars()
+const API_BASE_URL = apiUrl
+const API_NLU_URL = `${API_BASE_URL}/nlu`
+const API_DIALOG_URL = `${API_BASE_URL}/dialog`
+const API_HEALTH_URL = `${API_BASE_URL}/health`
+
+// ... rest of the service code
+```
 
 ## Testing in Development
 
@@ -438,3 +717,14 @@ When testing locally:
 3. **Dialog Flow** - The system will guide users through required information for different flows (towing, roadside assistance, etc.)
 4. **Error Handling** - Always implement proper error handling as shown in the example
 5. **Connectivity Issues** - Test your app's behavior when the API is unreachable
+6. **Testing with NLU-only** - For specialized use cases, you can use the `/api/nlu` endpoint to get just the NLU results without dialog management
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Connection Refused**: Make sure the API server is running on port 8001 before attempting to connect
+2. **Android Emulator Connection**: Remember that Android emulators can't access `localhost` directly - use `10.0.2.2` instead
+3. **Slow Responses**: The NLU model processing might take a moment, especially on the first request - implement proper loading states
+4. **Missing Conversation ID**: Always store and reuse the conversation_id returned from the API to maintain context
+5. **Conversation Timeout**: If your system doesn't receive messages for a long time, the conversation context might be lost

@@ -142,10 +142,48 @@ async def process_dialog(request: DialogRequest):
         )
 
 
+# Add an endpoint that transforms the existing /chat response to match Carro app expectations
+@app.post("/chat", include_in_schema=False)
+async def legacy_chat_endpoint(request: dict):
+    """Legacy endpoint that redirects to the new format."""
+    logger.info(f"Legacy chat endpoint called: {request}")
+    
+    # Create a proper request for the /api/dialog endpoint
+    dialog_request = DialogRequest(
+        text=request.get("text", ""),
+        conversation_id=request.get("conversationId", None)
+    )
+    
+    # Process using the dialog endpoint
+    response = await process_dialog(dialog_request)
+    
+    # Return in the legacy format for backward compatibility
+    return {
+        "botResponse": response.text,
+        "conversationId": response.conversation_id,
+        "intent": "auto_detected",
+        "confidence": 0.9,
+        "entities": []
+    }
+
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/health")
+async def legacy_health_check():
+    """Legacy health endpoint that returns the format expected by existing consumers."""
+    return {
+        "status": "ok", 
+        "message": "Carro Backend API health check", 
+        "components": {
+            "config": "ok", 
+            "chat_service": "ok"
+        }
+    }
+
+
 if __name__ == "__main__":
-    uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run("api:app", host="0.0.0.0", port=8001, reload=False)
