@@ -4,12 +4,20 @@ This document outlines how to integrate the NLU chatbot with your React Native f
 
 ## IMPORTANT: Use Local API for Development
 
-**CRITICAL UPDATE**: While there is a Docker container running on port 8000, it contains an older version of the API code. For development and testing, use the local API on port 8001:
+**CRITICAL UPDATE**: While there is a Docker container running on port 8000, it contains an older version of the API code. For development and testing, use the local API on port 8001 by running the provided script:
 
 ```bash
-# Start the local API server on port 8001
-python -c "import uvicorn; import api; uvicorn.run(api.app, host='127.0.0.1', port=8001)"
+# Start the local API server on port 8001 (RECOMMENDED METHOD)
+./start_api.sh
 ```
+
+This script automatically:
+
+- Sets up the Python virtual environment
+- Installs required dependencies
+- Checks for the trained model
+- Stops any existing API server instances
+- Starts the API server on port 8001 with proper logging
 
 All examples and code in this document have been updated to use port 8001. If you need to use the Docker version on port 8000 for any reason, replace 8001 with 8000 in the examples.
 
@@ -27,7 +35,30 @@ The chatbot API is a standalone service that:
 
 ~~The API server is **already running via Docker** at `http://localhost:8000`. You don't need to set up or deploy this service - it's ready to use.~~
 
-**Updated**: Run the local API server as described above on port 8001. This ensures you're using the latest version with all improvements.
+**Updated**: Run the local API server using the `start_api.sh` script. This ensures you're using the latest version with all improvements and proper logging.
+
+### Monitoring API Activity
+
+When running with the `start_api.sh` script, all chat interactions will be displayed in the terminal with the following format:
+
+```
+🔵🔵🔵 REACT NATIVE APP 🔵🔵🔵
+USER: [user message]
+BOT: [bot response]
+==============================
+```
+
+To ensure that React Native app connections are properly logged:
+
+1. Set the `X-Platform: React Native` header in all API requests
+2. Check the terminal where the API server is running to see the chat messages
+3. Verify that connections from your app show the blue emoji indicators
+
+If you don't see the messages in the terminal, ensure that:
+
+1. You started the server with `./start_api.sh` (not directly with Python)
+2. Your React Native app is sending the correct headers
+3. You're looking at the correct terminal window where the server is running
 
 ## API Endpoints
 
@@ -104,16 +135,19 @@ You can test the local API using cURL:
 
 ```bash
 # Health check
-curl -X GET http://localhost:8001/api/health
+curl -X GET http://localhost:8001/api/health \
+  -H "X-Platform: React Native"
 
 # Process text (NLU only)
 curl -X POST http://localhost:8001/api/nlu \
   -H "Content-Type: application/json" \
+  -H "X-Platform: React Native" \
   -d '{"text": "My car broke down on the highway, I need a tow"}'
 
 # Process dialog (with conversation state)
 curl -X POST http://localhost:8001/api/dialog \
   -H "Content-Type: application/json" \
+  -H "X-Platform: React Native" \
   -d '{"text": "My car broke down on the highway, I need a tow", "conversation_id": "test123"}'
 ```
 
@@ -141,6 +175,7 @@ export const processTextNLU = async (text) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Platform': 'React Native',
       },
       body: JSON.stringify({ text }),
     })
@@ -178,6 +213,7 @@ export const processDialog = async (text, conversationId = null) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Platform': 'React Native',
       },
       body: JSON.stringify(body),
     })
@@ -205,6 +241,9 @@ export const checkApiHealth = async () => {
   try {
     const response = await fetch(API_HEALTH_URL, {
       method: 'GET',
+      headers: {
+        'X-Platform': 'React Native',
+      },
     })
     return response.ok
   } catch (error) {
@@ -703,7 +742,8 @@ When testing locally:
 1. **Start the local API server**:
 
    ```bash
-   python -c "import uvicorn; import api; uvicorn.run(api.app, host='127.0.0.1', port=8001)"
+   # RECOMMENDED: Use the start_api.sh script
+   ./start_api.sh
    ```
 
 2. **For iOS simulator**: Use 'http://localhost:8001/api' as the base URL
@@ -712,19 +752,26 @@ When testing locally:
 
 ## Important Notes
 
-1. **Use the local API on port 8001** - Do not use the Docker container on port 8000 as it contains an older version
-2. **Conversation State** - The dialog endpoint maintains state between turns when you provide the same conversation_id
-3. **Dialog Flow** - The system will guide users through required information for different flows (towing, roadside assistance, etc.)
-4. **Error Handling** - Always implement proper error handling as shown in the example
-5. **Connectivity Issues** - Test your app's behavior when the API is unreachable
-6. **Testing with NLU-only** - For specialized use cases, you can use the `/api/nlu` endpoint to get just the NLU results without dialog management
+1. **Use the start_api.sh script** - Always use the provided script to start the server for proper logging and setup
+2. **Set X-Platform header** - Always include 'X-Platform: React Native' header in all API requests for proper logging
+3. **Conversation State** - The dialog endpoint maintains state between turns when you provide the same conversation_id
+4. **Dialog Flow** - The system will guide users through required information for different flows (towing, roadside assistance, etc.)
+5. **Error Handling** - Always implement proper error handling as shown in the example
+6. **Connectivity Issues** - Test your app's behavior when the API is unreachable
+7. **Testing with NLU-only** - For specialized use cases, you can use the `/api/nlu` endpoint to get just the NLU results without dialog management
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Connection Refused**: Make sure the API server is running on port 8001 before attempting to connect
-2. **Android Emulator Connection**: Remember that Android emulators can't access `localhost` directly - use `10.0.2.2` instead
-3. **Slow Responses**: The NLU model processing might take a moment, especially on the first request - implement proper loading states
-4. **Missing Conversation ID**: Always store and reuse the conversation_id returned from the API to maintain context
-5. **Conversation Timeout**: If your system doesn't receive messages for a long time, the conversation context might be lost
+1. **Chat Messages Not Visible in Terminal**:
+
+   - Ensure you started the server using `./start_api.sh` (not directly with Python)
+   - Verify your app is sending the 'X-Platform: React Native' header with every request
+   - Make sure you're looking at the right terminal window where the server is running
+
+2. **Connection Refused**: Make sure the API server is running on port 8001 before attempting to connect
+3. **Android Emulator Connection**: Remember that Android emulators can't access `localhost` directly - use `10.0.2.2` instead
+4. **Slow Responses**: The NLU model processing might take a moment, especially on the first request - implement proper loading states
+5. **Missing Conversation ID**: Always store and reuse the conversation_id returned from the API to maintain context
+6. **Conversation Timeout**: If your system doesn't receive messages for a long time, the conversation context might be lost
