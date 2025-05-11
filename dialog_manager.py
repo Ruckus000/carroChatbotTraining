@@ -163,6 +163,10 @@ class DialogManager:
         # Increment turn count at the beginning
         state.turn_count += 1
 
+        # Detect greetings for better handling of first interactions
+        greeting_patterns = ["hello", "hi", "hey", "greetings", "howdy", "good morning", "good afternoon", "good evening"]
+        is_greeting = any(greeting.lower() in user_input.lower() for greeting in greeting_patterns)
+        
         try:
             # Get NLU result - normal processing
             nlu_result = self.nlu.predict(user_input)
@@ -174,6 +178,18 @@ class DialogManager:
                 "intent": {"name": "fallback_nlu_error", "confidence": 1.0},
                 "entities": [],
             }
+
+        # Handle greetings specially
+        if is_greeting and (nlu_result["intent"]["confidence"] < 0.7 or nlu_result["intent"]["name"] == "fallback_low_confidence"):
+            print("Detected greeting, setting appropriate response")
+            state.fallback_reason = "low_confidence"
+            state.current_intent = "greeting"
+            # Bypass other processing and generate greeting response
+            response_text = self.response_generator.generate_response(
+                {"type": "RESPOND_FALLBACK", "reason": "low_confidence"}, state
+            )
+            state.add_history(user_input, response_text)
+            return {"bot_response": response_text, "action": "greeting", "state": state}
 
         # Detect out-of-scope queries that are clearly not automotive related
         out_of_scope_patterns = [

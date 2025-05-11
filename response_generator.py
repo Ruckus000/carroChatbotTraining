@@ -87,9 +87,9 @@ class ResponseGenerator:
             },
             "RESPOND_FALLBACK": {
                 "low_confidence": [
-                    "Sorry, I didn't quite understand that. Could you please rephrase?",
-                    "I'm not sure I got that. Can you say it differently?",
-                    "Hmm, I need a bit more clarity. Could you provide more details?",
+                    "Hello! I'm your automotive assistant. I can help with towing, roadside assistance, or scheduling service appointments. What can I help you with today?",
+                    "Hi there! I'm here to assist with vehicle services like towing, roadside help, or service appointments. What do you need help with?",
+                    "Welcome! I can help with your automotive needs. Do you need towing, roadside assistance, or would you like to schedule a service appointment?",
                 ],
                 "out_of_scope": [
                     "I can only help with towing, roadside assistance, or service appointments. How can I assist with one of those?",

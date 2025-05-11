@@ -49,9 +49,17 @@ if [ ! -d "trained_nlu_model" ]; then
     exit 1
 fi
 
+# Kill any existing API server processes
+pkill -f "python api.py" || true
+
+# Show startup instructions
+echo -e "\n\033[1;36m============================\033[0m"
+echo -e "\033[1;36m📱 Starting API Server 📱\033[0m"
+echo -e "\033[1;36m============================\033[0m\n"
+echo -e "API server will start on port 8001"
+echo -e "You will see highlighted chat messages in this terminal"
+echo -e "Connect your React Native app to: http://YOUR_MACHINE_IP:8001\n"
+echo -e "\033[1;32mAPI server starting...\033[0m\n"
+
 # Start the API server
-echo -e "${GREEN}Starting API server...${NC}"
-echo "API will be available at http://localhost:8000"
-echo "API documentation at http://localhost:8000/docs"
-echo "Press Ctrl+C to stop the server"
-python api.py 
+PORT=8001 python api.py 
