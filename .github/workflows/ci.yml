@@ -14,10 +14,10 @@ jobs:
         python-version: [3.8, 3.9, '3.10']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -27,6 +27,8 @@ jobs:
           pip install pytest pytest-cov
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      # Note: CI runs on Ubuntu, so MPS (Apple Silicon) features will not be tested
+      # The code is designed to fall back to CPU when MPS is not available
       - name: Run integration tests
         run: |
           python test_integration.py
@@ -38,10 +40,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 

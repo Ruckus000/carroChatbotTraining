@@ -31,20 +31,21 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
 # Client connection tracking middleware
 class ClientTrackingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Get client info
         client_host = request.client.host if request.client else "unknown"
         client_id = f"{client_host}:{request.headers.get('user-agent', 'unknown')}"
-        
+
         # Track the client connection
         timestamp = datetime.now().isoformat()
         endpoint = request.url.path
-        
+
         # Detect platform
         platform = self._detect_platform(request.headers.get("user-agent", ""), request)
-        
+
         # Add or update active client
         active_clients[client_id] = {
             "ip": client_host,
@@ -53,27 +54,29 @@ class ClientTrackingMiddleware(BaseHTTPMiddleware):
             "last_endpoint": endpoint,
             "platform": platform,
         }
-        
+
         # Simple RN detection for logging
         if platform == "React Native":
-            logger.info(f"REACT_NATIVE_CLIENT: {client_host} connected to {endpoint} - this is a mobile app connection")
-        
+            logger.info(
+                f"REACT_NATIVE_CLIENT: {client_host} connected to {endpoint} - this is a mobile app connection"
+            )
+
         # Log the connection
         logger.info(f"API_CLIENT_CONNECTION: {client_host} | {endpoint} | {platform}")
-        
+
         # Process the request
         response = await call_next(request)
         return response
-    
+
     def _detect_platform(self, user_agent: str, request: Request) -> str:
         """Detect the platform from user agent string or headers"""
         user_agent = user_agent.lower()
-        
+
         # Check X-Platform header first
         platform_header = request.headers.get("X-Platform", "").lower()
         if "react" in platform_header:
             return "React Native"
-        
+
         if "react-native" in user_agent or "expo" in user_agent:
             return "React Native"
         elif "android" in user_agent:
@@ -84,6 +87,7 @@ class ClientTrackingMiddleware(BaseHTTPMiddleware):
             return "Browser"
         else:
             return "Unknown"
+
 
 # Add middleware
 app.add_middleware(ClientTrackingMiddleware)
@@ -113,10 +117,16 @@ class IntentModel(BaseModel):
     confidence: float
 
 
+class SentimentModel(BaseModel):
+    label: str
+    score: float
+
+
 class NLUResponse(BaseModel):
     text: str
     intent: IntentModel
     entities: List[EntityModel]
+    sentiment: Optional[SentimentModel] = None
 
 
 class DialogRequest(BaseModel):
@@ -158,7 +168,17 @@ async def process_text(request: NLURequest):
     try:
         # Process the text through NLU
         result = nlu_inferencer.predict(request.text)
-        logger.info(f"API_RESPONSE: /api/nlu | Intent: '{result.intent.name}', Confidence: {result.intent.confidence}")
+
+        # Log the response including sentiment if available
+        sentiment_info = ""
+        if result.get("sentiment") and isinstance(result["sentiment"], dict):
+            sentiment_label = result["sentiment"].get("label", "unknown")
+            sentiment_score = result["sentiment"].get("score", 0.0)
+            sentiment_info = f", Sentiment: '{sentiment_label}' ({sentiment_score:.2f})"
+
+        logger.info(
+            f"API_RESPONSE: /api/nlu | Intent: '{result['intent']['name']}', Confidence: {result['intent']['confidence']:.2f}{sentiment_info}"
+        )
         return result
     except Exception as e:
         logger.error(f"API_ERROR: /api/nlu | Error processing text: {e}")
@@ -169,7 +189,9 @@ async def process_text(request: NLURequest):
 async def process_dialog(request: DialogRequest):
     """Process a dialog turn through the dialog manager."""
     conversation_id = request.conversation_id or str(uuid.uuid4())
-    logger.info(f"API_REQUEST: /api/dialog | ConvID: {conversation_id} | User: '{request.text}'")
+    logger.info(
+        f"API_REQUEST: /api/dialog | ConvID: {conversation_id} | User: '{request.text}'"
+    )
 
     try:
         # Process the turn through the dialog manager
@@ -193,7 +215,9 @@ async def process_dialog(request: DialogRequest):
             )
             response_text = "Error: Invalid response format."
 
-        logger.info(f"API_RESPONSE: /api/dialog | ConvID: {conversation_id} | Bot: '{response_text}'")
+        logger.info(
+            f"API_RESPONSE: /api/dialog | ConvID: {conversation_id} | Bot: '{response_text}'"
+        )
         return DialogResponse(text=response_text, conversation_id=conversation_id)
 
     except Exception as e:
@@ -213,47 +237,48 @@ async def process_dialog(request: DialogRequest):
 async def legacy_chat_endpoint(request: dict, req: Request = None):
     """Legacy endpoint that redirects to the new format."""
     logger.info(f"API_REQUEST: /chat | Legacy chat endpoint | Data: {request}")
-    
+
     # Check headers for React Native platform
     is_react_native = False
     client_ip = "unknown"
-    
+
     if req and req.headers:
         user_agent = req.headers.get("user-agent", "")
         platform_header = req.headers.get("x-platform", "")
-        
+
         if "react" in user_agent.lower() or "react" in platform_header.lower():
             is_react_native = True
-           
+
         if req.client:
             client_ip = req.client.host
-    
+
     # Create a proper request for the /api/dialog endpoint
     dialog_request = DialogRequest(
         text=request.get("text", ""),
-        conversation_id=request.get("conversationId", None)
+        conversation_id=request.get("conversationId", None),
     )
-    
+
     try:
         # Process using the dialog endpoint
         response = await process_dialog(dialog_request)
-        
+
         # Choose prefix based on client type
         if is_react_native or (client_ip != "127.0.0.1" and client_ip != "unknown"):
             prefix = "\n🔵🔵🔵 REACT NATIVE APP 🔵🔵🔵"
         else:
             prefix = "\n=== CHAT MESSAGE ===="
-        
+
         # Print terminal message for all chat requests - simple logging
-        print(f"{prefix}\nUSER: {request.get('text', '')}\nBOT: {response.text}\n{'=' * 30}\n")
-        
+        print(
+            f"{prefix}\nUSER: {request.get('text', '')}\nBOT: {response.text}\n{'=' * 30}\n"
+        )
+
         # Return the legacy format response
-        result = {
-            "response": response.text,
-            "conversationId": response.conversation_id
-        }
-        
-        logger.info(f"API_RESPONSE: /chat | Legacy format | ConvID: {response.conversation_id}")
+        result = {"response": response.text, "conversationId": response.conversation_id}
+
+        logger.info(
+            f"API_RESPONSE: /chat | Legacy format | ConvID: {response.conversation_id}"
+        )
         return result
     except Exception as e:
         logger.error(f"Error in legacy chat endpoint: {e}")
@@ -269,12 +294,9 @@ async def health_check():
 async def legacy_health_check():
     """Legacy health endpoint that returns the format expected by existing consumers."""
     return {
-        "status": "ok", 
-        "message": "Carro Backend API health check", 
-        "components": {
-            "config": "ok", 
-            "chat_service": "ok"
-        }
+        "status": "ok",
+        "message": "Carro Backend API health check",
+        "components": {"config": "ok", "chat_service": "ok"},
     }
 
 
@@ -293,13 +315,13 @@ async def get_connections():
                 "last_endpoint": client["last_endpoint"],
                 "last_seen": client["last_seen"],
             }
-    
+
     return {"active": active}
 
 
 if __name__ == "__main__":
     # Read port from environment variable, default to 8001 if not set
     port = int(os.environ.get("PORT", 8001))
-    host = os.environ.get("HOST", "0.0.0.0") # Optional: make host configurable too
-    print(f"INFO:     Starting NLU API on {host}:{port}") # Add this for clarity
+    host = os.environ.get("HOST", "0.0.0.0")  # Optional: make host configurable too
+    print(f"INFO:     Starting NLU API on {host}:{port}")  # Add this for clarity
     uvicorn.run("api:app", host=host, port=port, reload=False)

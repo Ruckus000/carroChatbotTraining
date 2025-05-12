@@ -1,5 +1,6 @@
 # dialog_manager.py
 import copy
+from typing import Dict, List, Optional, Any, Set, Tuple
 
 from inference import NLUInferencer  # Import the NLU class
 from response_generator import ResponseGenerator
@@ -21,6 +22,7 @@ class DialogState:
         self.fallback_reason = None  # 'low_confidence', 'out_of_scope', 'ambiguous'
         self.booking_details = {}  # Stores final booking info
         self.booking_confirmed = False
+        self.current_sentiment = {"label": "neutral", "score": 0.5}  # Default sentiment
 
     def update_from_nlu(self, nlu_result):
         """Update state based on NLU output."""
@@ -42,6 +44,15 @@ class DialogState:
             if entity_type and entity_value:
                 self.entities[entity_type] = entity_value
                 self.filled_slots.add(entity_type)  # Mark as filled
+
+        # Update sentiment if available
+        sentiment_info = nlu_result.get("sentiment", {})
+        if sentiment_info and isinstance(sentiment_info, dict):
+            self.current_sentiment = {
+                "label": sentiment_info.get("label", "neutral"),
+                "score": sentiment_info.get("score", 0.5),
+            }
+            print(f"DEBUG: Updated sentiment to {self.current_sentiment}")
 
         # Only set fallback if we're not in a flow
         if not self.required_slots:
@@ -164,9 +175,20 @@ class DialogManager:
         state.turn_count += 1
 
         # Detect greetings for better handling of first interactions
-        greeting_patterns = ["hello", "hi", "hey", "greetings", "howdy", "good morning", "good afternoon", "good evening"]
-        is_greeting = any(greeting.lower() in user_input.lower() for greeting in greeting_patterns)
-        
+        greeting_patterns = [
+            "hello",
+            "hi",
+            "hey",
+            "greetings",
+            "howdy",
+            "good morning",
+            "good afternoon",
+            "good evening",
+        ]
+        is_greeting = any(
+            greeting.lower() in user_input.lower() for greeting in greeting_patterns
+        )
+
         try:
             # Get NLU result - normal processing
             nlu_result = self.nlu.predict(user_input)
@@ -180,7 +202,10 @@ class DialogManager:
             }
 
         # Handle greetings specially
-        if is_greeting and (nlu_result["intent"]["confidence"] < 0.7 or nlu_result["intent"]["name"] == "fallback_low_confidence"):
+        if is_greeting and (
+            nlu_result["intent"]["confidence"] < 0.7
+            or nlu_result["intent"]["name"] == "fallback_low_confidence"
+        ):
             print("Detected greeting, setting appropriate response")
             state.fallback_reason = "low_confidence"
             state.current_intent = "greeting"
@@ -260,6 +285,45 @@ class DialogManager:
         if state.booking_confirmed:
             return {"type": "RESPOND_ALREADY_COMPLETE"}
 
+        # Get sentiment information for potentially influencing the flow
+        sentiment = getattr(
+            state, "current_sentiment", {"label": "neutral", "score": 0.5}
+        )
+        sentiment_label = sentiment.get("label", "neutral")
+        sentiment_score = sentiment.get("score", 0.5)
+        is_urgent_situation = sentiment_label == "negative" and sentiment_score > 0.8
+
+        # If sentiment is highly negative and we have an urgent intent, prioritize immediate assistance
+        if is_urgent_situation and (
+            nlu_intent.startswith("towing_request_tow_urgent")
+            or "urgent" in user_input.lower()
+            or "emergency" in user_input.lower()
+        ):
+            print(
+                f"DEBUG: Detected urgent situation based on sentiment ({sentiment_score}) and intent ({nlu_intent})"
+            )
+            # Skip some information collection steps for urgent towing requests
+            state.current_intent = "towing_request_tow_urgent"
+            if "pickup_location" in state.entities:
+                # If we already have the location, move directly to booking
+                state.current_step = "BOOKING"
+                state.booking_confirmed = True
+                return {
+                    "type": "RESPOND_COMPLETE",
+                    "details": state.entities,
+                    "intent": "towing",
+                    "urgent": True,
+                }
+            else:
+                # Otherwise, just ask for location and skip other details
+                state.required_slots = ["pickup_location"]
+                state.current_step = "ASK_PICKUP_LOCATION"
+                return {
+                    "type": "REQUEST_SLOT",
+                    "slot_name": "pickup_location",
+                    "urgent": True,
+                }
+
         # Handle restart flow (user wants to start over)
         if nlu_intent.startswith("restart") or nlu_intent.startswith("cancel"):
             state.reset_flow()  # Reset the state
@@ -296,6 +360,9 @@ class DialogManager:
                 for word in ["tow", "broke down", "broken down"]
             ):
                 state.current_intent = "towing_request_tow_basic"
+                # Check if it's urgent based on sentiment
+                if is_urgent_situation:
+                    state.current_intent = "towing_request_tow_urgent"
                 state.required_slots = self.define_required_slots(state.current_intent)
             else:
                 # Assign the intent detected by NLU
@@ -310,6 +377,33 @@ class DialogManager:
                 state.required_slots = self.define_required_slots(state.current_intent)
                 state.current_step = "COLLECTING_INFO"
 
+            # For urgent situations or explicitly urgent towing requests, use a shortened flow
+            if (
+                is_urgent_situation
+                or state.current_intent == "towing_request_tow_urgent"
+            ):
+                # Prioritize just getting location info for urgent requests
+                reduced_slots = ["pickup_location"]
+                if "pickup_location" in state.entities:
+                    # If we have location, fast-track to booking
+                    state.current_step = "BOOKING"
+                    state.booking_confirmed = True
+                    return {
+                        "type": "RESPOND_COMPLETE",
+                        "details": state.entities,
+                        "intent": "towing",
+                        "urgent": True,
+                    }
+                else:
+                    # Otherwise just ask for location
+                    state.current_step = "ASK_PICKUP_LOCATION"
+                    return {
+                        "type": "REQUEST_SLOT",
+                        "slot_name": "pickup_location",
+                        "urgent": True,
+                    }
+
+            # Normal flow (non-urgent)
             # Check if we have all required slots
             missing_slots = state.get_missing_slots()
             if missing_slots:
@@ -330,6 +424,9 @@ class DialogManager:
                     # Confirmation step completed, move to booking
                     state.current_step = "BOOKING"
                     state.booking_confirmed = True
+                    state.entities["service_type"] = state.current_intent.replace(
+                        "towing_", ""
+                    )
                     return {
                         "type": "RESPOND_COMPLETE",
                         "details": state.entities,

@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Dict, List, Optional, Any, Tuple
 
 import numpy as np
 import torch
@@ -7,6 +8,7 @@ from transformers import (
     DistilBertForSequenceClassification,
     DistilBertForTokenClassification,
     DistilBertTokenizer,
+    pipeline,
 )
 
 
@@ -19,7 +21,17 @@ class NLUInferencer:
             model_path (str): Path to the directory containing the trained models.
         """
         self.model_path = model_path
-        self.device = torch.device("cpu")
+
+        # Determine device: MPS for Apple Silicon, else CPU
+        if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+            self.device = torch.device("mps")
+            print(
+                "INFO [NLUInferencer]: MPS device found. Inference will use Apple Silicon GPU."
+            )
+        else:
+            self.device = torch.device("cpu")
+            print("INFO [NLUInferencer]: MPS device not found. Inference will use CPU.")
+
         self.CONFIDENCE_THRESHOLD = 0.01
 
         # Load intent model
@@ -76,6 +88,25 @@ class NLUInferencer:
         except Exception as e:
             raise RuntimeError(f"Error loading entity model: {e}")
 
+        # Load sentiment analysis pipeline
+        try:
+            model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+            self.sentiment_pipeline = pipeline(
+                "sentiment-analysis",
+                model=model_name,
+                device=(
+                    0 if self.device.type == "cuda" or self.device.type == "mps" else -1
+                ),
+            )
+            print(
+                f"INFO [NLUInferencer]: Sentiment analysis model loaded successfully using {model_name}."
+            )
+        except Exception as e:
+            print(
+                f"WARNING [NLUInferencer]: Failed to load sentiment analysis model: {e}"
+            )
+            self.sentiment_pipeline = None
+
     def predict(self, text):
         """
         Predict the intent and entities for the given text.
@@ -84,11 +115,11 @@ class NLUInferencer:
             text (str): The text to analyze.
 
         Returns:
-            dict: A dictionary containing the text, intent, and entities.
+            dict: A dictionary containing the text, intent, entities, and sentiment.
         """
         try:
             # Initialize response
-            result = {"text": text, "intent": {}, "entities": []}
+            result = {"text": text, "intent": {}, "entities": [], "sentiment": {}}
 
             # Predict intent
             intent_prediction = self._predict_intent(text)
@@ -98,6 +129,10 @@ class NLUInferencer:
             entities = self._predict_entities(text)
             result["entities"] = entities
 
+            # Predict sentiment
+            sentiment = self._predict_sentiment(text)
+            result["sentiment"] = sentiment
+
             return result
 
         except Exception as e:
@@ -106,6 +141,7 @@ class NLUInferencer:
                 "text": text,
                 "intent": {"name": "fallback_runtime_error", "confidence": 1.0},
                 "entities": [],
+                "sentiment": {"label": "neutral", "score": 0.5},
             }
 
     def _predict_intent(self, text):
@@ -153,6 +189,32 @@ class NLUInferencer:
 
         except Exception as e:
             return {"name": "fallback_intent_error", "confidence": 1.0}
+
+    def _predict_sentiment(self, text):
+        """
+        Predict the sentiment of the given text.
+
+        Args:
+            text (str): The text to analyze.
+
+        Returns:
+            dict: A dictionary containing sentiment label and score.
+        """
+        try:
+            if self.sentiment_pipeline is None:
+                return {"label": "neutral", "score": 0.5}
+
+            # Get sentiment prediction
+            sentiment_result = self.sentiment_pipeline(text)[0]
+
+            # Return the sentiment label and score
+            return {
+                "label": sentiment_result["label"].lower(),
+                "score": float(sentiment_result["score"]),
+            }
+        except Exception as e:
+            print(f"WARNING [NLUInferencer]: Sentiment analysis failed: {e}")
+            return {"label": "neutral", "score": 0.5}
 
     def _predict_entities(self, text):
         """

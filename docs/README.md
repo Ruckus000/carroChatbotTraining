@@ -6,10 +6,11 @@ This repository contains a **simplified** Natural Language Understanding (NLU) s
 
 1.  **Intent Detection:** What is the user trying to _do_? (e.g., request a tow, ask about battery)
 2.  **Entities:** What are the key pieces of information in the text? (e.g., location, vehicle type)
-3.  **Dialog Management:** A unified dialog management system that handles conversation state and determines appropriate actions
-4.  **Response Generation:** Generates appropriate responses based on the dialog state and determined actions
+3.  **Sentiment Analysis:** What is the emotional tone of the message? (positive, negative, neutral)
+4.  **Dialog Management:** A unified dialog management system that handles conversation state and determines appropriate actions
+5.  **Response Generation:** Generates appropriate responses based on the dialog state and determined actions
 
-The system features a clean architecture with dependency injection, making it flexible and testable.
+The system features a clean architecture with dependency injection, making it flexible and testable. It also leverages Apple Silicon GPU acceleration (MPS) when available for both training and inference.
 
 ---
 
@@ -17,8 +18,9 @@ The system features a clean architecture with dependency injection, making it fl
 
 - **Intent Detection:** Classifies the input text into a predefined set of intents. Intents are expected to follow a `flow_subintent` naming convention (e.g., `towing_request_tow_basic`, `roadside_request_battery`). If the model's confidence is below a threshold (currently hardcoded at 0.5 in `inference.py`), it defaults to a `fallback_low_confidence` intent.
 - **Entity Recognition:** Identifies and extracts named entities from the text. It uses the **BIO (Beginning, Inside, Outside)** tagging scheme. For example, "123 Main Street" might be tagged as `B-pickup_location I-pickup_location I-pickup_location`. The inference script then groups these tags into entity dictionaries like `{"entity": "pickup_location", "value": "123 Main Street"}`.
-- **Dialog Management:** The `DialogManager` class manages conversation state for multiple conversations, determines appropriate actions based on intents and entities, and coordinates the flow of the conversation.
-- **Response Generation:** The `ResponseGenerator` class generates human-readable responses based on the determined action and current dialog state.
+- **Sentiment Analysis:** Analyzes the emotional tone of the message and provides a sentiment label (positive, negative, neutral) with a confidence score. This information is used to adapt responses and optimize dialog flow, especially for urgent situations.
+- **Dialog Management:** The `DialogManager` class manages conversation state for multiple conversations, determines appropriate actions based on intents, entities, and sentiment, and coordinates the flow of the conversation.
+- **Response Generation:** The `ResponseGenerator` class generates human-readable responses based on the determined action, current dialog state, and sentiment context.
 
 ---
 
@@ -55,17 +57,29 @@ The system features a clean architecture with dependency injection, making it fl
 
 The system follows a modular architecture with clear separation of concerns:
 
-1. **NLU Layer (`inference.py`):** Handles text processing, intent detection, and entity extraction.
-2. **Dialog Management Layer (`dialog_manager.py`):** Manages conversation state, determines actions based on intents/entities.
-3. **Response Generation Layer (`response_generator.py`):** Creates natural language responses based on actions.
+1. **NLU Layer (`inference.py`):** Handles text processing, intent detection, entity extraction, and sentiment analysis.
+2. **Dialog Management Layer (`dialog_manager.py`):** Manages conversation state, determines actions based on intents/entities/sentiment.
+3. **Response Generation Layer (`response_generator.py`):** Creates natural language responses based on actions and sentiment context.
 4. **API Layer (`api.py`):** Exposes the functionality via a REST API using FastAPI.
 
 Key architectural features:
 
 - **Dependency Injection:** The DialogManager requires an NLUInferencer instance to be provided at initialization, allowing for loose coupling and easier testing.
 - **State Management:** Conversation state is maintained per conversation ID, allowing for multiple simultaneous conversations.
-- **Action Determination:** Based on the current state and NLU results, the DialogManager determines appropriate actions.
-- **Templated Responses:** The ResponseGenerator uses templates to create varied and context-appropriate responses.
+- **Action Determination:** Based on the current state, NLU results, and sentiment analysis, the DialogManager determines appropriate actions.
+- **Templated Responses:** The ResponseGenerator uses templates to create varied and context-appropriate responses, with special variations for negative sentiment.
+- **Hardware Acceleration:** The system automatically detects and uses Apple Silicon GPU (MPS) for inference and training when available.
+
+---
+
+## Apple Silicon GPU Acceleration
+
+The system automatically detects and uses Apple Silicon GPU (MPS) for both training and inference:
+
+- **Inference:** The NLUInferencer automatically detects MPS availability and moves models to the MPS device.
+- **Training:** The training script detects MPS and configures the training process to use it, resulting in significantly faster training times.
+
+No special configuration is needed - if you're running on a Mac with Apple Silicon (M1/M2/M3/M4), the system will automatically use hardware acceleration.
 
 ---
 
@@ -153,6 +167,7 @@ python train.py
 3.  **Trains Intent Model:** Fine-tunes a `DistilBertForSequenceClassification` model on the `text` and `intent` fields.
 4.  **Trains Entity Model:** Fine-tunes a `DistilBertForTokenClassification` model using the `text` and `entities` fields (converting entities to BIO tags internally).
 5.  Saves the trained models, tokenizers, and necessary configuration/mapping files into `./trained_nlu_model/intent_model/` and `./trained_nlu_model/entity_model/`.
+6.  **Hardware Acceleration:** Automatically uses Apple Silicon GPU (MPS) if available, significantly improving training speed.
 
 ---
 
@@ -162,18 +177,32 @@ To run the API server:
 
 ```bash
 # Use port 8001 to avoid conflicts with the Docker container that uses port 8000
-python -c "import uvicorn; import api; uvicorn.run(api.app, host='127.0.0.1', port=8001)"
+# You can also set a custom port using the PORT environment variable
+export PORT=8001 && python api.py
 ```
 
 This starts a FastAPI server on http://localhost:8001 that provides:
 
 - `/api/health` - Health check endpoint
-- `/api/nlu` - NLU processing endpoint
+- `/api/nlu` - NLU processing endpoint (includes sentiment analysis)
 - `/api/dialog` - Dialog processing endpoint that maintains conversation state
 
 **IMPORTANT NOTE**: There is a Docker container running on port 8000 with an older version of the API. For development and testing, use the local API on port 8001 as shown above. This ensures you're working with the latest version of the code.
 
 See the `API_README.md` file for detailed API documentation and integration examples.
+
+---
+
+## Sentiment Analysis
+
+The system now includes sentiment analysis as part of the NLU pipeline:
+
+- **Technical Implementation:** Uses Hugging Face's sentiment analysis pipeline with a pre-trained DistilBERT model.
+- **Integration:** Sentiment results (label and score) are included in the NLU output and stored in the dialog state.
+- **Dialog Flow Impact:** High negative sentiment combined with certain intents (like towing requests) can trigger expedited "urgent" flows.
+- **Response Adaptation:** The response generator uses sentiment information to provide more empathetic, urgent-focused responses for negative sentiment situations.
+
+This feature is particularly valuable for automotive assistance scenarios where user urgency and emotional state can significantly impact the required service level.
 
 ---
 

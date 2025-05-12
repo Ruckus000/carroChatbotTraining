@@ -1,6 +1,6 @@
 # NLU Chatbot Integration Guide
 
-This document outlines how to integrate the NLU chatbot with your React Native frontend. The API server provides intent detection, entity extraction, and dialog management for conversations.
+This document outlines how to integrate the NLU chatbot with your React Native frontend. The API server provides intent detection, entity extraction, sentiment analysis, and dialog management for conversations.
 
 ## IMPORTANT: Use Local API for Development
 
@@ -27,6 +27,7 @@ The chatbot API is a standalone service that:
 
 - Analyzes text to determine user intent
 - Extracts entities from user messages
+- Analyzes sentiment (emotional tone) of messages
 - Manages conversation state across multiple turns
 - Generates appropriate responses based on context
 - Provides a simple REST interface
@@ -95,9 +96,19 @@ The following endpoints are available:
         "entity": "entity_type",
         "value": "entity_value"
       }
-    ]
+    ],
+    "sentiment": {
+      "label": "negative",
+      "score": 0.9876
+    }
   }
   ```
+- **Notes on Sentiment Analysis**:
+  - The `sentiment` field is always included in the response
+  - `label` will be one of: "positive", "negative", or "neutral"
+  - `score` is a confidence value between 0 and 1
+  - Higher scores indicate stronger sentiment confidence
+  - The dialog system uses this information to adapt responses and handling of urgent situations
 - **Error Response**:
   ```json
   {
@@ -128,6 +139,8 @@ The following endpoints are available:
   - If `conversation_id` is not provided, a new one will be generated
   - The same `conversation_id` should be used for multiple turns in the same conversation
   - The dialog endpoint maintains state between turns
+  - Sentiment analysis is performed internally and influences the response generation and dialog flow
+  - For high negative sentiment in urgent situations (like towing requests), the dialog system will adapt to provide more empathetic responses and expedite the information collection process
 
 ## Testing the API
 
@@ -144,11 +157,23 @@ curl -X POST http://localhost:8001/api/nlu \
   -H "X-Platform: React Native" \
   -d '{"text": "My car broke down on the highway, I need a tow"}'
 
+# Process text with emotional content to see sentiment analysis
+curl -X POST http://localhost:8001/api/nlu \
+  -H "Content-Type: application/json" \
+  -H "X-Platform: React Native" \
+  -d '{"text": "I am so frustrated! My car broke down and I am stuck in the middle of nowhere!"}'
+
 # Process dialog (with conversation state)
 curl -X POST http://localhost:8001/api/dialog \
   -H "Content-Type: application/json" \
   -H "X-Platform: React Native" \
   -d '{"text": "My car broke down on the highway, I need a tow", "conversation_id": "test123"}'
+
+# Process dialog with emotional content to see adapted response
+curl -X POST http://localhost:8001/api/dialog \
+  -H "Content-Type: application/json" \
+  -H "X-Platform: React Native" \
+  -d '{"text": "This is an emergency! My car broke down on the highway and I need urgent help!", "conversation_id": "test123"}'
 ```
 
 ## React Native Integration
@@ -167,7 +192,7 @@ const API_HEALTH_URL = `${API_BASE_URL}/health`
 /**
  * Process text through NLU only (no conversation state)
  * @param {string} text - User message to analyze
- * @returns {Promise<Object>} - NLU result with intent and entities
+ * @returns {Promise<Object>} - NLU result with intent, entities, and sentiment
  */
 export const processTextNLU = async (text) => {
   try {
@@ -192,6 +217,7 @@ export const processTextNLU = async (text) => {
       text: text,
       intent: { name: 'error', confidence: 1.0 },
       entities: [],
+      sentiment: { label: 'neutral', score: 0.5 },
     }
   }
 }

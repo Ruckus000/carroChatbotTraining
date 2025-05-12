@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Dict, List, Optional, Any, Set, Tuple
 
 import numpy as np
 import torch
@@ -136,6 +137,78 @@ def compute_intent_metrics(eval_pred):
     recall = recall_score(labels, predictions, average="weighted", zero_division=0)
     f1 = f1_score(labels, predictions, average="weighted", zero_division=0)
 
+    # Print detailed per-class classification report
+    try:
+        # Get unique labels actually present in this batch
+        unique_labels = sorted(set(np.concatenate([labels, predictions])))
+        label_names = [id2intent.get(i, f"unknown-{i}") for i in unique_labels]
+
+        # Print per-intent metrics
+        print("\n=== Intent Classification Report ===")
+        print(f"Overall Accuracy: {accuracy:.4f}")
+        print(f"Overall F1 Score (weighted): {f1:.4f}\n")
+
+        # Calculate per-class metrics
+        per_class_metrics = {}
+        for i in unique_labels:
+            label_name = id2intent.get(i, f"unknown-{i}")
+            # Create binary arrays for this class
+            y_true = (labels == i).astype(int)
+            y_pred = (predictions == i).astype(int)
+
+            # Calculate metrics
+            cls_precision = precision_score(y_true, y_pred, zero_division=0)
+            cls_recall = recall_score(y_true, y_pred, zero_division=0)
+            cls_f1 = f1_score(y_true, y_pred, zero_division=0)
+            support = sum(y_true)
+
+            # Store results
+            per_class_metrics[label_name] = {
+                "precision": cls_precision,
+                "recall": cls_recall,
+                "f1": cls_f1,
+                "support": support,
+            }
+
+        # Print per-class metrics in a table format
+        print(
+            f"{'Intent':<30} {'Precision':<10} {'Recall':<10} {'F1-Score':<10} {'Support':<10}"
+        )
+        print("-" * 70)
+        for intent, metrics in per_class_metrics.items():
+            print(
+                f"{intent:<30} {metrics['precision']:<10.4f} {metrics['recall']:<10.4f} {metrics['f1']:<10.4f} {metrics['support']:<10}"
+            )
+
+        # Print confusion pairs (most frequently confused intents)
+        from sklearn.metrics import confusion_matrix
+
+        print("\n=== Most Confused Intent Pairs ===")
+        cm = confusion_matrix(labels, predictions)
+
+        # Create a list of confused pairs
+        confused_pairs = []
+        for i in range(len(cm)):
+            for j in range(len(cm)):
+                if (
+                    i != j and cm[i, j] > 0
+                ):  # Only include non-zero off-diagonal elements
+                    true_intent = id2intent.get(i, f"unknown-{i}")
+                    pred_intent = id2intent.get(j, f"unknown-{j}")
+                    confused_pairs.append((true_intent, pred_intent, cm[i, j]))
+
+        # Sort pairs by confusion count and print top 10
+        confused_pairs.sort(key=lambda x: x[2], reverse=True)
+        print(f"{'True Intent':<25} {'Predicted Intent':<25} {'Count':<10}")
+        print("-" * 60)
+        for true_intent, pred_intent, count in confused_pairs[
+            :10
+        ]:  # Show top 10 confused pairs
+            print(f"{true_intent:<25} {pred_intent:<25} {count:<10}")
+
+    except Exception as e:
+        print(f"Error generating detailed intent metrics: {e}")
+
     return {"accuracy": accuracy, "precision": precision, "recall": recall, "f1": f1}
 
 
@@ -161,8 +234,47 @@ def compute_entity_metrics(eval_pred):
         pred_labels.append(pred_seq)
 
     # Calculate metrics using seqeval
-    report = classification_report(true_labels, pred_labels, output_dict=True)
-    f1 = seqeval_f1_score(true_labels, pred_labels)
+    try:
+        print("\n=== Entity Recognition Report ===")
+        # Print the detailed classification report
+        report_text = classification_report(true_labels, pred_labels)
+        print(report_text)
+
+        # Convert report to dictionary for metric extraction
+        report = classification_report(true_labels, pred_labels, output_dict=True)
+
+        # Calculate overall F1
+        f1 = seqeval_f1_score(true_labels, pred_labels)
+
+        # Show entity-specific metrics for B tags (beginning of entities)
+        print("\n=== Entity Type Performance ===")
+        print(
+            f"{'Entity Type':<20} {'Precision':<10} {'Recall':<10} {'F1-Score':<10} {'Support':<10}"
+        )
+        print("-" * 60)
+
+        # Extract and display metrics for entity types (only B- tags for simplicity)
+        b_tag_metrics = {}
+        for tag, metrics in report.items():
+            if tag.startswith("B-"):
+                entity_type = tag[2:]  # Remove 'B-' prefix
+                b_tag_metrics[entity_type] = {
+                    "precision": metrics["precision"],
+                    "recall": metrics["recall"],
+                    "f1-score": metrics["f1-score"],
+                    "support": metrics["support"],
+                }
+
+        # Print entity type metrics
+        for entity_type, metrics in sorted(b_tag_metrics.items()):
+            print(
+                f"{entity_type:<20} {metrics['precision']:<10.4f} {metrics['recall']:<10.4f} {metrics['f1-score']:<10.4f} {metrics['support']:<10}"
+            )
+
+    except Exception as e:
+        print(f"Error generating detailed entity metrics: {e}")
+        f1 = 0.0  # Fallback
+        report = {"micro avg": {"precision": 0, "recall": 0}}
 
     return {
         "f1": f1,
@@ -251,6 +363,16 @@ def prepare_entity_dataset(examples, tokenizer, tag2id):
 if __name__ == "__main__":
     # Set fixed random state for reproducibility
     RANDOM_STATE = 42
+
+    # Determine device: MPS for Apple Silicon, else CPU
+    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        DEVICE = torch.device("mps")
+        print("INFO [train.py]: MPS device found. Training will use Apple Silicon GPU.")
+        USE_CUDA = True  # Not actually CUDA, but tells Trainer not to force CPU
+    else:
+        DEVICE = torch.device("cpu")
+        print("INFO [train.py]: MPS device not found. Training will use CPU.")
+        USE_CUDA = False
 
     # Load data
     data = load_data("data/nlu_training_data.json")
@@ -426,6 +548,7 @@ if __name__ == "__main__":
             id2label=id2intent,
             label2id=intent2id,
         )
+        intent_model.to(DEVICE)  # Move to detected device
     except Exception as e:
         print(f"Error loading intent model: {e}")
         exit(1)
@@ -437,6 +560,7 @@ if __name__ == "__main__":
             id2label=id2tag,
             label2id=tag2id,
         )
+        entity_model.to(DEVICE)  # Move to detected device
     except Exception as e:
         print(f"Error loading entity model: {e}")
         exit(1)
@@ -444,34 +568,34 @@ if __name__ == "__main__":
     # Configure training arguments
     intent_training_args = TrainingArguments(
         output_dir="./trained_nlu_model/intent_model_checkpoints",
-        num_train_epochs=2,
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=8,
-        warmup_steps=500,
+        num_train_epochs=3,  # Increased epochs slightly
+        per_device_train_batch_size=16,  # Increased batch size to utilize MPS
+        per_device_eval_batch_size=16,
+        warmup_steps=100,  # Adjusted for better learning rate
         weight_decay=0.01,
         logging_dir="./trained_nlu_model/intent_logs",
-        logging_steps=10,
+        logging_steps=50,  # Log more frequently
         eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="f1",
-        no_cuda=True,
+        # Removed no_cuda=True to allow device auto-detection
     )
 
     entity_training_args = TrainingArguments(
         output_dir="./trained_nlu_model/entity_model_checkpoints",
-        num_train_epochs=2,
-        per_device_train_batch_size=8,
-        per_device_eval_batch_size=8,
-        warmup_steps=500,
+        num_train_epochs=3,  # Increased epochs
+        per_device_train_batch_size=16,  # Increased batch size
+        per_device_eval_batch_size=16,
+        warmup_steps=100,  # Adjusted
         weight_decay=0.01,
         logging_dir="./trained_nlu_model/entity_logs",
-        logging_steps=10,
+        logging_steps=50,  # Log more frequently
         eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="f1",
-        no_cuda=True,
+        # Removed no_cuda=True to allow device auto-detection
     )
 
     # Create trainers

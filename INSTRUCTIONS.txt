@@ -1,19 +1,26 @@
-
-
 ============================
 Easy Setup Instructions
 ============================
 
-1. API server is running on port 8001
+1. Start API server with: export PORT=8001 && python api.py
+   (or use ./start_api.sh if available)
 2. Your React Native app should connect to this server at http://YOUR_SERVER_IP:8001
-3. Use the /chat endpoint with a JSON payload like: {"text": "Your message"}
-4. Set the 'X-Platform: React Native' header in your requests
-5. All chat messages appear in this terminal with 🔵🔵🔵 highlighting
-6. No GUI needed - just this simple API server
+3. Use the /api/dialog endpoint with a JSON payload like: {"text": "Your message", "conversation_id": "optional_id"}
+4. For NLU-only analysis (including sentiment), use /api/nlu endpoint
+5. Set the 'X-Platform: React Native' header in your requests
+6. All chat messages appear in the server terminal with 🔵🔵🔵 highlighting
+7. The system now includes sentiment analysis and will adapt responses for urgent situations
 ============================
 
-Example curl command:
-curl -H "X-Platform: React Native" -H "Content-Type: application/json" \n  http://localhost:8001/chat -d '{"text": "Your message"}'
+Example curl commands:
+
+# Dialog endpoint (maintains conversation state):
+curl -H "X-Platform: React Native" -H "Content-Type: application/json" \
+  http://localhost:8001/api/dialog -d '{"text": "I need a tow, my car broke down"}'
+
+# NLU endpoint (with sentiment analysis):
+curl -H "X-Platform: React Native" -H "Content-Type: application/json" \
+  http://localhost:8001/api/nlu -d '{"text": "I am frustrated, my car broke down"}'
 
 ============================
 
