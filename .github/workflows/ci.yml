@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read # Allows reading repo contents
+  actions: read # For reading workflow status
+  checks: write # For writing test results
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -14,36 +19,101 @@ jobs:
         python-version: [3.8, 3.9, '3.10']
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov pytest-asyncio httpx
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       # Note: CI runs on Ubuntu, so MPS (Apple Silicon) features will not be tested
       # The code is designed to fall back to CPU when MPS is not available
-      - name: Run integration tests
+      - name: Run NLU Inferencer tests
         run: |
           python test_integration.py
 
-      - name: Run deployment tests
+      - name: Run Dialog Manager unit tests
+        run: |
+          python -m unittest test_dialog_manager_unified.py
+
+      - name: Start API server in background & Run API integration tests
+        env:
+          PORT: 8003 # Use a distinct port for CI API tests to avoid conflicts
+        run: |
+          echo "Starting API server on port $PORT for testing..."
+          # Redirect output to a log file for debugging
+          python api.py > api_server.log 2>&1 &
+          SERVER_PID=$!
+          echo "API server started with PID $SERVER_PID. Waiting for it to be healthy..."
+
+          # Health check polling mechanism instead of fixed sleep
+          MAX_RETRIES=12 # 12 retries * 5 seconds = 60 seconds maximum wait time
+          RETRY_COUNT=0
+          HEALTHY=false
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Health check attempt $((RETRY_COUNT + 1))..."
+            # Use curl's --fail to exit with an error code on HTTP errors
+            if curl -s --fail -o /dev/null "http://127.0.0.1:$PORT/api/health"; then
+              echo "API server is healthy!"
+              HEALTHY=true
+              break
+            fi
+            
+            # Check if the server process is still running
+            if ! kill -0 $SERVER_PID 2>/dev/null; then
+              echo "ERROR: API server process is no longer running!"
+              cat api_server.log
+              exit 1
+            fi
+            
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "Server not ready yet, waiting 5 seconds..."
+            sleep 5
+          done
+
+          # If still not healthy after maximum retries, fail the build
+          if [ "$HEALTHY" = "false" ]; then
+            echo "API server failed to become healthy after $MAX_RETRIES attempts."
+            echo "API server logs:"
+            cat api_server.log
+            kill $SERVER_PID || echo "Failed to kill API server (PID $SERVER_PID)"
+            exit 1
+          fi
+
+          echo "API server is healthy. Running pytest..."
+          pytest test_api_integration.py -v
+          PYTEST_EXIT_CODE=$? # Capture pytest exit code
+
+          echo "Pytest finished with exit code $PYTEST_EXIT_CODE. Stopping API server..."
+          kill $SERVER_PID || echo "Failed to kill API server (PID $SERVER_PID)"
+          wait $SERVER_PID || echo "Server process $SERVER_PID already exited"
+
+          # Display server logs if tests failed
+          if [ $PYTEST_EXIT_CODE -ne 0 ]; then
+            echo "Tests failed! API server logs:"
+            cat api_server.log
+          fi
+
+          exit $PYTEST_EXIT_CODE # Exit with pytest's exit code
+
+      - name: Run deployment/structure tests
         run: |
           python test_phase5.py
 
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
