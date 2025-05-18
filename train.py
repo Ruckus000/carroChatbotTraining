@@ -17,11 +17,16 @@ from transformers import (
     TrainingArguments,
 )
 
+# Import path utilities
+from utils.path_helpers import data_file_path, model_file_path, ensure_dir_exists
+
 
 def load_data(filepath):
     """Load training data from JSON file."""
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
+        # Use resolve_path for the file path
+        resolved_path = data_file_path(os.path.basename(filepath)) if filepath.startswith("data/") else filepath
+        with open(resolved_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         print(f"Successfully loaded {len(data)} examples from {filepath}")
         return data
@@ -360,137 +365,48 @@ def prepare_entity_dataset(examples, tokenizer, tag2id):
     return tokenized_inputs
 
 
-if __name__ == "__main__":
-    # Set fixed random state for reproducibility
-    RANDOM_STATE = 42
+def train_intent_classifier(data, test_size=0.2, batch_size=16, num_epochs=3):
+    """Train the intent classifier model."""
+    print("\n=== Training Intent Classifier ===")
 
-    # Determine device: MPS for Apple Silicon, else CPU
-    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
-        DEVICE = torch.device("mps")
-        print("INFO [train.py]: MPS device found. Training will use Apple Silicon GPU.")
-        USE_CUDA = True  # Not actually CUDA, but tells Trainer not to force CPU
-    else:
-        DEVICE = torch.device("cpu")
-        print("INFO [train.py]: MPS device not found. Training will use CPU.")
-        USE_CUDA = False
+    # Make sure the model output directory exists
+    intent_model_dir = model_file_path("intent_model")
+    ensure_dir_exists(intent_model_dir)
 
-    # Load data
-    data = load_data("data/nlu_training_data.json")
-    if not data:
-        print("No data loaded. Exiting.")
-        exit(1)
+    # Create dataset for intent classification
+    X = [example["text"] for example in data]
+    intents = list(set(example["intent"] for example in data))
+    intents.sort()  # Sort for deterministic result
 
-    # Standardize the data format
-    data = standardize_data(data)
-    print(f"Standardized data: {len(data)} examples")
-
-    # Split data into train and validation sets
-    train_data, val_data = train_test_split(
-        data, test_size=0.2, random_state=RANDOM_STATE
-    )
-    print(
-        f"Split data into {len(train_data)} training examples and {len(val_data)} validation examples"
-    )
-
-    # Prepare intent classification data
-    all_intents = sorted(list(set(example["intent"] for example in train_data)))
-    intent2id = {intent: i for i, intent in enumerate(all_intents)}
+    global intent2id, id2intent
+    intent2id = {intent: i for i, intent in enumerate(intents)}
     id2intent = {i: intent for intent, i in intent2id.items()}
 
-    # Save intent mappings
-    os.makedirs("./trained_nlu_model/intent_model", exist_ok=True)
-    try:
-        with open(
-            "./trained_nlu_model/intent_model/intent2id.json", "w", encoding="utf-8"
-        ) as f:
-            json.dump(intent2id, f, ensure_ascii=False, indent=2)
-    except IOError as e:
-        print(f"Error saving intent mappings: {e}")
+    # Save intent mapping
+    with open(model_file_path("intent_model/intent2id.json"), "w") as f:
+        json.dump(intent2id, f, indent=2)
 
-    # Prepare entity recognition data
-    # Get all unique entity types from training data
-    entity_types = set()
-    for example in train_data:
-        for entity in example["entities"]:
-            entity_types.add(entity["entity"])
+    # Map intents to IDs
+    y = [intent2id[example["intent"]] for example in data]
 
-    # Create BIO tags
-    bio_tags = ["O"]
-    for entity_type in sorted(entity_types):
-        bio_tags.extend([f"B-{entity_type}", f"I-{entity_type}"])
-
-    tag2id = {tag: i for i, tag in enumerate(bio_tags)}
-    id2tag = {i: tag for tag, i in tag2id.items()}
-
-    # Save entity mappings
-    os.makedirs("./trained_nlu_model/entity_model", exist_ok=True)
-    try:
-        with open(
-            "./trained_nlu_model/entity_model/tag2id.json", "w", encoding="utf-8"
-        ) as f:
-            json.dump(tag2id, f, ensure_ascii=False, indent=2)
-    except IOError as e:
-        print(f"Error saving entity mappings: {e}")
-
-    # Create datasets for intent classification
-    intent_tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
-
-    train_texts = [example["text"] for example in train_data]
-    train_intent_ids = [intent2id[example["intent"]] for example in train_data]
-
-    val_texts = [example["text"] for example in val_data]
-    val_intent_ids = []
-
-    # Add a fallback intent if it doesn't exist
-    fallback_intents = [
-        "fallback_low_confidence",
-        "fallback_out_of_domain",
-        "fallback_out_of_scope",
-    ]
-    fallback_id = None
-
-    # Find an existing fallback intent or use the first intent as default
-    for fallback in fallback_intents:
-        if fallback in intent2id:
-            fallback_id = intent2id[fallback]
-            break
-
-    if fallback_id is None:
-        fallback_id = 0  # Default to first intent if no fallback exists
-
-    # Process validation intents
-    unseen_intents = set()
-    for example in val_data:
-        intent = example["intent"]
-        # Handle unseen intents in validation set
-        if intent not in intent2id:
-            unseen_intents.add(intent)
-            val_intent_ids.append(fallback_id)
-        else:
-            val_intent_ids.append(intent2id[intent])
-
-    # Print summary of unseen intents
-    if unseen_intents:
-        print(
-            f"Found {len(unseen_intents)} unseen intents in validation set. Mapping to fallback (ID: {fallback_id})."
-        )
-        for intent in sorted(unseen_intents):
-            print(
-                f"Warning: Unseen intent '{intent}' in validation set. Mapping to fallback."
-            )
+    # Split data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, random_state=42, stratify=y
+    )
 
     # Tokenize for intent classification
+    intent_tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
     train_intent_encodings = intent_tokenizer(
-        train_texts, truncation=True, padding=True
+        X_train, truncation=True, padding=True
     )
-    val_intent_encodings = intent_tokenizer(val_texts, truncation=True, padding=True)
+    val_intent_encodings = intent_tokenizer(X_test, truncation=True, padding=True)
 
     # Create datasets
     train_intent_dataset = Dataset.from_dict(
         {
             "input_ids": train_intent_encodings["input_ids"],
             "attention_mask": train_intent_encodings["attention_mask"],
-            "labels": train_intent_ids,
+            "labels": y_train,
         }
     )
 
@@ -498,45 +414,7 @@ if __name__ == "__main__":
         {
             "input_ids": val_intent_encodings["input_ids"],
             "attention_mask": val_intent_encodings["attention_mask"],
-            "labels": val_intent_ids,
-        }
-    )
-
-    # Create datasets for entity recognition
-    entity_tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
-
-    # Create simple Dataset objects first
-    train_entity_raw_data = {
-        "text": [example["text"] for example in train_data],
-        "entities": [example["entities"] for example in train_data],
-    }
-
-    val_entity_raw_data = {
-        "text": [example["text"] for example in val_data],
-        "entities": [example["entities"] for example in val_data],
-    }
-
-    # Prepare entity datasets
-    train_entity_features = prepare_entity_dataset(
-        train_entity_raw_data, entity_tokenizer, tag2id
-    )
-    val_entity_features = prepare_entity_dataset(
-        val_entity_raw_data, entity_tokenizer, tag2id
-    )
-
-    train_entity_dataset = Dataset.from_dict(
-        {
-            "input_ids": train_entity_features["input_ids"].numpy().tolist(),
-            "attention_mask": train_entity_features["attention_mask"].numpy().tolist(),
-            "labels": train_entity_features["labels"].numpy().tolist(),
-        }
-    )
-
-    val_entity_dataset = Dataset.from_dict(
-        {
-            "input_ids": val_entity_features["input_ids"].numpy().tolist(),
-            "attention_mask": val_entity_features["attention_mask"].numpy().tolist(),
-            "labels": val_entity_features["labels"].numpy().tolist(),
+            "labels": y_test,
         }
     )
 
@@ -553,6 +431,89 @@ if __name__ == "__main__":
         print(f"Error loading intent model: {e}")
         exit(1)
 
+    # Configure training arguments
+    intent_training_args = TrainingArguments(
+        output_dir=model_file_path("intent_model_checkpoints"),
+        num_train_epochs=num_epochs,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
+        warmup_steps=100,  # Adjusted for better learning rate
+        weight_decay=0.01,
+        logging_dir=model_file_path("intent_logs"),
+        logging_steps=50,  # Log more frequently
+        eval_strategy="epoch",
+        save_strategy="epoch",
+        load_best_model_at_end=True,
+        metric_for_best_model="f1",
+        # Removed no_cuda=True to allow device auto-detection
+    )
+
+    # Create trainer
+    intent_trainer = Trainer(
+        model=intent_model,
+        args=intent_training_args,
+        train_dataset=train_intent_dataset,
+        eval_dataset=val_intent_dataset,
+        compute_metrics=compute_intent_metrics,
+    )
+
+    # Train models
+    print("Training intent model...")
+    try:
+        intent_trainer.train()
+    except Exception as e:
+        print(f"Error during intent model training: {e}")
+        exit(1)
+
+    # Save models
+    print("Saving intent model...")
+    try:
+        intent_model.save_pretrained(model_file_path("intent_model"))
+        intent_tokenizer.save_pretrained(model_file_path("intent_model"))
+    except Exception as e:
+        print(f"Error saving intent model: {e}")
+
+    print("Intent classifier training complete!")
+
+
+def train_entity_recognizer(data, test_size=0.2, batch_size=16, num_epochs=3):
+    """Train named entity recognition model."""
+    print("\n=== Training Entity Recognizer ===")
+
+    # Make sure the model output directory exists
+    entity_model_dir = model_file_path("entity_model")
+    ensure_dir_exists(entity_model_dir)
+
+    # Prepare BIO tagged data
+    word_tokens = []
+    word_tags = []
+    entity_types = set()
+
+    for example in data:
+        for entity in example["entities"]:
+            entity_types.add(entity["entity"])
+
+    # Create BIO tags
+    bio_tags = ["O"]
+    for entity_type in sorted(entity_types):
+        bio_tags.extend([f"B-{entity_type}", f"I-{entity_type}"])
+
+    tag2id = {tag: i for i, tag in enumerate(bio_tags)}
+    id2tag = {i: tag for tag, i in tag2id.items()}
+
+    # Save tag mapping
+    with open(model_file_path("entity_model/tag2id.json"), "w") as f:
+        json.dump(tag2id, f, indent=2)
+
+    # Create datasets for entity recognition
+    entity_tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+    entity_tokenizer.model_max_length = 128
+    entity_tokenizer.padding_side = "right"
+    entity_tokenizer.truncation_side = "right"
+
+    entity_dataset = prepare_entity_dataset(data, entity_tokenizer, tag2id)
+
+    # Load models
     try:
         entity_model = DistilBertForTokenClassification.from_pretrained(
             "distilbert-base-uncased",
@@ -566,14 +527,14 @@ if __name__ == "__main__":
         exit(1)
 
     # Configure training arguments
-    intent_training_args = TrainingArguments(
-        output_dir="./trained_nlu_model/intent_model_checkpoints",
-        num_train_epochs=3,  # Increased epochs slightly
-        per_device_train_batch_size=16,  # Increased batch size to utilize MPS
-        per_device_eval_batch_size=16,
+    entity_training_args = TrainingArguments(
+        output_dir=model_file_path("entity_model_checkpoints"),
+        num_train_epochs=num_epochs,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size,
         warmup_steps=100,  # Adjusted for better learning rate
         weight_decay=0.01,
-        logging_dir="./trained_nlu_model/intent_logs",
+        logging_dir=model_file_path("entity_logs"),
         logging_steps=50,  # Log more frequently
         eval_strategy="epoch",
         save_strategy="epoch",
@@ -582,47 +543,15 @@ if __name__ == "__main__":
         # Removed no_cuda=True to allow device auto-detection
     )
 
-    entity_training_args = TrainingArguments(
-        output_dir="./trained_nlu_model/entity_model_checkpoints",
-        num_train_epochs=3,  # Increased epochs
-        per_device_train_batch_size=16,  # Increased batch size
-        per_device_eval_batch_size=16,
-        warmup_steps=100,  # Adjusted
-        weight_decay=0.01,
-        logging_dir="./trained_nlu_model/entity_logs",
-        logging_steps=50,  # Log more frequently
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        load_best_model_at_end=True,
-        metric_for_best_model="f1",
-        # Removed no_cuda=True to allow device auto-detection
-    )
-
-    # Create trainers
-    intent_trainer = Trainer(
-        model=intent_model,
-        args=intent_training_args,
-        train_dataset=train_intent_dataset,
-        eval_dataset=val_intent_dataset,
-        compute_metrics=compute_intent_metrics,
-    )
-
+    # Create trainer
     entity_trainer = Trainer(
         model=entity_model,
         args=entity_training_args,
-        train_dataset=train_entity_dataset,
-        eval_dataset=val_entity_dataset,
+        train_dataset=entity_dataset,
         compute_metrics=compute_entity_metrics,
     )
 
     # Train models
-    print("Training intent model...")
-    try:
-        intent_trainer.train()
-    except Exception as e:
-        print(f"Error during intent model training: {e}")
-        exit(1)
-
     print("Training entity model...")
     try:
         entity_trainer.train()
@@ -631,18 +560,56 @@ if __name__ == "__main__":
         exit(1)
 
     # Save models
-    print("Saving intent model...")
-    try:
-        intent_model.save_pretrained("./trained_nlu_model/intent_model")
-        intent_tokenizer.save_pretrained("./trained_nlu_model/intent_model")
-    except Exception as e:
-        print(f"Error saving intent model: {e}")
-
     print("Saving entity model...")
     try:
-        entity_model.save_pretrained("./trained_nlu_model/entity_model")
-        entity_tokenizer.save_pretrained("./trained_nlu_model/entity_model")
+        entity_model.save_pretrained(model_file_path("entity_model"))
+        entity_tokenizer.save_pretrained(model_file_path("entity_model"))
     except Exception as e:
         print(f"Error saving entity model: {e}")
+
+    print("Entity recognizer training complete!")
+
+
+if __name__ == "__main__":
+    # Set device
+    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        # Use Metal Performance Shaders (MPS) for Apple Silicon
+        DEVICE = torch.device("mps")
+        print("Using MPS (Apple Silicon) device for training")
+    elif torch.cuda.is_available():
+        # Use CUDA for NVIDIA GPUs
+        DEVICE = torch.device("cuda")
+        print("Using CUDA device for training")
+    else:
+        # Fall back to CPU
+        DEVICE = torch.device("cpu")
+        print("GPU not available, using CPU for training")
+
+    # Load and preprocess data
+    print("Loading training data...")
+    train_data = load_data("data/nlu_training_data.json")
+
+    if not train_data:
+        print("No training data available. Exiting.")
+        exit(1)
+
+    # Set aside validation data
+    train_data, val_data = train_test_split(
+        train_data, test_size=0.2, random_state=42
+    )
+
+    print(
+        f"Split data: {len(train_data)} training examples, {len(val_data)} validation examples"
+    )
+
+    # Standardize data format
+    train_data = standardize_data(train_data)
+    val_data = standardize_data(val_data)
+
+    # Train intent classifier
+    train_intent_classifier(train_data)
+
+    # Train entity recognizer
+    train_entity_recognizer(train_data)
 
     print("Training complete!")

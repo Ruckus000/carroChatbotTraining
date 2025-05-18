@@ -4,13 +4,17 @@ from pydantic import BaseModel
 import uvicorn
 import logging
 from typing import Dict, List, Optional, Any, Set
-from inference import NLUInferencer
-from dialog_manager import DialogManager
 import uuid
 import os
 import time
 from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime
+
+# Import path helpers
+from utils.path_helpers import get_project_root, resolve_path
+
+from inference import NLUInferencer
+from dialog_manager import DialogManager
 
 # Configure logging
 logging.basicConfig(

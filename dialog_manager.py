@@ -2,6 +2,9 @@
 import copy
 from typing import Dict, List, Optional, Any, Set, Tuple
 
+# Import path utilities
+from utils.path_helpers import data_file_path
+
 from inference import NLUInferencer  # Import the NLU class
 from response_generator import ResponseGenerator
 

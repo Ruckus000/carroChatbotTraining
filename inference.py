@@ -11,16 +11,20 @@ from transformers import (
     pipeline,
 )
 
+# Import the path utilities
+from utils.path_helpers import model_file_path, resolve_path
+
 
 class NLUInferencer:
-    def __init__(self, model_path="./trained_nlu_model"):
+    def __init__(self, model_path="trained_nlu_model"):
         """
         Initialize the NLU Inferencer.
 
         Args:
             model_path (str): Path to the directory containing the trained models.
         """
-        self.model_path = model_path
+        # Use resolve_path to handle the model path properly
+        self.model_path = resolve_path(model_path)
 
         # Determine device: MPS for Apple Silicon, else CPU
         if torch.backends.mps.is_available() and torch.backends.mps.is_built():
@@ -36,7 +40,7 @@ class NLUInferencer:
 
         # Load intent model
         try:
-            self.intent_model_path = os.path.join(model_path, "intent_model")
+            self.intent_model_path = model_file_path("intent_model")
             self.intent_model = DistilBertForSequenceClassification.from_pretrained(
                 self.intent_model_path
             )
@@ -47,8 +51,8 @@ class NLUInferencer:
                 self.intent_model_path
             )
 
-            # Load intent mappings
-            with open(os.path.join(self.intent_model_path, "intent2id.json"), "r") as f:
+            # Load intent mappings - use model_file_path for the JSON file
+            with open(model_file_path("intent_model/intent2id.json"), "r") as f:
                 self.intent2id = json.load(f)
 
             # Create id2intent mapping
@@ -63,7 +67,7 @@ class NLUInferencer:
 
         # Load entity model
         try:
-            self.entity_model_path = os.path.join(model_path, "entity_model")
+            self.entity_model_path = model_file_path("entity_model")
             self.entity_model = DistilBertForTokenClassification.from_pretrained(
                 self.entity_model_path
             )
@@ -74,8 +78,8 @@ class NLUInferencer:
                 self.entity_model_path
             )
 
-            # Load entity tag mappings
-            with open(os.path.join(self.entity_model_path, "tag2id.json"), "r") as f:
+            # Load entity tag mappings - use model_file_path for the JSON file
+            with open(model_file_path("entity_model/tag2id.json"), "r") as f:
                 self.tag2id = json.load(f)
 
             # Create id2tag mapping
