@@ -24,6 +24,24 @@ from utils.ui_components import (
     set_page
 )
 
+# Import visualization components
+from utils.visualization import (
+    create_intent_radar_chart,
+    create_performance_timeline,
+    create_confusion_matrix_heatmap,
+    create_error_pattern_sankey,
+    create_confidence_distribution
+)
+
+# Import data processing functions
+from utils.data_processing import (
+    extract_intent_distributions,
+    process_confusion_matrix,
+    analyze_errors,
+    process_history_data,
+    extract_entity_metrics
+)
+
 # Set page config for better UI
 st.set_page_config(
     page_title="NLU Model Benchmarking",
@@ -38,49 +56,42 @@ st.markdown("""
     .main {
         padding: 1rem 1.5rem;
     }
-    .st-emotion-cache-16idsys p {
-        font-size: 16px;
-        line-height: 1.5;
+    .stApp {
+        margin: 0 auto;
     }
-    .metric-value {
-        font-size: 36px;
-        font-weight: 600;
-    }
-    .metric-label {
-        font-size: 14px;
-        font-weight: 400;
-        color: #555;
-        text-transform: uppercase;
-    }
-    .card {
-        background-color: #f8f9fa;
-        border-radius: 5px;
+    .metric-card {
+        border: 1px solid #f0f0f0;
+        border-radius: 0.5rem;
         padding: 1rem;
         margin-bottom: 1rem;
-        border-left: 4px solid #4b9dff;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        background-color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    .card.warning {
-        border-left: 4px solid #ff9d4b;
+    .metric-card h3 {
+        margin-top: 0;
     }
-    .card.success {
-        border-left: 4px solid #4bff9d;
+    .performance-summary {
+        padding: 1rem;
+        background-color: #f8f8f8;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
     }
-    .header-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
+    .stTabs {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    .header-title {
-        font-size: 24px;
-        font-weight: 600;
-        margin: 0;
+    .icon-text {
+        font-size: 1.2em;
+        vertical-align: middle;
     }
-    .header-subtitle {
-        font-size: 16px;
-        color: #555;
-        margin: 0;
+    .st-bb {
+        padding-top: 0.5rem;
+    }
+    .help-btn {
+        float: right;
+        margin-right: 0.5rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -291,118 +302,626 @@ def render_confusion_matrix(cm, labels, width=None, height=None):
     return fig
 
 def render_intent_metrics(metrics):
-    """Render intent classification metrics"""
-    st.subheader("Intent Classification Performance")
-
-    intent_metrics = metrics.get("intent_metrics", {})
-    # Extract key metrics
-    accuracy = intent_metrics.get("accuracy", 0)
-    f1 = intent_metrics.get("f1", 0)
-    precision = intent_metrics.get("precision", 0)
-    recall = intent_metrics.get("recall", 0)
+    """Render intent classification metrics with enhanced visualizations"""
+    st.header("Intent Classification Performance")
     
-    # Create metric cards in columns
+    # Extract intent metrics
+    intent_metrics = metrics.get('intent_metrics', {})
+    if not intent_metrics:
+        st.warning("No intent metrics available")
+        return
+    
+    # Summary metrics in cards
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        render_metric_card("Accuracy", accuracy, "🎯", is_percentage=True)
+        render_metric_card(
+            "Accuracy", 
+            intent_metrics.get('accuracy', 0), 
+            "🎯", 
+            is_percentage=True,
+            help_text="Percentage of examples where predicted intent matches true intent"
+        )
     with col2:
-        render_metric_card("F1 Score", f1, "⚖️")
+        render_metric_card(
+            "Precision", 
+            intent_metrics.get('precision', 0), 
+            "📌", 
+            is_percentage=True,
+            help_text="Ratio of correctly predicted intents to all predicted intents"
+        )
     with col3:
-        render_metric_card("Precision", precision, "📌")
+        render_metric_card(
+            "Recall", 
+            intent_metrics.get('recall', 0), 
+            "🔍", 
+            is_percentage=True,
+            help_text="Ratio of correctly predicted intents to all actual intents"
+        )
     with col4:
-        render_metric_card("Recall", recall, "🔍")
+        render_metric_card(
+            "F1 Score", 
+            intent_metrics.get('f1', 0), 
+            "⚖️", 
+            is_percentage=True,
+            help_text="Harmonic mean of precision and recall"
+        )
+    
+    # Enhanced visualizations
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Radar chart for best and worst intents
+        radar_chart = create_intent_radar_chart(metrics)
+        if radar_chart:
+            st.plotly_chart(radar_chart, use_container_width=True)
+    
+    with col2:
+        # Extract confusion matrix data
+        confusion_matrix = metrics.get('intent_metrics', {}).get('confusion_matrix', [])
+        intent_labels = metrics.get('intent_metrics', {}).get('labels', [])
+        
+        # Create enhanced confusion matrix heatmap
+        if confusion_matrix and intent_labels:
+            cm_data = process_confusion_matrix(confusion_matrix, intent_labels)
+            cm_heatmap = create_confusion_matrix_heatmap(confusion_matrix, intent_labels)
+            if cm_heatmap:
+                st.plotly_chart(cm_heatmap, use_container_width=True)
+                
+                # Display top confused pairs
+                if 'confused_pairs' in cm_data and cm_data['confused_pairs']:
+                    with st.expander("Top Confusion Pairs"):
+                        for pair in cm_data['confused_pairs'][:5]:
+                            st.markdown(f"**{pair['true']}** → **{pair['predicted']}**: {pair['count']} examples ({pair['percentage']:.1%} of '{pair['true']}' examples)")
+        else:
+            st.warning("No confusion matrix data available")
 
 def render_entity_metrics(metrics):
-    """Render entity recognition metrics"""
-    entity_metrics = metrics.get("entity_metrics", {})
-    if not entity_metrics:
-        st.warning("No entity metrics available in this benchmark")
-        return
-
-    st.subheader("Entity Recognition Performance")
-
-    # Get aggregate metrics if available
-    agg_metrics = entity_metrics.get("micro avg", {})
-    f1 = agg_metrics.get("f1-score", 0)
-    precision = agg_metrics.get("precision", 0)
-    recall = agg_metrics.get("recall", 0)
+    """Render entity recognition metrics with enhanced visualizations"""
+    st.header("Entity Recognition Performance")
     
-    # Create metric cards in columns
+    # Extract entity metrics
+    entity_metrics = extract_entity_metrics(metrics.get('entity_metrics', {}))
+    if not entity_metrics:
+        st.warning("No entity metrics available")
+        return
+    
+    # Get aggregate metrics
+    micro_avg = entity_metrics.get('micro avg', {})
+    
+    # Summary metrics in cards
     col1, col2, col3 = st.columns(3)
     with col1:
-        render_metric_card("Entity F1", f1, "🏷️")
+        render_metric_card(
+            "Entity Precision", 
+            micro_avg.get('precision', 0), 
+            "📌", 
+            is_percentage=True,
+            help_text="How many predicted entities are correct"
+        )
     with col2:
-        render_metric_card("Entity Precision", precision, "📌")
+        render_metric_card(
+            "Entity Recall", 
+            micro_avg.get('recall', 0), 
+            "🔍", 
+            is_percentage=True,
+            help_text="How many actual entities were found"
+        )
     with col3:
-        render_metric_card("Entity Recall", recall, "🔍")
+        render_metric_card(
+            "Entity F1", 
+            micro_avg.get('f1-score', 0), 
+            "⚖️", 
+            is_percentage=True,
+            help_text="Harmonic mean of precision and recall"
+        )
+    
+    # Show entity breakdown if available
+    if 'entity_data' in entity_metrics and entity_metrics['entity_data']:
+        entity_df = pd.DataFrame(entity_metrics['entity_data'])
+        
+        # Plot entity performance
+        fig = plt.figure(figsize=(10, 5))
+        ax = fig.add_subplot(111)
+        
+        # Sort by F1 score
+        entity_df = entity_df.sort_values('f1_score')
+        
+        # Create barplot
+        sns.barplot(x='f1_score', y='entity', data=entity_df, palette='Blues_d', ax=ax)
+        ax.set_title('Entity Type Performance (F1 Score)')
+        ax.set_xlabel('F1 Score')
+        ax.set_ylabel('Entity Type')
+        
+        # Display plot
+        st.pyplot(fig)
+        
+        # Display detailed metrics table
+        with st.expander("Detailed Entity Metrics"):
+            # Format for display
+            display_df = entity_df.copy()
+            for col in ['f1_score', 'precision', 'recall']:
+                display_df[col] = display_df[col].map('{:.1%}'.format)
+            
+            st.dataframe(
+                display_df.rename(columns={
+                    'entity': 'Entity Type',
+                    'f1_score': 'F1 Score',
+                    'precision': 'Precision',
+                    'recall': 'Recall',
+                    'support': 'Examples'
+                }),
+                use_container_width=True
+            )
 
-def render_class_performance(class_report, class_type="intent"):
-    """Render per-class performance metrics"""
-    # Create a dataframe from the class report
-    df = pd.DataFrame(class_report).T
+def render_error_analysis(metrics):
+    """Render error analysis with enhanced visualizations"""
+    st.header("Error Analysis")
     
-    # Filter out aggregate metrics
-    df = df[~df.index.isin(['micro avg', 'macro avg', 'weighted avg'])]
+    # Get detailed results
+    detailed_results = metrics.get('detailed_results', [])
+    if not detailed_results:
+        st.warning("No detailed results available for error analysis")
+        return
     
-    # Calculate support percentage
-    total_support = df['support'].sum()
-    df['support_pct'] = df['support'] / total_support * 100
+    # Process errors
+    error_data = analyze_errors(detailed_results)
+    if not error_data or not error_data.get('errors'):
+        st.warning("No errors found in the evaluation dataset")
+        return
     
-    # Sort by F1 score descending
-    df = df.sort_values(by='f1-score', ascending=False)
+    # Summary metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        render_metric_card(
+            "Error Rate", 
+            error_data['error_rate'] * 100, 
+            "❌", 
+            is_percentage=True,
+            help_text="Percentage of examples with incorrect intent predictions"
+        )
+    with col2:
+        render_metric_card(
+            "High Confidence Errors", 
+            error_data['high_confidence_errors'], 
+            "⚠️",
+            help_text="Number of errors with confidence > 0.8"
+        )
+    with col3:
+        render_metric_card(
+            "Avg. Error Confidence", 
+            error_data['avg_error_confidence'] * 100, 
+            "📉", 
+            is_percentage=True,
+            help_text="Average confidence score for incorrect predictions"
+        )
     
-    # Format for display
-    df_display = df.copy()
-    for col in ['precision', 'recall', 'f1-score']:
-        df_display[col] = df_display[col].map(lambda x: f"{x:.4f}")
-    df_display['support_pct'] = df_display['support_pct'].map(lambda x: f"{x:.1f}%")
+    # Enhanced visualizations
+    col1, col2 = st.columns(2)
     
-    # Show the table
+    with col1:
+        # Create Sankey diagram for error patterns
+        sankey_diagram = create_error_pattern_sankey(error_data['errors'])
+        if sankey_diagram:
+            st.plotly_chart(sankey_diagram, use_container_width=True)
+    
+    with col2:
+        # Create confidence distribution histogram
+        conf_histogram = create_confidence_distribution(
+            error_data['errors'], 
+            error_data['correct']
+        )
+        if conf_histogram:
+            st.plotly_chart(conf_histogram, use_container_width=True)
+    
+    # Error pattern table
+    st.subheader("Common Error Patterns")
+    if error_data.get('error_patterns'):
+        # Create dataframe for display
+        patterns_df = pd.DataFrame(error_data['error_patterns'])
+        patterns_df['percentage'] = patterns_df['percentage'].map('{:.1f}%'.format)
+        
+        st.dataframe(
+            patterns_df.rename(columns={
+                'true_intent': 'True Intent',
+                'predicted_intent': 'Predicted As',
+                'count': 'Count',
+                'percentage': '% of Errors'
+            }),
+            use_container_width=True
+        )
+    else:
+        st.info("No clear error patterns detected")
+    
+    # Interactive error explorer
+    st.subheader("Error Examples")
+    
+    # Filter controls
+    col1, col2 = st.columns(2)
+    with col1:
+        # Get unique true intents from errors
+        true_intents = list(set(e.get('true_intent', '') for e in error_data['errors']))
+        true_intents.sort()
+        
+        selected_true_intent = st.selectbox(
+            "Filter by True Intent",
+            ["All"] + true_intents
+        )
+    
+    with col2:
+        # Get unique predicted intents from errors
+        pred_intents = list(set(e.get('pred_intent', '') for e in error_data['errors']))
+        pred_intents.sort()
+        
+        selected_pred_intent = st.selectbox(
+            "Filter by Predicted Intent",
+            ["All"] + pred_intents
+        )
+    
+    # Apply filters
+    filtered_errors = error_data['errors']
+    
+    if selected_true_intent != "All":
+        filtered_errors = [e for e in filtered_errors if e.get('true_intent') == selected_true_intent]
+    
+    if selected_pred_intent != "All":
+        filtered_errors = [e for e in filtered_errors if e.get('pred_intent') == selected_pred_intent]
+    
+    # Show filtered errors
+    if filtered_errors:
+        st.write(f"Showing {len(filtered_errors)} of {len(error_data['errors'])} errors")
+        
+        for i, error in enumerate(filtered_errors[:20]):  # Limit to 20 examples for performance
+            with st.expander(f"'{error.get('text', 'No text')}' (Confidence: {error.get('confidence', 0):.2f})"):
+                col1, col2 = st.columns(2)
+                col1.markdown(f"**True Intent:** {error.get('true_intent', 'Unknown')}")
+                col2.markdown(f"**Predicted Intent:** {error.get('pred_intent', 'Unknown')}")
+                
+                # Show entities if available
+                if 'entities' in error:
+                    st.markdown("**Entities:**")
+                    for entity in error['entities']:
+                        st.markdown(f"- {entity.get('entity', '')}: {entity.get('value', '')}")
+    else:
+        st.info("No errors match the selected filters")
+
+def render_performance_history():
+    """Render performance history with enhanced visualizations"""
+    st.header("Performance History")
+    
+    # Load history data
+    history_df = load_history()
+    if history_df.empty:
+        st.warning("No historical data available")
+        return
+    
+    # Process history data
+    processed_history = process_history_data(history_df)
+    
+    # Summary metrics with trend indicators
+    col1, col2, col3 = st.columns(3)
+    
+    if 'trends' in processed_history:
+        trends = processed_history['trends']
+        
+        with col1:
+            if 'intent_accuracy' in trends:
+                trend = trends['intent_accuracy']
+                render_metric_card(
+                    "Intent Accuracy", 
+                    trend['current'] * 100, 
+                    "🎯", 
+                    is_percentage=True,
+                    delta=trend['change'] * 100 if 'change' in trend else None,
+                    help_text="Current accuracy with change from previous run"
+                )
+        
+        with col2:
+            if 'intent_f1' in trends:
+                trend = trends['intent_f1']
+                render_metric_card(
+                    "Intent F1", 
+                    trend['current'] * 100, 
+                    "⚖️", 
+                    is_percentage=True,
+                    delta=trend['change'] * 100 if 'change' in trend else None,
+                    help_text="Current F1 score with change from previous run"
+                )
+        
+        with col3:
+            if 'entity_f1' in trends:
+                trend = trends['entity_f1']
+                render_metric_card(
+                    "Entity F1", 
+                    trend['current'] * 100, 
+                    "🏷️", 
+                    is_percentage=True,
+                    delta=trend['change'] * 100 if 'change' in trend else None,
+                    help_text="Current entity F1 score with change from previous run"
+                )
+    
+    # Enhanced timeline visualization
+    timeline_chart = create_performance_timeline(history_df)
+    if timeline_chart:
+        st.plotly_chart(timeline_chart, use_container_width=True)
+    
+    # Model version history
+    st.subheader("Model Version History")
+    
+    # Prepare model history table
+    if not history_df.empty and 'model_id' in history_df.columns:
+        display_df = history_df.copy()
+        
+        # Format columns for display
+        for col in ['intent_accuracy', 'intent_f1', 'entity_f1']:
+            if col in display_df.columns:
+                display_df[col] = display_df[col].map(lambda x: f"{x:.2%}")
+        
+        # Extract timestamp and format it
+        if 'timestamp' in display_df.columns:
+            display_df['date'] = display_df['timestamp'].dt.strftime('%Y-%m-%d %H:%M')
+        
+        # Select and rename columns for display
+        columns_to_show = ['date', 'model_id', 'intent_accuracy', 'intent_f1', 'entity_f1']
+        rename_map = {
+            'date': 'Date',
+            'model_id': 'Model ID',
+            'intent_accuracy': 'Intent Accuracy',
+            'intent_f1': 'Intent F1',
+            'entity_f1': 'Entity F1'
+        }
+        
+        # Filter columns that exist in the dataframe
+        available_cols = [col for col in columns_to_show if col in display_df.columns]
+        
+        if available_cols:
+            st.dataframe(
+                display_df[available_cols].rename(columns={
+                    col: rename_map.get(col, col) for col in available_cols
+                }).sort_values('date', ascending=False),
+                use_container_width=True
+            )
+        else:
+            st.warning("No model history data available to display")
+    else:
+        st.warning("No model history data available")
+
+def render_model_comparison():
+    """Render model comparison view"""
+    st.header("Model Comparison")
+    
+    # Load available models
+    models = load_available_runs()
+    if not models:
+        st.warning("No models available for comparison")
+        return
+    
+    # Select models to compare
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        base_model_index = 0
+        base_model = st.selectbox(
+            "Base Model",
+            [f"{m['model_id']} ({m['timestamp']})" for m in models],
+            index=base_model_index,
+            key="base_model"
+        )
+    
+    with col2:
+        comparison_model_index = min(1, len(models) - 1)
+        comparison_model = st.selectbox(
+            "Comparison Model",
+            [f"{m['model_id']} ({m['timestamp']})" for m in models],
+            index=comparison_model_index,
+            key="comparison_model"
+        )
+    
+    # Skip if same model selected
+    if base_model == comparison_model:
+        st.warning("Please select different models to compare")
+        return
+    
+    # Load metrics for selected models
+    base_model_info = models[base_model_index]
+    comparison_model_info = models[comparison_model_index]
+    
+    base_metrics = load_metrics(base_model_info["file"])
+    comparison_metrics = load_metrics(comparison_model_info["file"])
+    
+    if not base_metrics or not comparison_metrics:
+        st.warning("Could not load metrics for the selected models")
+        return
+    
+    # Show comparison summary
+    st.subheader("Comparison Summary")
+    
+    # Compare key metrics
+    comparison_rows = []
+    
+    # Intent metrics
+    base_intent = base_metrics.get('intent_metrics', {})
+    comp_intent = comparison_metrics.get('intent_metrics', {})
+    
+    for metric_name, display_name in [
+        ('accuracy', 'Intent Accuracy'),
+        ('precision', 'Intent Precision'),
+        ('recall', 'Intent Recall'),
+        ('f1', 'Intent F1')
+    ]:
+        base_value = base_intent.get(metric_name, 0)
+        comp_value = comp_intent.get(metric_name, 0)
+        diff = comp_value - base_value
+        
+        comparison_rows.append({
+            'Metric': display_name,
+            'Base Model': f"{base_value:.2%}",
+            'Comparison Model': f"{comp_value:.2%}",
+            'Difference': f"{diff:.2%}",
+            'raw_diff': diff
+        })
+    
+    # Entity metrics
+    base_entity = base_metrics.get('entity_metrics', {}).get('report', {}).get('micro avg', {})
+    comp_entity = comparison_metrics.get('entity_metrics', {}).get('report', {}).get('micro avg', {})
+    
+    for metric_name, display_name in [
+        ('precision', 'Entity Precision'),
+        ('recall', 'Entity Recall'),
+        ('f1-score', 'Entity F1')
+    ]:
+        base_value = base_entity.get(metric_name, 0)
+        comp_value = comp_entity.get(metric_name, 0)
+        diff = comp_value - base_value
+        
+        comparison_rows.append({
+            'Metric': display_name,
+            'Base Model': f"{base_value:.2%}",
+            'Comparison Model': f"{comp_value:.2%}",
+            'Difference': f"{diff:.2%}",
+            'raw_diff': diff
+        })
+    
+    # Convert to dataframe
+    comparison_df = pd.DataFrame(comparison_rows)
+    
+    # Display summary table with highlighting
+    def highlight_diff(val):
+        """Highlight positive/negative differences"""
+        if 'raw_diff' in val:
+            diff = val['raw_diff']
+            if diff > 0:
+                color = '#c6ecc6'  # light green
+            elif diff < 0:
+                color = '#ffcccc'  # light red
+            else:
+                color = '#ffffff'  # white
+            return [f"background-color: {color}" if col == 'Difference' else "" for col in comparison_df.columns]
+        return ["" for _ in comparison_df.columns]
+    
+    # Display comparison dataframe without the raw_diff column
     st.dataframe(
-        df_display,
-        column_config={
-            "precision": "Precision",
-            "recall": "Recall",
-            "f1-score": "F1 Score",
-            "support": "Examples",
-            "support_pct": "% of Total"
-        },
-        height=min(35 * len(df) + 38, 400)
+        comparison_df.drop(columns=['raw_diff']).style.apply(highlight_diff, axis=1),
+        use_container_width=True
     )
     
-    # Create a bar chart of F1 scores
-    fig, ax = plt.subplots(figsize=(10, max(6, len(df) * 0.3)))
+    # Most improved and degraded intents
+    st.subheader("Intent Performance Changes")
     
-    # Sort for the chart
-    df_plot = df.sort_values(by='f1-score')
+    # Get per-class metrics for both models
+    base_per_class = base_metrics.get('intent_metrics', {}).get('per_class_report', {})
+    comp_per_class = comparison_metrics.get('intent_metrics', {}).get('per_class_report', {})
     
-    # Plot horizontal bars
-    ax.barh(df_plot.index, df_plot['f1-score'], color='#4b9dff')
+    # Skip aggregate metrics
+    skip_intents = ['micro avg', 'macro avg', 'weighted avg']
     
-    # Set limits and labels
-    ax.set_xlim(0, 1)
-    ax.set_xlabel('F1 Score')
-    ax.set_ylabel(f'{class_type.capitalize()} Class')
-    ax.set_title(f'{class_type.capitalize()} Classification Performance (F1)')
+    # Find common intents
+    common_intents = [
+        intent for intent in base_per_class.keys() 
+        if intent in comp_per_class and intent not in skip_intents
+    ]
     
-    # Improve readability
-    plt.tight_layout()
-    
-    # Show the chart
-    st.pyplot(fig)
+    if common_intents:
+        # Calculate differences
+        intent_changes = []
+        
+        for intent in common_intents:
+            base_f1 = base_per_class[intent].get('f1-score', 0)
+            comp_f1 = comp_per_class[intent].get('f1-score', 0)
+            diff = comp_f1 - base_f1
+            
+            intent_changes.append({
+                'intent': intent,
+                'base_f1': base_f1,
+                'comp_f1': comp_f1,
+                'diff': diff
+            })
+        
+        # Sort by difference
+        intent_changes.sort(key=lambda x: x['diff'])
+        
+        # Display most improved and degraded intents
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Most Degraded Intents")
+            degraded = intent_changes[:5]  # 5 most degraded
+            
+            if degraded:
+                degraded_df = pd.DataFrame(degraded)
+                degraded_df['base_f1'] = degraded_df['base_f1'].map('{:.2%}'.format)
+                degraded_df['comp_f1'] = degraded_df['comp_f1'].map('{:.2%}'.format)
+                degraded_df['diff'] = degraded_df['diff'].map('{:.2%}'.format)
+                
+                st.dataframe(
+                    degraded_df.rename(columns={
+                        'intent': 'Intent',
+                        'base_f1': 'Base F1',
+                        'comp_f1': 'Comparison F1',
+                        'diff': 'Change'
+                    }),
+                    use_container_width=True
+                )
+            else:
+                st.info("No degraded intents found")
+        
+        with col2:
+            st.markdown("#### Most Improved Intents")
+            improved = intent_changes[-5:]  # 5 most improved, reversed
+            improved.reverse()
+            
+            if improved:
+                improved_df = pd.DataFrame(improved)
+                improved_df['base_f1'] = improved_df['base_f1'].map('{:.2%}'.format)
+                improved_df['comp_f1'] = improved_df['comp_f1'].map('{:.2%}'.format)
+                improved_df['diff'] = improved_df['diff'].map('{:.2%}'.format)
+                
+                st.dataframe(
+                    improved_df.rename(columns={
+                        'intent': 'Intent',
+                        'base_f1': 'Base F1',
+                        'comp_f1': 'Comparison F1',
+                        'diff': 'Change'
+                    }),
+                    use_container_width=True
+                )
+            else:
+                st.info("No improved intents found")
+    else:
+        st.warning("No common intents found between the models")
 
-def format_entities(entities):
-    """Format entities for display"""
-    if not entities:
-        return "-"
+def render_latest_results():
+    """Render latest benchmark results with tabs"""
+    st.header("Latest Benchmark Results")
     
-    entity_strs = []
-    for entity in entities:
-        entity_type = entity.get("entity", "")
-        value = entity.get("value", "")
-        entity_strs.append(f"{entity_type}: {value}")
+    # Load latest metrics
+    metrics = load_latest_metrics()
+    if not metrics:
+        st.warning("No benchmark results available. Please run the benchmark first.")
+        return
     
-    return ", ".join(entity_strs)
+    # Format timestamp
+    timestamp = metrics.get('timestamp', '')
+    if timestamp:
+        formatted_time = datetime.fromisoformat(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        formatted_time = "Unknown"
+    
+    # Show model info
+    model_id = metrics.get('model_id', 'Unknown')
+    st.markdown(f"**Model ID:** {model_id}")
+    st.markdown(f"**Benchmark Time:** {formatted_time}")
+    
+    # Create tabs for different types of metrics
+    tabs = st.tabs(["Intent Metrics", "Entity Metrics", "Error Analysis"])
+    
+    with tabs[0]:
+        render_intent_metrics(metrics)
+    
+    with tabs[1]:
+        render_entity_metrics(metrics)
+    
+    with tabs[2]:
+        render_error_analysis(metrics)
 
 def render_home_page_with_data(latest_runs, latest_metrics):
     """Render home page with actual data from the latest run"""
@@ -424,17 +943,18 @@ def render_home_page_with_data(latest_runs, latest_metrics):
     model_id = latest_metrics.get("model_id", latest_run.get("model_id", "Unknown"))
     
     # Render home page with actual data
-    # Use text instead of image for the logo
-    st.markdown("<h1 style='font-size: 2.5rem;'>🤖 NLU Model Performance Dashboard</h1>", unsafe_allow_html=True)
+    # Use text instead of image logo
+    st.title("NLU Model Performance Dashboard")
+    st.markdown("### Real-time metrics and analysis for NLU model performance")
     
     # Key metrics overview cards in a row
     col1, col2, col3 = st.columns(3)
     with col1:
         render_metric_card("Current Model", model_id, "🤖")
     with col2:
-        render_metric_card("Intent Accuracy", intent_metrics.get("accuracy", 0), "🎯", is_percentage=True)
+        render_metric_card("Intent Accuracy", intent_metrics.get("accuracy", 0) * 100, "🎯", is_percentage=True)
     with col3:
-        render_metric_card("Entity F1", entity_f1, "🏷️")
+        render_metric_card("Entity F1", entity_f1 * 100, "🏷️", is_percentage=True)
     
     # Quick actions section
     st.subheader("Quick Actions")
@@ -445,364 +965,55 @@ def render_home_page_with_data(latest_runs, latest_metrics):
         st.button("📈 Performance History", on_click=set_page, args=("history",))
     with action_col3:
         st.button("❌ Error Analysis", on_click=set_page, args=("errors",))
+    
+    # Recent performance visualization
+    st.subheader("Recent Performance")
+    
+    # Load and process history data
+    history_df = load_history()
+    if not history_df.empty:
+        # Take last 5 runs
+        recent_df = history_df.sort_values('timestamp', ascending=True).tail(5)
+        
+        # Create recent performance chart
+        timeline_chart = create_performance_timeline(recent_df)
+        if timeline_chart:
+            st.plotly_chart(timeline_chart, use_container_width=True)
+    else:
+        st.info("No performance history available")
 
 def main():
-    """Main function to run the dashboard"""
-    
-    # Create navigation sidebar
+    """Main function to render the dashboard"""
+    # Create navigation
     create_navigation(PAGES)
     
-    # Render the appropriate page based on session state
-    current_page = st.session_state.get("current_page", "home")
+    # Determine which page to show
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = "home"
     
-    # Load data that might be needed across multiple pages
-    available_runs = load_available_runs()
-    history_df = load_history()
+    current_page = st.session_state.current_page
     
-    # Load the latest metrics file if available
-    latest_metrics = None
-    if available_runs:
-        latest_metrics = load_metrics(available_runs[0]["file"])
+    # Load data that might be needed
+    available_models = load_available_runs()
+    latest_metrics = load_latest_metrics()
     
-    # Render the correct page
+    # Render the appropriate page
     if current_page == "home":
-        render_home_page_with_data(available_runs, latest_metrics)
-        
+        render_home_page_with_data(available_models, latest_metrics)
     elif current_page == "results":
-        render_header()
-        
-        st.subheader("Latest Benchmark Results")
-        
-        if not available_runs:
-            st.warning("No benchmark results found. Please run evaluations first.")
-            return
-            
-        run_select = st.selectbox(
-            "Select benchmark run:",
-            options=[f"{run['model_id']} ({run['timestamp']})" for run in available_runs],
-            index=0
-        )
-        
-        # Find the selected run
-        selected_index = [f"{run['model_id']} ({run['timestamp']})" for run in available_runs].index(run_select)
-        selected_run = available_runs[selected_index]
-        
-        # Load metrics for the selected run
-        metrics = load_metrics(selected_run["file"])
-        
-        if not metrics:
-            st.error(f"Could not load metrics for the selected run: {selected_run['file']}")
-            return
-            
-        # Show metadata
-        st.markdown(f"**Model ID:** {metrics.get('model_id', 'Unknown')}")
-        st.markdown(f"**Timestamp:** {selected_run['timestamp']}")
-        
-        # Show tabs for different metric types
-        tabs = st.tabs(["Intent Metrics", "Entity Metrics", "Confusion Matrix", "Error Analysis"])
-        
-        # Intent Metrics Tab
-        with tabs[0]:
-            render_intent_metrics(metrics)
-            
-            # Per-class metrics
-            st.markdown("### Per-Intent Performance")
-            if "intent_metrics" in metrics and "per_class_report" in metrics["intent_metrics"]:
-                render_class_performance(metrics["intent_metrics"]["per_class_report"], "intent")
-            else:
-                st.warning("No per-intent metrics available.")
-                
-        # Entity Metrics Tab
-        with tabs[1]:
-            render_entity_metrics(metrics)
-            
-            # Per-entity metrics
-            st.markdown("### Per-Entity Performance")
-            if "entity_metrics" in metrics and "report" in metrics["entity_metrics"]:
-                # Filter out the averages
-                entity_report = {k: v for k, v in metrics["entity_metrics"]["report"].items() 
-                               if k not in ["micro avg", "macro avg", "weighted avg"]}
-                if entity_report:
-                    render_class_performance(entity_report, "entity")
-                else:
-                    st.warning("No per-entity metrics available.")
-            else:
-                st.warning("No per-entity metrics available.")
-                
-        # Confusion Matrix Tab
-        with tabs[2]:
-            st.markdown("### Intent Confusion Matrix")
-            if "intent_metrics" in metrics and "confusion_matrix" in metrics["intent_metrics"]:
-                cm = np.array(metrics["intent_metrics"]["confusion_matrix"])
-                labels = metrics["intent_metrics"].get("labels", [])
-                
-                if len(cm) > 0 and len(labels) > 0:
-                    fig = render_confusion_matrix(cm, labels)
-                    st.pyplot(fig)
-                else:
-                    st.warning("Not enough data to generate confusion matrix.")
-            else:
-                st.warning("No confusion matrix data available.")
-                
-        # Error Analysis Tab
-        with tabs[3]:
-            st.markdown("### Error Analysis")
-            if "detailed_results" in metrics:
-                # Filter to errors only
-                errors = [r for r in metrics["detailed_results"] if not r.get("intent_correct", True)]
-                
-                if errors:
-                    st.markdown(f"Found **{len(errors)}** errors out of **{len(metrics['detailed_results'])}** examples.")
-                    
-                    # Show errors in an expander
-                    for i, error in enumerate(errors):
-                        with st.expander(f"Error {i+1}: {error.get('text', 'No text')}"):
-                            cols = st.columns(2)
-                            with cols[0]:
-                                st.markdown(f"**True Intent:** {error.get('true_intent', 'Unknown')}")
-                                st.markdown(f"**True Entities:** {format_entities(error.get('true_entities', []))}")
-                            with cols[1]:
-                                st.markdown(f"**Predicted Intent:** {error.get('pred_intent', 'Unknown')}")
-                                st.markdown(f"**Confidence:** {error.get('confidence', 0):.4f}")
-                else:
-                    st.success("No errors found in this benchmark!")
-            else:
-                st.warning("No detailed results available for error analysis.")
-    
+        render_latest_results()
     elif current_page == "history":
-        render_header()
-        
-        st.subheader("Performance History")
-        
-        if history_df.empty:
-            st.warning("No history data available. Please run more evaluations to build history.")
-            return
-            
-        st.markdown("### Performance Trends")
-        
-        # Create timeline plot
-        fig, ax = plt.subplots(figsize=(10, 6))
-        
-        # Ensure timestamp is in datetime format
-        if 'timestamp' in history_df.columns:
-            history_df['timestamp'] = pd.to_datetime(history_df['timestamp'])
-            
-            # Plot intent metrics
-            if 'intent_accuracy' in history_df.columns:
-                ax.plot(history_df['timestamp'], history_df['intent_accuracy'], 
-                      marker='o', label='Intent Accuracy', color='#4b9dff')
-                
-            if 'intent_f1' in history_df.columns:
-                ax.plot(history_df['timestamp'], history_df['intent_f1'], 
-                      marker='s', label='Intent F1', color='#4bff9d')
-                
-            # Plot entity metrics if available
-            if 'entity_f1' in history_df.columns:
-                ax.plot(history_df['timestamp'], history_df['entity_f1'], 
-                      marker='^', label='Entity F1', color='#ff9d4b')
-                
-            # Set labels and limits
-            ax.set_xlabel('Date')
-            ax.set_ylabel('Score')
-            ax.set_ylim(0, 1)
-            ax.grid(True, alpha=0.3)
-            ax.legend()
-            
-            # Format x-axis
-            fig.autofmt_xdate()
-            
-            st.pyplot(fig)
-        else:
-            st.warning("Invalid history data format. Missing timestamp column.")
-            
-        # Show the history data table
-        st.markdown("### History Data")
-        st.dataframe(history_df)
-    
+        render_performance_history()
     elif current_page == "errors":
-        render_header()
-        
-        st.subheader("Error Analysis")
-        
-        if not available_runs:
-            st.warning("No benchmark results found. Please run evaluations first.")
-            return
-            
-        run_select = st.selectbox(
-            "Select benchmark run:",
-            options=[f"{run['model_id']} ({run['timestamp']})" for run in available_runs],
-            index=0
-        )
-        
-        # Find the selected run
-        selected_index = [f"{run['model_id']} ({run['timestamp']})" for run in available_runs].index(run_select)
-        selected_run = available_runs[selected_index]
-        
-        # Load metrics for the selected run
-        metrics = load_metrics(selected_run["file"])
-        
-        if not metrics or "detailed_results" not in metrics:
-            st.error("No detailed results available for error analysis.")
-            return
-            
-        # Filter to errors only
-        errors = [r for r in metrics["detailed_results"] if not r.get("intent_correct", True)]
-        
-        if not errors:
-            st.success("No errors found in this benchmark!")
-            return
-            
-        st.markdown(f"Found **{len(errors)}** errors out of **{len(metrics['detailed_results'])}** examples.")
-        
-        # Group errors by predicted/true intent pair
-        error_groups = {}
-        for error in errors:
-            key = f"{error.get('true_intent', 'Unknown')} → {error.get('pred_intent', 'Unknown')}"
-            if key not in error_groups:
-                error_groups[key] = []
-            error_groups[key].append(error)
-            
-        # Sort groups by count
-        sorted_groups = sorted(error_groups.items(), key=lambda x: len(x[1]), reverse=True)
-        
-        # Show error pattern breakdown
-        st.markdown("### Error Patterns")
-        
-        # Create a bar chart of error patterns
-        fig, ax = plt.subplots(figsize=(10, min(max(6, len(sorted_groups) * 0.3), 12)))
-        
-        # Get data for plot (up to top 15 patterns)
-        labels = [group[0] for group in sorted_groups[:15]]
-        counts = [len(group[1]) for group in sorted_groups[:15]]
-        
-        # Sort for the chart (ascending for horizontal bars)
-        sort_idx = np.argsort(counts)
-        labels = [labels[i] for i in sort_idx]
-        counts = [counts[i] for i in sort_idx]
-        
-        # Plot horizontal bars
-        ax.barh(labels, counts, color='#ff9d4b')
-        
-        # Set labels
-        ax.set_xlabel('Number of Errors')
-        ax.set_ylabel('Error Pattern')
-        ax.set_title('Most Common Error Patterns')
-        
-        # Improve readability
-        plt.tight_layout()
-        
-        # Show the chart
-        st.pyplot(fig)
-        
-        # Show errors grouped by pattern
-        st.markdown("### Errors by Pattern")
-        
-        for pattern, errors in sorted_groups:
-            with st.expander(f"{pattern} ({len(errors)} errors)"):
-                for i, error in enumerate(errors):
-                    st.markdown(f"**{i+1}. {error.get('text', 'No text')}**")
-                    cols = st.columns(2)
-                    with cols[0]:
-                        st.markdown(f"**True Intent:** {error.get('true_intent', 'Unknown')}")
-                        st.markdown(f"**True Entities:** {format_entities(error.get('true_entities', []))}")
-                    with cols[1]:
-                        st.markdown(f"**Predicted Intent:** {error.get('pred_intent', 'Unknown')}")
-                        st.markdown(f"**Confidence:** {error.get('confidence', 0):.4f}")
-                    st.markdown("---")
-    
+        # Use error analysis from latest results
+        if latest_metrics:
+            render_error_analysis(latest_metrics)
+        else:
+            st.warning("No benchmark results available for error analysis")
     elif current_page == "comparison":
-        render_header()
-        
-        st.subheader("Model Comparison")
-        
-        if len(available_runs) < 2:
-            st.warning("At least two benchmark runs are needed for comparison. Please run more evaluations.")
-            return
-            
-        # Model selection
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("### Select Base Model")
-            base_select = st.selectbox(
-                "Base model:",
-                options=[f"{run['model_id']} ({run['timestamp']})" for run in available_runs],
-                index=1,
-                key="base_model"
-            )
-            
-        with col2:
-            st.markdown("### Select Comparison Model")
-            comp_select = st.selectbox(
-                "Comparison model:",
-                options=[f"{run['model_id']} ({run['timestamp']})" for run in available_runs],
-                index=0,
-                key="comp_model"
-            )
-            
-        # Get indices
-        base_idx = [f"{run['model_id']} ({run['timestamp']})" for run in available_runs].index(base_select)
-        comp_idx = [f"{run['model_id']} ({run['timestamp']})" for run in available_runs].index(comp_select)
-        
-        if base_idx == comp_idx:
-            st.warning("Please select different models to compare.")
-            return
-            
-        # Load metrics
-        base_metrics = load_metrics(available_runs[base_idx]["file"])
-        comp_metrics = load_metrics(available_runs[comp_idx]["file"])
-        
-        if not base_metrics or not comp_metrics:
-            st.error("Could not load metrics for one or both selected models.")
-            return
-            
-        # Display comparison
-        st.markdown("### Overall Metrics Comparison")
-        
-        # Intent metrics
-        base_intent = base_metrics.get("intent_metrics", {})
-        comp_intent = comp_metrics.get("intent_metrics", {})
-        
-        # Intent metrics comparison
-        cols = st.columns(4)
-        metrics_to_compare = [
-            ("Accuracy", "accuracy", "🎯"),
-            ("F1 Score", "f1", "⚖️"),
-            ("Precision", "precision", "📌"),
-            ("Recall", "recall", "🔍")
-        ]
-        
-        for i, (label, key, icon) in enumerate(metrics_to_compare):
-            with cols[i]:
-                base_val = base_intent.get(key, 0)
-                comp_val = comp_intent.get(key, 0)
-                delta = comp_val - base_val
-                
-                # Use updated metric card with delta
-                render_metric_card(label, comp_val, icon, delta=delta)
-        
-        # Entity metrics if available
-        if "entity_metrics" in base_metrics and "entity_metrics" in comp_metrics:
-            st.markdown("### Entity Metrics Comparison")
-            
-            base_entity = base_metrics.get("entity_metrics", {}).get("micro avg", {})
-            comp_entity = comp_metrics.get("entity_metrics", {}).get("micro avg", {})
-            
-            cols = st.columns(3)
-            entity_metrics_to_compare = [
-                ("F1 Score", "f1-score", "🏷️"),
-                ("Precision", "precision", "📌"),
-                ("Recall", "recall", "🔍")
-            ]
-            
-            for i, (label, key, icon) in enumerate(entity_metrics_to_compare):
-                with cols[i]:
-                    base_val = base_entity.get(key, 0)
-                    comp_val = comp_entity.get(key, 0)
-                    delta = comp_val - base_val
-                    
-                    # Use updated metric card with delta
-                    render_metric_card(f"Entity {label}", comp_val, icon, delta=delta)
+        render_model_comparison()
+    else:
+        st.error(f"Unknown page: {current_page}")
 
 if __name__ == "__main__":
     main() 
