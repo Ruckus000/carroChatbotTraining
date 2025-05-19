@@ -1,0 +1,83 @@
+name: NLU Model Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/**'
+      - '*.py'
+      - 'requirements*.txt'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'data/**'
+      - '*.py'
+      - 'requirements*.txt'
+  workflow_dispatch:
+    inputs:
+      train_new_model:
+        description: 'Train a new model'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  test:
+    name: Test NLU Model Pipeline
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dashboard.txt ]; then pip install -r requirements-dashboard.txt; fi
+
+      - name: Run tests
+        run: |
+          # Run basic sanity tests
+          python -c "from inference import NLUInferencer; print('NLUInferencer can be imported')"
+          python -c "from evaluate_nlu import evaluate_model; print('evaluate_nlu can be imported')"
+
+      - name: Set up model directory
+        run: |
+          mkdir -p models
+          mkdir -p benchmark_results
+
+      # Only run if manually triggered with train_new_model=true or data changes
+      - name: Train and benchmark model
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.train_new_model == 'true' || contains(github.event.head_commit.message, '[train]') }}
+        run: |
+          python model_pipeline.py pipeline \
+            --training-data data/nlu_training_data.json \
+            --benchmark-data data/nlu_benchmark_data.json \
+            --description "CI build ${{ github.run_id }}" \
+            --fail-on-regression
+
+      # Always run regression test on the current model
+      - name: Test current model for regression
+        if: ${{ always() }}
+        run: |
+          python model_pipeline.py regression --ci
+        continue-on-error: true
+
+      # Create model report as artifact
+      - name: Generate model report
+        if: ${{ always() }}
+        run: |
+          python model_pipeline.py list --json > model_report.json
+
+      - name: Upload model report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: model-report
+          path: model_report.json

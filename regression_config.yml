@@ -1,0 +1,110 @@
+# NLU Model Regression Testing Configuration
+# Defines thresholds and rules for detecting performance degradation
+
+# General configuration
+general:
+  # Minimum number of tests required to enable regression checks
+  min_test_count: 3
+  # Whether to use statistical significance testing
+  use_statistical_testing: true
+  # Confidence level for statistical tests (default: 95%)
+  confidence_level: 0.95
+
+# Metric thresholds
+# Format: metric_name: {absolute: X, relative: Y%, min_value: Z}
+# - absolute: Maximum allowed absolute drop (e.g., 0.05 = 5 percentage points)
+# - relative: Maximum allowed relative drop (e.g., 5 = 5%)
+# - min_value: Minimum acceptable value regardless of history
+
+thresholds:
+  intent:
+    accuracy:
+      absolute: 0.05  # Max 5 percentage point drop
+      relative: 5.0   # Max 5% relative drop
+      min_value: 0.75 # Never accept below 75% accuracy
+    
+    f1:
+      absolute: 0.05  # Max 5 percentage point drop
+      relative: 5.0   # Max 5% relative drop
+      min_value: 0.75 # Never accept below 75% F1 score
+    
+    recall:
+      absolute: 0.08  # Max 8 percentage point drop
+      relative: 8.0   # Max 8% relative drop
+      min_value: 0.70 # Never accept below 70% recall
+    
+    precision:
+      absolute: 0.08  # Max 8 percentage point drop
+      relative: 8.0   # Max 8% relative drop
+      min_value: 0.70 # Never accept below 70% precision
+  
+  entity:
+    f1:
+      absolute: 0.07  # Max 7 percentage point drop
+      relative: 7.0   # Max 7% relative drop
+      min_value: 0.65 # Never accept below 65% F1 score
+
+# Class-specific thresholds for critical intents/entities
+# These override the general thresholds for specific classes
+class_thresholds:
+  intents:
+    # Example: payment-related intents have higher quality requirements
+    make_payment:
+      f1:
+        absolute: 0.03
+        relative: 3.0
+        min_value: 0.85
+    
+    payment_status:
+      f1:
+        absolute: 0.03
+        relative: 3.0
+        min_value: 0.85
+    
+    # Example: critical error-handling intents
+    help:
+      f1:
+        absolute: 0.02
+        relative: 2.0
+        min_value: 0.90
+    
+  entities:
+    # Example: date entities should be very accurate
+    date:
+      f1:
+        absolute: 0.03
+        relative: 3.0
+        min_value: 0.85
+    
+    # Example: payment amount needs to be accurate
+    amount:
+      f1:
+        absolute: 0.02
+        relative: 2.0
+        min_value: 0.90
+
+# Configuration for CI environments
+ci:
+  # Exit code to return when regression is detected
+  exit_code: 2
+  # Whether to include full metrics in CI output
+  verbose_output: false
+  # Generate a detailed report file
+  generate_report: true
+  report_file: "regression_report.json"
+
+# Visualization settings
+visualization:
+  # Generate trend plots for key metrics
+  generate_plots: true
+  # Directory to save visualization files
+  output_dir: "benchmark_results/regression_plots"
+  # Format for plot files (png, svg, pdf)
+  format: "png"
+  # Number of historical models to include in visualization
+  history_limit: 10
+  # List of metrics to visualize
+  metrics:
+    - intent.accuracy
+    - intent.f1
+    - entity.f1 
