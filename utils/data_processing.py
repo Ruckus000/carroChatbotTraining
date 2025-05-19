@@ -4,6 +4,10 @@ Data processing utilities for the NLU Benchmarking Dashboard
 
 import pandas as pd
 import numpy as np
+import os
+import glob
+import json
+from datetime import datetime
 from collections import Counter, defaultdict
 
 def extract_intent_distributions(metrics):
@@ -278,4 +282,81 @@ def extract_entity_metrics(metrics):
         if 'report' in entity_metrics and avg_type in entity_metrics['report']:
             result[avg_type] = entity_metrics['report'][avg_type]
     
-    return result 
+    return result
+
+def load_available_models():
+    """
+    Load available model metadata from benchmark runs.
+    
+    Returns:
+        List of dictionaries with model metadata.
+    """
+    # Check if benchmark_results directory exists
+    benchmark_dir = "benchmark_results"
+    if not os.path.exists(benchmark_dir):
+        return []
+    
+    # Find all metrics files
+    metric_files = sorted(glob.glob(os.path.join(benchmark_dir, "metrics_*.json")), reverse=True)
+    models = []
+
+    for file in metric_files:
+        # Extract timestamp from filename
+        timestamp = os.path.basename(file).replace("metrics_", "").replace(".json", "")
+        try:
+            # Format timestamp for display
+            formatted_time = datetime.strptime(timestamp, "%Y%m%d_%H%M%S").strftime("%Y-%m-%d %H:%M:%S")
+
+            # Try to extract model_id
+            model_id = "Unknown"
+            try:
+                with open(file, 'r') as f:
+                    data = json.load(f)
+                    model_id = data.get("model_id", "Unknown")
+            except:
+                pass
+
+            models.append({
+                "id": model_id,
+                "file": file,
+                "date": formatted_time,
+                "timestamp": timestamp,
+                "version": model_id.split("_")[-1] if "_" in model_id else "Unknown"
+            })
+        except Exception as e:
+            # Skip files with invalid naming
+            continue
+
+    return models
+
+
+def load_model_metrics(model_id):
+    """
+    Load metrics for a specific model.
+    
+    Args:
+        model_id: ID of the model to load metrics for
+        
+    Returns:
+        Dictionary containing model metrics or None if not found
+    """
+    # Get available models
+    models = load_available_models()
+    
+    # Find the model with the given ID
+    model_file = None
+    for model in models:
+        if model["id"] == model_id:
+            model_file = model["file"]
+            break
+    
+    if not model_file:
+        return None
+    
+    # Load metrics
+    try:
+        with open(model_file, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading metrics file: {str(e)}")
+        return None 
