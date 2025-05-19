@@ -174,6 +174,19 @@ def load_history():
             return pd.DataFrame()
     return pd.DataFrame()
 
+@st.cache_data
+def load_latest_metrics():
+    """Load the most recent metrics file"""
+    runs = load_available_runs()
+    if not runs:
+        return {}
+        
+    # Get the most recent run (first in the list, as they're sorted by timestamp)
+    latest_run = runs[0]
+    
+    # Load metrics for the latest run
+    return load_metrics(latest_run["file"])
+
 def custom_metric_card(label, value, delta=None, help_text=None, color="blue"):
     """Create a custom, visually appealing metric card"""
     # Determine color based on value for visual feedback
