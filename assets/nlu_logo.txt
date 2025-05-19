@@ -1,0 +1,2 @@
+This file serves as a placeholder for the NLU logo image.
+Replace with a proper image file (PNG or JPG) for production use. 
