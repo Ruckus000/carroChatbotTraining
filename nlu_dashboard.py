@@ -424,8 +424,8 @@ def render_home_page_with_data(latest_runs, latest_metrics):
     model_id = latest_metrics.get("model_id", latest_run.get("model_id", "Unknown"))
     
     # Render home page with actual data
-    st.image("assets/nlu_logo.txt", width=100)
-    st.title("NLU Model Performance Dashboard")
+    # Use text instead of image for the logo
+    st.markdown("<h1 style='font-size: 2.5rem;'>🤖 NLU Model Performance Dashboard</h1>", unsafe_allow_html=True)
     
     # Key metrics overview cards in a row
     col1, col2, col3 = st.columns(3)

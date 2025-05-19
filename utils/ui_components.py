@@ -78,7 +78,8 @@ def create_navigation(pages_dict):
     
     # Create sidebar navigation
     with st.sidebar:
-        st.image("assets/nlu_logo.txt", width=80)
+        # Use text instead of image for the logo
+        st.markdown("<h1 style='text-align: center; font-size: 1.5rem;'>🤖 NLU</h1>", unsafe_allow_html=True)
         st.title("Navigation")
         
         # Navigation buttons with visual indicators for active page
@@ -104,8 +105,8 @@ def render_home_page():
     """
     Render a welcoming home page with key metrics and quick actions
     """
-    st.image("assets/nlu_logo.txt", width=100)
-    st.title("NLU Model Performance Dashboard")
+    # Use text instead of image for the logo
+    st.markdown("<h1 style='font-size: 2.5rem;'>🤖 NLU Model Performance Dashboard</h1>", unsafe_allow_html=True)
     
     # Placeholder data - would normally be replaced with actual metrics
     col1, col2, col3 = st.columns(3)
