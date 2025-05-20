@@ -44,7 +44,7 @@ A comprehensive framework for benchmarking, tracking, and visualizing NLU model 
 3. **Launch dashboard**:
 
    ```bash
-   ./run_dashboard.sh
+   ./scripts/run_dashboard.sh
    ```
 
 4. **Run full pipeline**:
@@ -66,7 +66,7 @@ A comprehensive framework for benchmarking, tracking, and visualizing NLU model 
 ### Support Files
 
 - **regression_config.yml**: Configuration for regression testing thresholds
-- **run_dashboard.sh**: Launcher script for the Streamlit dashboard
+- **scripts/run_dashboard.sh**: Launcher script for the Streamlit dashboard
 - **.github/workflows/nlu-ci.yml**: GitHub Actions CI/CD integration
 
 ## Usage Guide
@@ -107,7 +107,7 @@ The Streamlit dashboard provides an interactive way to explore model performance
 ### Launching the Dashboard
 
 ```bash
-./run_dashboard.sh
+./scripts/run_dashboard.sh
 ```
 
 The dashboard automatically runs on http://localhost:8501

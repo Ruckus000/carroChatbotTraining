@@ -2,7 +2,7 @@
 Type=Application
 Name=NLU Benchmarking Dashboard
 Comment=View NLU model performance metrics
-Exec=/bin/bash -c "cd %PROJECTPATH% && ./run_dashboard.sh"
+Exec=/bin/bash -c "cd %PROJECTPATH% && ./scripts/run_dashboard.sh"
 Icon=utilities-terminal
 Terminal=false
 Categories=Development; 

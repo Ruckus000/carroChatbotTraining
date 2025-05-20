@@ -1,0 +1,1490 @@
+{
+  "intent_metrics": {
+    "accuracy": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "per_class_report": {
+      "appointment_book_service_date": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 2.0
+      },
+      "appointment_maintenance_package": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "appointment_multiple_services": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 2.0
+      },
+      "appointment_recurring_appointment": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "appointment_seasonal_recommendation": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "appointment_uncertain_service_needs": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "appointment_urgent_repair_request": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "appointment_warranty_recall_service": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "clarification_ambiguous_request": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "roadside_multiple_issues": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "roadside_request_roadside_battery": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 2.0
+      },
+      "roadside_request_roadside_fuel": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "roadside_request_roadside_keys": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "roadside_safety_concern": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "roadside_service_eta_weather": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "roadside_specialized_service": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "roadside_uncertain_issue": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "towing_price_concern": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "towing_request_tow_full": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "towing_request_tow_location_partial": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "towing_request_tow_urgent": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      },
+      "towing_vehicle_specialty": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "labels": [
+      "appointment_book_service_date",
+      "appointment_maintenance_package",
+      "appointment_multiple_services",
+      "appointment_recurring_appointment",
+      "appointment_seasonal_recommendation",
+      "appointment_uncertain_service_needs",
+      "appointment_urgent_repair_request",
+      "appointment_warranty_recall_service",
+      "clarification_ambiguous_request",
+      "roadside_multiple_issues",
+      "roadside_request_roadside_battery",
+      "roadside_request_roadside_fuel",
+      "roadside_request_roadside_keys",
+      "roadside_safety_concern",
+      "roadside_service_eta_weather",
+      "roadside_specialized_service",
+      "roadside_uncertain_issue",
+      "towing_price_concern",
+      "towing_request_tow_full",
+      "towing_request_tow_location_partial",
+      "towing_request_tow_urgent",
+      "towing_vehicle_specialty"
+    ]
+  },
+  "entity_metrics": {
+    "appointment_date": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 4
+    },
+    "appointment_time": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 2
+    },
+    "destination": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "final_charge": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "interval": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "issue_description": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "issue_type": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "location_type": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "pickup_location": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 10
+    },
+    "recall_component": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "schedule_type": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "season": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "service_type": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 7
+    },
+    "urgency": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 2
+    },
+    "vehicle_condition": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "vehicle_make": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 8
+    },
+    "vehicle_model": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 8
+    },
+    "vehicle_type": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 4
+    },
+    "vehicle_year": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 5
+    },
+    "weather_condition": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 1
+    },
+    "micro avg": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 61
+    },
+    "macro avg": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 61
+    },
+    "weighted avg": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1-score": 0.0,
+      "support": 61
+    }
+  },
+  "error_analysis": {
+    "intent_error_rate": 1.0,
+    "entity_error_rate": 0.96,
+    "most_common_errors": [
+      [
+        [
+          "roadside_request_roadside_battery",
+          "towing_service_completed"
+        ],
+        2
+      ],
+      [
+        [
+          "appointment_book_service_date",
+          "towing_service_completed"
+        ],
+        2
+      ],
+      [
+        [
+          "appointment_multiple_services",
+          "towing_service_completed"
+        ],
+        2
+      ],
+      [
+        [
+          "towing_request_tow_full",
+          "towing_service_completed"
+        ],
+        1
+      ],
+      [
+        [
+          "towing_request_tow_urgent",
+          "towing_service_completed"
+        ],
+        1
+      ]
+    ],
+    "avg_error_confidence": 0.01707513853907585
+  },
+  "detailed_results": [
+    {
+      "text": "My Jeep Cherokee is dead in the water - can you tow it from the movie theater to Bob's Auto on 5th Street?",
+      "true_intent": "towing_request_tow_full",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "vehicle_make",
+          "value": "Jeep"
+        },
+        {
+          "entity": "vehicle_model",
+          "value": "Cherokee"
+        },
+        {
+          "entity": "pickup_location",
+          "value": "movie theater"
+        },
+        {
+          "entity": "destination",
+          "value": "Bob's Auto on 5th Street"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.017653897404670715
+    },
+    {
+      "text": "Help! I'm on Route 66 with my daughter and our car's smoking - need emergency towing NOW!",
+      "true_intent": "towing_request_tow_urgent",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "pickup_location",
+          "value": "Route 66"
+        },
+        {
+          "entity": "urgency",
+          "value": "emergency"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.017197851091623306
+    },
+    {
+      "text": "Battery completely died at Home Depot - can't even unlock the doors on my Tesla Model Y",
+      "true_intent": "roadside_request_roadside_battery",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "battery assistance"
+        },
+        {
+          "entity": "pickup_location",
+          "value": "Home Depot"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "Tesla"
+        },
+        {
+          "entity": "vehicle_model",
+          "value": "Model Y"
+        },
+        {
+          "entity": "vehicle_type",
+          "value": "electric"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.016952596604824066
+    },
+    {
+      "text": "Need an oil change ASAP - check engine light just came on in my 2023 Nissan Rogue",
+      "true_intent": "appointment_urgent_repair_request",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "oil change"
+        },
+        {
+          "entity": "issue_type",
+          "value": "check engine light"
+        },
+        {
+          "entity": "urgency",
+          "value": "immediate"
+        },
+        {
+          "entity": "vehicle_year",
+          "value": "2023"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "Nissan"
+        },
+        {
+          "entity": "vehicle_model",
+          "value": "Rogue"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.0176383089274168
+    },
+    {
+      "text": "I'm at the airport parking garage level 3, got locked out of my Audi. Can you help?",
+      "true_intent": "roadside_request_roadside_keys",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "lockout"
+        },
+        {
+          "entity": "pickup_location",
+          "value": "airport parking garage level 3"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "Audi"
+        },
+        {
+          "entity": "location_type",
+          "value": "parking garage"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.016863811761140823
+    },
+    {
+      "text": "Two flat tires on my RV - I'm at the Wayside Campground off exit 43",
+      "true_intent": "roadside_specialized_service",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "flat tire"
+        },
+        {
+          "entity": "pickup_location",
+          "value": "Wayside Campground off exit 43"
+        },
+        {
+          "entity": "vehicle_type",
+          "value": "RV"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.017146514728665352
+    },
+    {
+      "text": "My truck is stuck in a muddy field. Need winching and possibly a tow after.",
+      "true_intent": "roadside_multiple_issues",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "winching"
+        },
+        {
+          "entity": "additional_service",
+          "value": "towing"
+        },
+        {
+          "entity": "vehicle_condition",
+          "value": "stuck in mud"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.01748884655535221
+    },
+    {
+      "text": "My car overheated on South Beach Parkway. The radiator's leaking everywhere.",
+      "true_intent": "towing_request_tow_location_partial",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "pickup_location",
+          "value": "South Beach Parkway"
+        },
+        {
+          "entity": "vehicle_condition",
+          "value": "overheated"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.016734737902879715
+    },
+    {
+      "text": "Schedule 40,000 mile maintenance for my 2020 hybrid RAV4 next Wednesday afternoon",
+      "true_intent": "appointment_maintenance_package",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "40000-mile service"
+        },
+        {
+          "entity": "mileage",
+          "value": "40000"
+        },
+        {
+          "entity": "vehicle_year",
+          "value": "2020"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "Toyota"
+        },
+        {
+          "entity": "vehicle_model",
+          "value": "RAV4"
+        },
+        {
+          "entity": "vehicle_type",
+          "value": "hybrid"
+        },
+        {
+          "entity": "appointment_date",
+          "value": "next Wednesday"
+        },
+        {
+          "entity": "appointment_time",
+          "value": "afternoon"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.01591639406979084
+    },
+    {
+      "text": "What's the soonest you can fix the weird grinding when I brake? It's getting worse.",
+      "true_intent": "appointment_uncertain_service_needs",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "issue_description",
+          "value": "grinding when braking"
+        },
+        {
+          "entity": "potential_system",
+          "value": "brakes"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.01668778993189335
+    },
+    {
+      "text": "I need help. Something's wrong with my car.",
+      "true_intent": "clarification_ambiguous_request",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [],
+      "pred_entities": [],
+      "entities_correct": true,
+      "confidence": 0.017326530069112778
+    },
+    {
+      "text": "Can you squeeze me in for a brake pad replacement tomorrow or Thursday?",
+      "true_intent": "appointment_book_service_date",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "brake pad replacement"
+        },
+        {
+          "entity": "appointment_date",
+          "value": "tomorrow or Thursday"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.01707620918750763
+    },
+    {
+      "text": "I'm completely out of gas at the corner of 7th and Broadway, any chance you can bring me some?",
+      "true_intent": "roadside_request_roadside_fuel",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "fuel"
+        },
+        {
+          "entity": "pickup_location",
+          "value": "corner of 7th and Broadway"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.01740250177681446
+    },
+    {
+      "text": "Looking to book full detail service for both our cars - a 2021 BMW X3 and a 2022 Mini Cooper",
+      "true_intent": "appointment_multiple_services",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "full detail"
+        },
+        {
+          "entity": "vehicle_count",
+          "value": "2"
+        },
+        {
+          "entity": "vehicle_year",
+          "value": "2021"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "BMW"
+        },
+        {
+          "entity": "vehicle_model",
+          "value": "X3"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.01634519174695015
+    },
+    {
+      "text": "Need roadside assistance - no idea what's wrong with my car but it won't start and there's smoke",
+      "true_intent": "roadside_uncertain_issue",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "issue_description",
+          "value": "won't start and there's smoke"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.0172467902302742
+    },
+    {
+      "text": "Please send someone to replace my tire ASAP - I'm alone on I-95 and it's getting dark",
+      "true_intent": "roadside_safety_concern",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "flat tire"
+        },
+        {
+          "entity": "urgency",
+          "value": "urgent"
+        },
+        {
+          "entity": "pickup_location",
+          "value": "I-95"
+        },
+        {
+          "entity": "safety_status",
+          "value": "unsafe"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.016494998708367348
+    },
+    {
+      "text": "This price is ridiculous. Why is a simple tow costing $175?",
+      "true_intent": "towing_price_concern",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "final_charge",
+          "value": "$175"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.01747787930071354
+    },
+    {
+      "text": "I got the recall notice about my Ford Bronco's steering - can I bring it in Thursday morning?",
+      "true_intent": "appointment_warranty_recall_service",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "recall"
+        },
+        {
+          "entity": "recall_component",
+          "value": "steering"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "Ford"
+        },
+        {
+          "entity": "vehicle_model",
+          "value": "Bronco"
+        },
+        {
+          "entity": "appointment_date",
+          "value": "Thursday"
+        },
+        {
+          "entity": "appointment_time",
+          "value": "morning"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.017687609419226646
+    },
+    {
+      "text": "Our company van broke down - it's a 2019 long-wheelbase Sprinter with about 100,000 miles",
+      "true_intent": "towing_vehicle_specialty",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "vehicle_year",
+          "value": "2019"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "Mercedes"
+        },
+        {
+          "entity": "vehicle_model",
+          "value": "Sprinter"
+        },
+        {
+          "entity": "vehicle_type",
+          "value": "long-wheelbase"
+        },
+        {
+          "entity": "mileage",
+          "value": "100000"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.016518300399184227
+    },
+    {
+      "text": "How much longer until the tech arrives? It's storming and I have my kids with me.",
+      "true_intent": "roadside_service_eta_weather",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "weather_condition",
+          "value": "storming"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.016725054010748863
+    },
+    {
+      "text": "I need a winter preparation package including tire change and fluid check for my Subaru",
+      "true_intent": "appointment_seasonal_recommendation",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "winter preparation"
+        },
+        {
+          "entity": "season",
+          "value": "winter"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "Subaru"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.0171833299100399
+    },
+    {
+      "text": "I'd like to set up recurring oil changes every 3 months for my delivery vehicle",
+      "true_intent": "appointment_recurring_appointment",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "oil change"
+        },
+        {
+          "entity": "schedule_type",
+          "value": "recurring"
+        },
+        {
+          "entity": "interval",
+          "value": "3 months"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.016913538798689842
+    },
+    {
+      "text": "Both my 2020 Tacoma and my wife's 2022 Camry need service - can we get them done together?",
+      "true_intent": "appointment_multiple_services",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "vehicle_count",
+          "value": "2"
+        },
+        {
+          "entity": "vehicle_year",
+          "value": "2020"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "Toyota"
+        },
+        {
+          "entity": "vehicle_model",
+          "value": "Tacoma"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.017079930752515793
+    },
+    {
+      "text": "I need an immediate jump for my Porsche 911 - stuck at Blue Ridge Mall north entrance",
+      "true_intent": "roadside_request_roadside_battery",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "jump start"
+        },
+        {
+          "entity": "urgency",
+          "value": "immediate"
+        },
+        {
+          "entity": "vehicle_make",
+          "value": "Porsche"
+        },
+        {
+          "entity": "vehicle_model",
+          "value": "911"
+        },
+        {
+          "entity": "pickup_location",
+          "value": "Blue Ridge Mall north entrance"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.0178451519459486
+    },
+    {
+      "text": "Can I get a full service for next Monday on my motorcycle?",
+      "true_intent": "appointment_book_service_date",
+      "pred_intent": "towing_service_completed",
+      "intent_correct": false,
+      "true_entities": [
+        {
+          "entity": "service_type",
+          "value": "full service"
+        },
+        {
+          "entity": "appointment_date",
+          "value": "next Monday"
+        },
+        {
+          "entity": "vehicle_type",
+          "value": "motorcycle"
+        }
+      ],
+      "pred_entities": [],
+      "entities_correct": false,
+      "confidence": 0.017274698242545128
+    }
+  ]
+}

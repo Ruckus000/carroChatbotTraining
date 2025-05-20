@@ -1,0 +1,498 @@
+[
+  {
+    "text": "I need roadside assistance for a flat tire on my Ford F-150.",
+    "intent": "roadside_request_roadside_tire",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "flat tire assistance"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Ford"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "F-150"
+      }
+    ]
+  },
+  {
+    "text": "Can someone help change a flat tire on my 2017 Ford F-150?",
+    "intent": "roadside_request_roadside_tire",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "flat tire assistance"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2017"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Ford"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "F-150"
+      }
+    ]
+  },
+  {
+    "text": "Flat tire on my Honda Civic, need help replacing it.",
+    "intent": "roadside_request_roadside_tire",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "flat tire assistance"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Honda"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Civic"
+      }
+    ]
+  },
+  {
+    "text": "I need a jump for my dead battery, I'm at the Walmart parking lot.",
+    "intent": "roadside_request_roadside_battery",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "battery jump"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Walmart parking lot"
+      }
+    ]
+  },
+  {
+    "text": "My 2019 Toyota Corolla needs a jump start at 567 Pine Road.",
+    "intent": "roadside_request_roadside_battery",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "jump start"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2019"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Toyota"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Corolla"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "567 Pine Road"
+      }
+    ]
+  },
+  {
+    "text": "Battery is completely dead on my Hyundai Sonata, need roadside help.",
+    "intent": "roadside_request_roadside_battery",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "battery assistance"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Hyundai"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Sonata"
+      }
+    ]
+  },
+  {
+    "text": "I need a tow for my Honda Accord from Downtown Mall to Joe's Auto Shop.",
+    "intent": "towing_request_tow_full",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Honda"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Accord"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Downtown Mall"
+      },
+      {
+        "entity": "destination",
+        "value": "Joe's Auto Shop"
+      }
+    ]
+  },
+  {
+    "text": "My 2015 Chevy Malibu needs to be towed from 123 Oak Street to the nearest dealership.",
+    "intent": "towing_request_tow_full",
+    "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2015"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Chevy"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Malibu"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "123 Oak Street"
+      },
+      {
+        "entity": "destination",
+        "value": "nearest dealership"
+      }
+    ]
+  },
+  {
+    "text": "Tow my 2021 Kia Sorento from Westfield Mall to my home at 456 Maple Avenue.",
+    "intent": "towing_request_tow_full",
+    "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2021"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Kia"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Sorento"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Westfield Mall"
+      },
+      {
+        "entity": "destination",
+        "value": "456 Maple Avenue"
+      }
+    ]
+  },
+  {
+    "text": "I'm at 123 Main Street and need a tow truck right now!",
+    "intent": "towing_request_tow_urgent",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "123 Main Street"
+      },
+      {
+        "entity": "urgency",
+        "value": "urgent"
+      }
+    ]
+  },
+  {
+    "text": "Emergency towing needed! My car is blocking traffic on Highway 9.",
+    "intent": "towing_request_tow_urgent",
+    "entities": [
+      {
+        "entity": "urgency",
+        "value": "emergency"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Highway 9"
+      }
+    ]
+  },
+  {
+    "text": "URGENT! Need immediate tow after accident at Lincoln Ave and 5th Street.",
+    "intent": "towing_request_tow_urgent",
+    "entities": [
+      {
+        "entity": "urgency",
+        "value": "urgent"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Lincoln Ave and 5th Street"
+      }
+    ]
+  },
+  {
+    "text": "What's the price for a tow from downtown to North Hills?",
+    "intent": "towing_price_concern",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "downtown"
+      },
+      {
+        "entity": "destination",
+        "value": "North Hills"
+      }
+    ]
+  },
+  {
+    "text": "How much will it cost to tow my Ford Explorer about 15 miles?",
+    "intent": "towing_price_concern",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Ford"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Explorer"
+      },
+      {
+        "entity": "distance",
+        "value": "15 miles"
+      }
+    ]
+  },
+  {
+    "text": "Is $120 the final price for towing or are there additional fees?",
+    "intent": "towing_price_breakdown",
+    "entities": [
+      {
+        "entity": "final_charge",
+        "value": "$120"
+      }
+    ]
+  },
+  {
+    "text": "I need a breakdown of the $85 towing charge please.",
+    "intent": "towing_price_breakdown",
+    "entities": [
+      {
+        "entity": "final_charge",
+        "value": "$85"
+      }
+    ]
+  },
+  {
+    "text": "Can you send a tow truck to Oakwood Shopping Center?",
+    "intent": "towing_request_tow_location_partial",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "Oakwood Shopping Center"
+      }
+    ]
+  },
+  {
+    "text": "I need a tow from the Target parking lot on Central Avenue.",
+    "intent": "towing_request_tow_location_partial",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "Target parking lot on Central Avenue"
+      }
+    ]
+  },
+  {
+    "text": "My car is at 789 Cedar Lane, can you send a tow truck there?",
+    "intent": "towing_request_tow_location_partial",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "789 Cedar Lane"
+      }
+    ]
+  },
+  {
+    "text": "I'd like to schedule an oil change for my 2018 BMW X5.",
+    "intent": "appointment_book_service_type",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "oil change"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2018"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "BMW"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "X5"
+      }
+    ]
+  },
+  {
+    "text": "Need to book a brake inspection for my Audi A4.",
+    "intent": "appointment_book_service_type",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "brake inspection"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Audi"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "A4"
+      }
+    ]
+  },
+  {
+    "text": "I want to schedule a transmission service on my 2016 Lexus RX.",
+    "intent": "appointment_book_service_type",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "transmission service"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2016"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Lexus"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "RX"
+      }
+    ]
+  },
+  {
+    "text": "I need an appointment for this Friday for a tire rotation.",
+    "intent": "appointment_book_service_date",
+    "entities": [
+      {
+        "entity": "appointment_date",
+        "value": "this Friday"
+      },
+      {
+        "entity": "service_type",
+        "value": "tire rotation"
+      }
+    ]
+  },
+  {
+    "text": "Can I get my Mazda CX-5 serviced on September 15th?",
+    "intent": "appointment_book_service_date",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Mazda"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "CX-5"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "September 15th"
+      }
+    ]
+  },
+  {
+    "text": "Looking for a 10am appointment on Monday for an AC repair.",
+    "intent": "appointment_book_service_time",
+    "entities": [
+      {
+        "entity": "appointment_time",
+        "value": "10am"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "Monday"
+      },
+      {
+        "entity": "service_type",
+        "value": "AC repair"
+      }
+    ]
+  },
+  {
+    "text": "Do you have any afternoon slots available this Thursday?",
+    "intent": "appointment_book_service_time",
+    "entities": [
+      {
+        "entity": "appointment_time",
+        "value": "afternoon"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "this Thursday"
+      }
+    ]
+  },
+  {
+    "text": "I'd like to schedule my 2019 Subaru Outback for a 30,000 mile checkup next Tuesday at 2pm.",
+    "intent": "appointment_book_service_full",
+    "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2019"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Subaru"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Outback"
+      },
+      {
+        "entity": "service_type",
+        "value": "30,000 mile checkup"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "next Tuesday"
+      },
+      {
+        "entity": "appointment_time",
+        "value": "2pm"
+      }
+    ]
+  },
+  {
+    "text": "Need to book my Volkswagen Golf for an engine light diagnosis on Friday at 9am.",
+    "intent": "appointment_book_service_full",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Volkswagen"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Golf"
+      },
+      {
+        "entity": "service_type",
+        "value": "engine light diagnosis"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "Friday"
+      },
+      {
+        "entity": "appointment_time",
+        "value": "9am"
+      }
+    ]
+  }
+] 

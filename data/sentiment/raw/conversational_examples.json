@@ -1,0 +1,212 @@
+[
+    {
+      "conversation_id": 1,
+      "pattern": "escalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "Hi, I need to find a mechanic who can look at my Honda Civic today. The check engine light just came on.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "Sure, I'm searching for available mechanics near you for a Honda Civic inspection..."},
+        {"speaker": "user", "text": "It says no mechanics are available today. I really needed this done before my trip tomorrow.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I’m sorry, the earliest slot is tomorrow afternoon. Would you like to book that?"},
+        {"speaker": "user", "text": "Are you kidding? Tomorrow afternoon is useless! What's the point of this app if it can’t find help when I need it?", "sentiment": "urgent_negative"}
+      ]
+    },
+    {
+      "conversation_id": 2,
+      "pattern": "escalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "I need a tow truck to my location ASAP. My car stalled on 5th St.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "Looking for available tow trucks nearby..."},
+        {"speaker": "user", "text": "Why is it showing no available tow trucks? This is urgent—I can't leave my car here!", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "Apologies—currently busy, the earliest arrival is in 2 hours."},
+        {"speaker": "user", "text": "Two hours? I'm in an unfamiliar area. This is unacceptable!", "sentiment": "urgent_negative"}
+      ]
+    },
+    {
+      "conversation_id": 3,
+      "pattern": "escalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "Can I get a mobile mechanic right away? My battery died and I’m two blocks from home.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "Searching for mobile mechanics who offer jump-start services near you..."},
+        {"speaker": "user", "text": "It says none are available until tomorrow morning. I literally can’t move my car!", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I’m really sorry. The next availability is at 8 AM."},
+        {"speaker": "user", "text": "8 AM is useless—what am I supposed to do all night in this parking lot?", "sentiment": "urgent_negative"}
+      ]
+    },
+    {
+      "conversation_id": 4,
+      "pattern": "escalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "I need someone to inspect my slipping transmission today.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "Looking for transmission specialists in your area..."},
+        {"speaker": "user", "text": "No matches found for transmission work until next week. That’s way too late!", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I apologize—the earliest is Monday morning."},
+        {"speaker": "user", "text": "Monday? My car might break down before then! This app is failing me!", "sentiment": "urgent_negative"}
+      ]
+    },
+    {
+      "conversation_id": 5,
+      "pattern": "escalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "I need a tire change right now—got a nail in my tire on Main St.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "Searching for tire repair providers nearby..."},
+        {"speaker": "user", "text": "It shows no one available for three hours. I’m blocking traffic here.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I’m sorry. The soonest is in 2 hours and 45 minutes."},
+        {"speaker": "user", "text": "2 hours? Cars are honking—this is dangerous!", "sentiment": "urgent_negative"}
+      ]
+    },
+    {
+      "conversation_id": 6,
+      "pattern": "deescalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "I’ve been waiting 90 minutes for a tow. My car is blocking traffic on Highway 9!", "sentiment": "urgent_negative"},
+        {"speaker": "platform", "text": "I’m very sorry for the delay. I’m reassigning a tow truck right now."},
+        {"speaker": "user", "text": "Okay, please hurry. It's causing a hazard.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "The new driver is 5 minutes away and en route to your location."},
+        {"speaker": "user", "text": "Great, thank you. Relief to know help is close.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 7,
+      "pattern": "deescalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "Your mechanic canceled on me last minute. I’m stuck with a dead battery!", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I apologize for the inconvenience. I’ve booked another mechanic who is 10 minutes away."},
+        {"speaker": "user", "text": "Alright, thank you for the quick update.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "They’re on their way now and should arrive shortly."},
+        {"speaker": "user", "text": "Perfect, I appreciate the fast solution.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 8,
+      "pattern": "deescalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "The app double-charged me for my oil change. This is ridiculous!", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I’m sorry to hear that. I’ll will look into this issue for you."},
+        {"speaker": "user", "text": "Okay, thanks. I’ll wait for the refund.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "A customer support team member will be in touch with you shortly to resolve this issue."},
+        {"speaker": "user", "text": "Thanks for handling that so promptly.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 9,
+      "pattern": "deescalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "I requested a tow for my RV and got matched with a standard car tow. Now it’s canceled.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I apologize. I will match you with a heavy-duty tow truck instead."},
+        {"speaker": "user", "text": "That’s better. Thank you for fixing it.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "The heavy-duty truck is on its way and will arrive in 20 minutes."},
+        {"speaker": "user", "text": "Perfect, appreciate the quick fix.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 10,
+      "pattern": "deescalating_negativity",
+      "turns": [
+        {"speaker": "user", "text": "My appointment got rescheduled without notice and I have no ride to work tomorrow!", "sentiment": "urgent_negative"},
+        {"speaker": "platform", "text": "I’m so sorry for the mix-up. I’ve scheduled a appointment for you at 7 AM tomorrow."},
+        {"speaker": "user", "text": "Alright, that works.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "You’re confirmed for 7 AM tomorrow. I’ll send you reminders."},
+        {"speaker": "user", "text": "Thank you for sorting that out.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 11,
+      "pattern": "sentiment_shifts",
+      "turns": [
+        {"speaker": "user", "text": "Can you show me mechanics for tire rotation near me?", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "Here are three nearby: 4.5★ for $50, 4.8★ for $60, 4.2★ for $45."},
+        {"speaker": "user", "text": "Thanks, I’ll choose the 4.8-star shop", "sentiment": "positive"},
+        {"speaker": "platform", "text": "Booking the Mark's Auto for $60. Confirm?"},
+        {"speaker": "user", "text": "Yes, thank you!", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 12,
+      "pattern": "sentiment_shifts",
+      "turns": [
+        {"speaker": "user", "text": "What’s the price estimate for brake pads on a 2016 Subaru?", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "The estimated price is $200 including labor."},
+        {"speaker": "user", "text": "That’s more than I expected.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "Should I cancel your request."},
+        {"speaker": "user", "text": "No, go ahead and book it, thank you.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 13,
+      "pattern": "sentiment_shifts",
+      "turns": [
+        {"speaker": "user", "text": "Your quote seems way off compared to my usual shop.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "Our estimates use average market rates; some providers vary."},
+        {"speaker": "user", "text": "Okay, I see.", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "Would you like to view lower-cost options?"},
+        {"speaker": "user", "text": "Yes, please show me those.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 14,
+      "pattern": "sentiment_shifts",
+      "turns": [
+        {"speaker": "user", "text": "Thanks for fast matching to a tow truck earlier.", "sentiment": "positive"},
+        {"speaker": "platform", "text": "Glad to help! Here are your booking details."},
+        {"speaker": "user", "text": "Why is the cheapest provider a 3-star? I expected better.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I’ve updated the filter to show 4★+ only."},
+        {"speaker": "user", "text": "Much better, thanks!", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 15,
+      "pattern": "sentiment_shifts",
+      "turns": [
+        {"speaker": "user", "text": "Can I get a mobile battery replacement at 8 PM tonight?", "sentiment": "neutral"},
+        {"speaker": "platform", "text": "Only provider available charges $120."},
+        {"speaker": "user", "text": "That’s double what I paid last week at my local shop.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I can match you with a different partner at $65."},
+        {"speaker": "user", "text": "Yes, please book that one. Thanks!", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 16,
+      "pattern": "mixed_sentiment",
+      "turns": [
+        {"speaker": "user", "text": "The app interface is sleek and intuitive, but there are no mechanics listed in my area.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I’m sorry for the inconvenience. We’re adding more providers here soon."},
+        {"speaker": "user", "text": "Still, I really like the filter-by-certification feature.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 17,
+      "pattern": "mixed_sentiment",
+      "turns": [
+        {"speaker": "user", "text": "Your pricing estimates are helpful, but the surge fee came out of nowhere.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "Surge fees apply during peak hours; apologies if that wasn’t clear."},
+        {"speaker": "user", "text": "At least the payment went through smoothly.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 18,
+      "pattern": "mixed_sentiment",
+      "turns": [
+        {"speaker": "user", "text": "I got matched with a 5-star tow company quickly, but their truck lacked proper straps.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I apologize. I’ve notified them and they’re bringing the correct equipment shortly."},
+        {"speaker": "user", "text": "Glad they’re fixing it so fast.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 19,
+      "pattern": "mixed_sentiment",
+      "turns": [
+        {"speaker": "user", "text": "The in-app chat is brilliant for clarity, but the booking button wouldn’t respond on the first try.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I’m sorry about that. Please try closing the app and opening it again."},
+        {"speaker": "user", "text": "Thanks, it worked on the second try. Nice job overall.", "sentiment": "positive"}
+      ]
+    },
+    {
+      "conversation_id": 20,
+      "pattern": "mixed_sentiment",
+      "turns": [
+        {"speaker": "user", "text": "I love that you save my car details for quick booking, but I was charged an unexpected small fee.", "sentiment": "standard_negative"},
+        {"speaker": "platform", "text": "I apologize for the extra fee. I will look into this issue for you."},
+        {"speaker": "user", "text": "Good to know you have 24/7 support for billing issues.", "sentiment": "positive"}
+      ]
+    }
+  ]

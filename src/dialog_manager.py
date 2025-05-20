@@ -1,4 +1,71 @@
-# dialog_manager.py
+        # Handle positive sentiment - be more upbeat and friendly
+        elif is_positive and (nlu_intent.startswith("appointment_") or nlu_intent.startswith("roadside_")):
+            print(f"DEBUG: Detected positive sentiment - using more upbeat responses")
+            # Still follow regular flow but with more positive tone
+            if not state.required_slots:
+                state.required_slots = self.define_required_slots(state.current_intent)
+                state.current_step = "COLLECTING_INFO"
+            
+            # Check if we have all required slots
+            missing_slots = state.get_missing_slots()
+            if missing_slots:
+                # Ask for the first missing slot with positive tone
+                slot_to_request = missing_slots[0]
+                return {"type": "REQUEST_SLOT", "slot_name": slot_to_request, "with_positivity": True}
+            else:
+                # All slots filled, move to confirmation
+                return {
+                    "type": "REQUEST_CONFIRMATION",
+                    "details": state.entities,
+                    "intent": state.current_intent,
+                    "with_positivity": True  # Include positivity flag
+                }        # Handle standard negative sentiment - prioritize reassurance but don't skip steps
+        elif is_standard_negative and nlu_intent.startswith("towing_"):
+            print(f"DEBUG: Detected standard negative situation - adding extra reassurance")
+            # Flag the current request as needing reassurance
+            state.current_intent = "towing_request_tow_basic"
+            state.current_step = "COLLECTING_INFO_WITH_REASSURANCE"
+            # Still need all the regular info, just with more empathetic responses
+            if not state.required_slots:
+                state.required_slots = self.define_required_slots(state.current_intent)
+            
+            # Check if we have all required slots
+            missing_slots = state.get_missing_slots()
+            if missing_slots:
+                # Ask for the first missing slot with reassurance
+                slot_to_request = missing_slots[0]
+                return {"type": "REQUEST_SLOT", "slot_name": slot_to_request, "with_reassurance": True}
+            else:
+                # All slots filled, move to confirmation
+                return {
+                    "type": "REQUEST_CONFIRMATION",
+                    "details": state.entities,
+                    "intent": state.current_intent,
+                    "with_reassurance": True  # Include reassurance flag
+                }
+                
+        # Handle positive sentiment - be more upbeat and friendly
+        elif is_positive and (nlu_intent.startswith("appointment_") or nlu_intent.startswith("roadside_")):
+            print(f"DEBUG: Detected positive sentiment - using more upbeat responses")
+            # Still follow regular flow but with more positive tone
+            if not state.required_slots:
+                state.required_slots = self.define_required_slots(state.current_intent)
+                state.current_step = "COLLECTING_INFO"
+            
+            # Check if we have all required slots
+            missing_slots = state.get_missing_slots()
+            if missing_slots:
+                # Ask for the first missing slot with positive tone
+                slot_to_request = missing_slots[0]
+                return {"type": "REQUEST_SLOT", "slot_name": slot_to_request, "with_positivity": True}
+            else:
+                # All slots filled, move to confirmation
+                return {
+                    "type": "REQUEST_CONFIRMATION",
+                    "details": state.entities,
+                    "intent": state.current_intent,
+                    "with_positivity": True  # Include positivity flag
+                }# dialog_manager.py
 import copy
 from typing import Dict, List, Optional, Any, Set, Tuple
 
@@ -54,8 +121,12 @@ class DialogState:
             self.current_sentiment = {
                 "label": sentiment_info.get("label", "neutral"),
                 "score": sentiment_info.get("score", 0.5),
+                "all_scores": sentiment_info.get("all_scores", {}),
+                "is_fallback": sentiment_info.get("is_fallback", False)
             }
-            print(f"DEBUG: Updated sentiment to {self.current_sentiment}")
+            sentiment_label = self.current_sentiment["label"]
+            sentiment_score = self.current_sentiment["score"]
+            print(f"DEBUG: Updated sentiment to {sentiment_label} with score {sentiment_score:.4f}")
 
         # Only set fallback if we're not in a flow
         if not self.required_slots:
@@ -289,18 +360,39 @@ class DialogManager:
             return {"type": "RESPOND_ALREADY_COMPLETE"}
 
         # Get sentiment information for potentially influencing the flow
-        sentiment = getattr(
-            state, "current_sentiment", {"label": "neutral", "score": 0.5}
-        )
+        sentiment = getattr(state, "current_sentiment", {"label": "neutral", "score": 0.5})
         sentiment_label = sentiment.get("label", "neutral")
         sentiment_score = sentiment.get("score", 0.5)
-        is_urgent_situation = sentiment_label == "negative" and sentiment_score > 0.8
-
-        # If sentiment is highly negative and we have an urgent intent, prioritize immediate assistance
-        if is_urgent_situation and (
-            nlu_intent.startswith("towing_request_tow_urgent")
+        all_sentiment_scores = sentiment.get("all_scores", {})
+        
+        # Now we have more nuanced checks for different sentiment types
+        is_urgent_negative = sentiment_label == "urgent_negative" and sentiment_score > 0.6
+        
+        # Check for standard negative where the score is significant
+        is_standard_negative = sentiment_label == "standard_negative" and sentiment_score > 0.6
+        
+        # Handle positive sentiment with proper threshold
+        is_positive = sentiment_label == "positive" and sentiment_score > 0.6
+        
+        # Also check if multiple sentiment labels have significant scores
+        # This could indicate mixed emotions that require careful handling
+        has_mixed_sentiments = False
+        significant_sentiments = []
+        
+        for label, score in all_sentiment_scores.items():
+            if score > 0.3 and label != sentiment_label:  # Check for secondary strong sentiments
+                significant_sentiments.append((label, score))
+                has_mixed_sentiments = True
+        
+        if has_mixed_sentiments:
+            print(f"DEBUG: Detected mixed sentiments: Primary {sentiment_label}:{sentiment_score:.4f}, Others: {significant_sentiments}")
+        
+        # If sentiment is urgent_negative, prioritize immediate assistance
+        if is_urgent_negative and (
+            nlu_intent.startswith("towing_request_tow")
             or "urgent" in user_input.lower()
             or "emergency" in user_input.lower()
+            or "help" in user_input.lower()
         ):
             print(
                 f"DEBUG: Detected urgent situation based on sentiment ({sentiment_score}) and intent ({nlu_intent})"
@@ -325,6 +417,102 @@ class DialogManager:
                     "type": "REQUEST_SLOT",
                     "slot_name": "pickup_location",
                     "urgent": True,
+                }
+        
+        # Enhanced detection for mixed emotions - someone trying to stay calm but situation is urgent
+        # This is common when people break down but are trying to maintain composure
+        elif has_mixed_sentiments and any(label == "urgent_negative" for label, score in significant_sentiments if score > 0.3) and \
+             (nlu_intent.startswith("towing_") or nlu_intent.startswith("roadside_")):
+            print(f"DEBUG: Detected mixed sentiments with underlying urgency in a roadside/towing situation")
+            # Handle as urgent but with calm reassurance rather than panic response
+            state.current_intent = nlu_intent  # Keep their stated intent
+            if "pickup_location" in state.entities:
+                state.current_step = "COLLECTING_INFO_URGENT_BUT_CALM"
+                return {
+                    "type": "REQUEST_CONFIRMATION",
+                    "details": state.entities,
+                    "intent": state.current_intent,
+                    "urgent_but_calm": True  # New flag for mixed emotion handling
+                }
+            else:
+                state.current_step = "ASK_PICKUP_LOCATION_URGENT_BUT_CALM"
+                return {
+                    "type": "REQUEST_SLOT",
+                    "slot_name": "pickup_location",
+                    "urgent_but_calm": True  # New flag for mixed emotion handling
+                }
+                
+        # Handle standard negative sentiment - prioritize reassurance but don't skip steps
+        elif is_standard_negative and nlu_intent.startswith("towing_"):
+            print(f"DEBUG: Detected standard negative situation - adding extra reassurance")
+            # Flag the current request as needing reassurance
+            state.current_intent = "towing_request_tow_basic"
+            state.current_step = "COLLECTING_INFO_WITH_REASSURANCE"
+            # Still need all the regular info, just with more empathetic responses
+            if not state.required_slots:
+                state.required_slots = self.define_required_slots(state.current_intent)
+            
+            # Check if we have all required slots
+            missing_slots = state.get_missing_slots()
+            if missing_slots:
+                # Ask for the first missing slot with reassurance
+                slot_to_request = missing_slots[0]
+                return {"type": "REQUEST_SLOT", "slot_name": slot_to_request, "with_reassurance": True}
+            else:
+                # All slots filled, move to confirmation
+                return {
+                    "type": "REQUEST_CONFIRMATION",
+                    "details": state.entities,
+                    "intent": state.current_intent,
+                    "with_reassurance": True  # Include reassurance flag
+                }
+                
+        # Handle positive sentiment - be more upbeat and friendly
+        elif is_positive and (nlu_intent.startswith("appointment_") or nlu_intent.startswith("roadside_")):
+            print(f"DEBUG: Detected positive sentiment - using more upbeat responses")
+            # Still follow regular flow but with more positive tone
+            if not state.required_slots:
+                state.required_slots = self.define_required_slots(state.current_intent)
+                state.current_step = "COLLECTING_INFO"
+            
+            # Check if we have all required slots
+            missing_slots = state.get_missing_slots()
+            if missing_slots:
+                # Ask for the first missing slot with positive tone
+                slot_to_request = missing_slots[0]
+                return {"type": "REQUEST_SLOT", "slot_name": slot_to_request, "with_positivity": True}
+            else:
+                # All slots filled, move to confirmation
+                return {
+                    "type": "REQUEST_CONFIRMATION",
+                    "details": state.entities,
+                    "intent": state.current_intent,
+                    "with_positivity": True  # Include positivity flag
+                }
+                
+        # Handle standard negative sentiment - prioritize reassurance but don't skip steps
+        elif is_standard_negative and nlu_intent.startswith("towing_"):
+            print(f"DEBUG: Detected standard negative situation - adding extra reassurance")
+            # Flag the current request as needing reassurance
+            state.current_intent = "towing_request_tow_basic"
+            state.current_step = "COLLECTING_INFO_WITH_REASSURANCE"
+            # Still need all the regular info, just with more empathetic responses
+            if not state.required_slots:
+                state.required_slots = self.define_required_slots(state.current_intent)
+            
+            # Check if we have all required slots
+            missing_slots = state.get_missing_slots()
+            if missing_slots:
+                # Ask for the first missing slot with reassurance
+                slot_to_request = missing_slots[0]
+                return {"type": "REQUEST_SLOT", "slot_name": slot_to_request, "with_reassurance": True}
+            else:
+                # All slots filled, move to confirmation
+                return {
+                    "type": "REQUEST_CONFIRMATION",
+                    "details": state.entities,
+                    "intent": state.current_intent,
+                    "with_reassurance": True  # Include reassurance flag
                 }
 
         # Handle restart flow (user wants to start over)
@@ -364,7 +552,7 @@ class DialogManager:
             ):
                 state.current_intent = "towing_request_tow_basic"
                 # Check if it's urgent based on sentiment
-                if is_urgent_situation:
+                if is_urgent_negative:
                     state.current_intent = "towing_request_tow_urgent"
                 state.required_slots = self.define_required_slots(state.current_intent)
             else:
@@ -382,9 +570,10 @@ class DialogManager:
 
             # For urgent situations or explicitly urgent towing requests, use a shortened flow
             if (
-                is_urgent_situation
-                or state.current_intent == "towing_request_tow_urgent"
-            ):
+            is_urgent_negative
+            or state.current_intent == "towing_request_tow_urgent"
+                or (has_mixed_sentiments and any(label == "urgent_negative" for label, _ in significant_sentiments))
+                ):
                 # Prioritize just getting location info for urgent requests
                 reduced_slots = ["pickup_location"]
                 if "pickup_location" in state.entities:

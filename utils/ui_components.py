@@ -4,6 +4,7 @@ UI Components - Reusable UI elements for the NLU Benchmarking Dashboard
 
 import streamlit as st
 import os
+from utils.help_content import get_metric_help, get_section_help
 
 def render_metric_card(title, value, icon=None, is_percentage=False, delta=None, help_text=None):
     """
@@ -126,3 +127,119 @@ def render_home_page():
         st.button("📈 Performance History", on_click=set_page, args=("history",))
     with action_col3:
         st.button("❌ Error Analysis", on_click=set_page, args=("errors",)) 
+
+# New Phase 4 components
+
+def render_metric_with_help(title, value, help_text=None, metric_key=None):
+    """
+    Render a metric with a help tooltip
+    
+    Args:
+        title: Title of the metric
+        value: Value to display
+        help_text: Custom help text (overrides metric_key lookup)
+        metric_key: Key to look up help text in METRIC_HELP
+    """
+    if not help_text and metric_key:
+        help_text = get_metric_help(metric_key)
+    
+    col1, col2 = st.columns([0.9, 0.1])
+    with col1:
+        st.metric(label=title, value=value)
+    with col2:
+        with st.expander("?"):
+            st.markdown(help_text)
+    
+    return col1
+
+def get_performance_color(value):
+    """
+    Returns a color based on performance value
+    
+    Args:
+        value: Performance value (0-1)
+    
+    Returns:
+        CSS color string
+    """
+    if value >= 0.9:
+        return "#4bff9d"  # bright green
+    elif value >= 0.8:
+        return "#a5f2a5"  # light green
+    elif value >= 0.7:
+        return "#ffcb3c"  # yellow/orange
+    else:
+        return "#ff4b4b"  # red
+
+def render_performance_indicator(label, value):
+    """
+    Render a color-coded performance indicator
+    
+    Args:
+        label: Name of the metric
+        value: Value of the metric (0-1)
+    """
+    color = get_performance_color(value)
+    st.markdown(f"""
+    <div style="display:flex; align-items:center; margin-bottom:10px;">
+        <div style="width:120px;">{label}:</div>
+        <div style="width:50px; text-align:right;">{value:.2f}</div>
+        <div style="flex-grow:1; margin-left:10px;">
+            <div style="width:{value*100}%; height:8px; background-color:{color}; border-radius:4px;"></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def add_section_help(section_key):
+    """
+    Add an interpretation guide for a dashboard section
+    
+    Args:
+        section_key: Key to look up in SECTION_HELP
+    """
+    help_text = get_section_help(section_key)
+    with st.expander("💡 Interpretation Guide"):
+        st.markdown(help_text)
+
+def create_dashboard_tour():
+    """
+    Create an interactive tour of the dashboard features
+    """
+    if "tour_step" not in st.session_state:
+        st.session_state.tour_step = 0
+
+    # Tour button in sidebar
+    with st.sidebar:
+        if st.button("Dashboard Tour"):
+            st.session_state.tour_step = 1
+
+    # Tour steps
+    if st.session_state.tour_step > 0:
+        # Create overlay with tour information
+        tour_steps = [
+            {"title": "Welcome to the Tour", "text": "This tour will walk you through the dashboard features.", "element": "body"},
+            {"title": "Performance Summary", "text": "This section shows the key performance metrics for your model.", "element": ".performance-summary"},
+            {"title": "Navigation", "text": "Use the sidebar to navigate between different views.", "element": ".sidebar"},
+            {"title": "Intent Metrics", "text": "This section shows detailed intent classification performance.", "element": ".intent-metrics"},
+            {"title": "Entity Metrics", "text": "This section shows detailed entity recognition performance.", "element": ".entity-metrics"},
+            {"title": "Error Analysis", "text": "Explore model errors to understand where improvements are needed.", "element": ".error-analysis"},
+        ]
+
+        current_step = tour_steps[st.session_state.tour_step - 1]
+
+        # Show tour dialog
+        with st.sidebar:
+            st.markdown(f"## {current_step['title']}")
+            st.markdown(current_step['text'])
+
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Previous") and st.session_state.tour_step > 1:
+                    st.session_state.tour_step -= 1
+            with col2:
+                if st.session_state.tour_step < len(tour_steps):
+                    if st.button("Next"):
+                        st.session_state.tour_step += 1
+                else:
+                    if st.button("Finish"):
+                        st.session_state.tour_step = 0 

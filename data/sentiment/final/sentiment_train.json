@@ -1,0 +1,636 @@
+[
+  {
+    "text": "I received a confirmation email immediately after booking.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Your convenience fee is 15%\u2014that\u2019s excessive. Losing customers over hidden charges.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "I changed my booking time via the app in under a minute.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Digital wallet integration saved time during checkout. Smooth experience.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The calendar integration for service reminders is a game-changer.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I can\u2019t find any towing companies in my zip code 97205. This platform is useless where I live.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Thanks for handling that so promptly.",
+    "sentiment": "positive",
+    "conversation_id": 8,
+    "pattern": "deescalating_negativity"
+  },
+  {
+    "text": "Is there an option to rate the provider after the service is complete?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Provider\u2019s phone is unreachable and I\u2019m stuck on a one-lane coastal road!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "My car died on I-95 just north of Downtown Miami and there's heavy traffic. I need immediate towing\u2014please send someone ASAP, preferably the nearest 5-star provider!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "I selected a 5-star shop for my oil change but they were booked when I arrived.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "I appreciate the app auto-saving my vehicle details. Makes booking future services so much easier!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Applying a promo code was a breeze\u2014got 10% off my service without any issues.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "It says no mechanics are available today. I really needed this done before my trip tomorrow.",
+    "sentiment": "standard_negative",
+    "conversation_id": 1,
+    "pattern": "escalating_negativity"
+  },
+  {
+    "text": "The app\u2019s UI is clean and intuitive. Finding what I need is a snap.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Filtering mechanics by rating helped me choose a top-notch technician. Great UX.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "How do I contact the provider after booking for location details?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I need a tow truck to my location ASAP. My car stalled on 5th St.",
+    "sentiment": "neutral",
+    "conversation_id": 2,
+    "pattern": "escalating_negativity"
+  },
+  {
+    "text": "Your pricing estimates are helpful, but the surge fee came out of nowhere.",
+    "sentiment": "standard_negative",
+    "conversation_id": 17,
+    "pattern": "mixed_sentiment"
+  },
+  {
+    "text": "The surge pricing on a flat tire repair was double the normal rate. That\u2019s a rip-off for a simple service.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Okay, please hurry. It's causing a hazard.",
+    "sentiment": "standard_negative",
+    "conversation_id": 6,
+    "pattern": "deescalating_negativity"
+  },
+  {
+    "text": "Your platform shows the provider en route, then they cancel without warning. Very frustrating.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Can I schedule a routine maintenance slot for next Wednesday around noon?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I was able to see detailed service packages before confirming.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "I requested in-shop service, yet the provider came as a mobile mechanic instead.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "No providers available after 6 PM and I need tire repair before dawn.",
+    "sentiment": "standard_negative",
+    "is_edge_case": true,
+    "secondary_sentiment": "urgent_negative"
+  },
+  {
+    "text": "I love that I can leave detailed feedback for my provider after service.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "What\u2019s the price estimate for brake pads on a 2016 Subaru?",
+    "sentiment": "neutral",
+    "conversation_id": 12,
+    "pattern": "sentiment_shifts"
+  },
+  {
+    "text": "Your platform never crashed during my booking process\u2014rock solid reliability.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "There are only two mobile mechanics in my area listed, and both have terrible ratings. Expand your network!",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Being able to pay with Apple Pay made checkout quick and easy.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The map accurately showed the provider's approach to my location.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "I asked for a tow but your app matched me with a tire repair service. How is that even possible?",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Thank you for the digital receipt; it\u2019s so convenient for tracking my expenses.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Provider ratings seem fake\u2014my 'top-rated' mobile mechanic didn\u2019t even have the right tools.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Your platform saved me time, but now I have to wait another hour because of a cancellation.",
+    "sentiment": "positive",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "App added a $20 service fee after I confirmed. Surprise fees are unacceptable.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Thanks, it worked on the second try. Nice job overall.",
+    "sentiment": "positive",
+    "conversation_id": 19,
+    "pattern": "mixed_sentiment"
+  },
+  {
+    "text": "What service categories are available\u2014do you offer battery replacements or only brake and oil services?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Steering locked up on Highway 101 near San Jose at 70 mph. This is an emergency\u2014send roadside service immediately!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Transmission just died on I-5 in Seattle during rush hour! No tow available on your platform!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "How do I update my payment method if my card expired?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Car alarm keeps blaring on this deserted road. At risk of mugging. Need help ASAP!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "I\u2019ve been rear-ended at the 5th Avenue intersection in Manhattan. My car won\u2019t start and traffic\u2019s piling up. Please send emergency assistance now!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Your platform charged me $150 for a battery replacement in Phoenix, but I found the same service for $100 elsewhere. Overpriced.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Notifications are turned on, but I didn't get the arrival alert.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Your price comparison tool displayed incorrect rates for brake service in Miami, so I ended up overpaying.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "How do I track the tow truck once it's en route to my location?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The customer support team resolved my billing question in minutes. Outstanding!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Overall, this platform makes automotive emergencies feel manageable. Five stars!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Can I see a breakdown of service fees and provider fees before confirming?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I\u2019d like to know the average wait time for a tow truck in the Chicago area through your platform.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I\u2019d prefer to pre-authorize payment before the service to speed up checkout.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Booking a tire change through your platform in Seattle was seamless. Technician was friendly and efficient!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "What is the difference between in-shop and mobile mechanic services?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I need someone to inspect my slipping transmission today.",
+    "sentiment": "neutral",
+    "conversation_id": 4,
+    "pattern": "escalating_negativity"
+  },
+  {
+    "text": "I called the provider's number, but it keeps ringing with no answer. Why offer useless contact info?",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Brakes failed on steep hill in San Francisco\u2014I'm sliding toward traffic! Send help NOW!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "It\u2019s pouring rain and my brakes failed on the bridge in St. Louis. I\u2019m at serious risk\u2014please prioritize my service request!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Does your platform offer battery replacement services in rural Wisconsin?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Monday? My car might break down before then! This app is failing me!",
+    "sentiment": "urgent_negative",
+    "conversation_id": 4,
+    "pattern": "escalating_negativity"
+  },
+  {
+    "text": "I love how easy it is to see all the towing options in my area with their ratings and prices. Makes a stressful situation much easier to handle!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I plan to schedule a routine maintenance appointment two weeks in advance.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The one-click booking for favorite providers is a time-saver.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Tow cancellation left me stranded on a dark road\u2014your app isn\u2019t reliable in emergencies.",
+    "sentiment": "urgent_negative",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "I can\u2019t find any shops open after 8 PM in Seattle through your app, even though Yelp shows several options.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "I tried canceling a booking before the provider arrived in Chicago, but I was still charged a cancellation fee. That\u2019s unfair.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Splitting payment with my partner was easy using the payment-splitting option.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "My booking was confirmed, then the provider canceled last minute. Now I\u2019m without a mechanic for two days!",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Glad they\u2019re fixing it so fast.",
+    "sentiment": "positive",
+    "conversation_id": 18,
+    "pattern": "mixed_sentiment"
+  },
+  {
+    "text": "The mechanic your app matched me with charged $50 more than the estimate shown in the app. This isn't the first time this has happened either.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "How do I filter for mobile mechanics only in the app? I need someone to come to my location.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Stranded outside a closed gas station in Chicago with zero fuel. This is urgent\u2014need mobile fuel delivery ASAP!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "My SUV slipped on black ice and slid into a ditch. I can\u2019t move in subzero temps!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "My check engine light just burst into flames in heavy rain. Please match me with the highest-rated tow ASAP!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "None of the mechanics in your app are available today and my car is making a concerning noise. I need to find someone before my road trip tomorrow.",
+    "sentiment": "standard_negative",
+    "is_edge_case": true,
+    "secondary_sentiment": "urgent_negative"
+  },
+  {
+    "text": "App reports active providers in my area, but I get 'no providers available' when booking.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Can I get a mobile battery replacement at 8 PM tonight?",
+    "sentiment": "neutral",
+    "conversation_id": 15,
+    "pattern": "sentiment_shifts"
+  },
+  {
+    "text": "It says none are available until tomorrow morning. I literally can\u2019t move my car!",
+    "sentiment": "standard_negative",
+    "conversation_id": 3,
+    "pattern": "escalating_negativity"
+  },
+  {
+    "text": "I like that I can schedule routine maintenance up to a month in advance. Very flexible.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Tow provider lost my location and is nowhere to be seen! I'm stuck on I-70 with semis zooming past!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Great, thank you. Relief to know help is close.",
+    "sentiment": "positive",
+    "conversation_id": 6,
+    "pattern": "deescalating_negativity"
+  },
+  {
+    "text": "The estimated wait time showed 20 minutes but no one arrived after 40.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Engine overheating, need help now but app shows no providers\u2014this platform failed me.",
+    "sentiment": "urgent_negative",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "I\u2019m stranded in a bad neighborhood in Chicago and your app finds ZERO providers\u2014I'm scared!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Thank you for matching me with QuickFix Tow in Dallas\u2014they arrived in 10 minutes and were super professional!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The app\u2019s security measures gave me confidence in using my credit card.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Your mechanic canceled on me last minute. I\u2019m stuck with a dead battery!",
+    "sentiment": "standard_negative",
+    "conversation_id": 7,
+    "pattern": "deescalating_negativity"
+  },
+  {
+    "text": "The \u2018certified\u2019 mechanic you sent couldn\u2019t fix my simple brake issue. Not impressed.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "My kids are crying in the backseat on a busy interstate\u2014need mobile mechanic ASAP or I\u2019m calling 911!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Provider ratings look outdated\u2014one shop showed 5 stars but gave me poor service in Boston. Misleading.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "App doesn\u2019t show any gas delivery options\u2014running fuel low on a dangerous road!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Finding an ASE-certified mobile mechanic in my neighborhood took seconds. Thank you!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "App crashed when I tried to rebook after cancellation\u2014I need a tow now or I'm stuck!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "How do I update my service location once the provider is en route?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Can I see a breakdown of the fees, including platform service fees and provider charges?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I'm stuck on Route 66 with no phone signal and my two kids in the back. I need an urgent tow! I saw Mike's Towing has a 4.9 rating\u2014can you dispatch them right now?",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "I wasted 30 minutes waiting for a mobile mechanic who canceled and never apologized.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "My second booking was even easier thanks to saved preferences.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Lost power steering on a busy highway. I\u2019m about to crash. Help me!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "I requested jump start assistance, but they sent someone to change my oil instead. Useless!",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Smoke coming from under my hood on the Golden Gate Bridge. I feel unsafe\u2014dispatch emergency mechanic immediately!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "2 hours? Cars are honking\u2014this is dangerous!",
+    "sentiment": "urgent_negative",
+    "conversation_id": 5,
+    "pattern": "escalating_negativity"
+  },
+  {
+    "text": "You estimated a 20-minute wait for mobile mechanic, but I waited over 90. Terrible accuracy.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Your in-app chat so far has been super helpful for clarifying details with the provider. Love that feature.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Payment failed at checkout despite using a valid card. Now I can't book any service.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "My gear shift locked in drive on a bridge\u2014I\u2019m exposed and cars swerving by!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Alright, that works.",
+    "sentiment": "neutral",
+    "conversation_id": 10,
+    "pattern": "deescalating_negativity"
+  },
+  {
+    "text": "Your app\u2019s rating filter helped me find a 5-star mechanic in Chicago. Repair was fast and affordable\u2014great job!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Can you show me mechanics for tire rotation near me?",
+    "sentiment": "neutral",
+    "conversation_id": 11,
+    "pattern": "sentiment_shifts"
+  },
+  {
+    "text": "Provider shows ETA 10 min but traffic on GPS is red. I\u2019m still roadside!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Thank you for sorting that out.",
+    "sentiment": "positive",
+    "conversation_id": 10,
+    "pattern": "deescalating_negativity"
+  },
+  {
+    "text": "Car battery died on remote mountain road in Colorado with wolves nearby. Need mobile mechanic ASAP!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Engine locked up in middle of busy Avenue in NYC. People honking, I'm terrified\u2014help!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Your customer support chat resolved my billing question instantly. Great service!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I\u2019m stuck on the shoulder with a sputtering engine and no tow trucks available\u2014this is really bad.",
+    "sentiment": "urgent_negative",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Why did your app match me with a 2-star repair shop in Houston? Their prices were higher than advertised and the service was terrible.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "I was quoted $120 for a brake pad replacement but ended up paying $175. Why is your pricing so unreliable?",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "How many providers are typically available in the downtown Seattle area?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Tow ETA keeps jumping back to 1 h! I can\u2019t wait that long on an active rail crossing!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "The mobile mechanic was on time and knowledgeable, however your support chat was unresponsive.",
+    "sentiment": "positive",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Why is it showing no available tow trucks? This is urgent\u2014I can't leave my car here!",
+    "sentiment": "standard_negative",
+    "conversation_id": 2,
+    "pattern": "escalating_negativity"
+  },
+  {
+    "text": "What are your hours of operation on Saturday?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Thanks for the transparent pricing! No hidden fees and the estimate was spot-on.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Tow just cancelled again, this is the third time! I\u2019m on a curve with no guardrail!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "I love the subtle animations and design details\u2014it feels premium.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The 4.9-star mechanic I booked in Atlanta turned out to be unprofessional and overpriced.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Your coverage in rural areas impressed me. I didn\u2019t expect to find any providers, but you delivered!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Knowing the provider holds insurance and credentials gave me peace of mind.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I like the clear service categories, but the pricing estimator is wildly inaccurate.",
+    "sentiment": "standard_negative",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Is there a way to chat directly with the service provider before confirming a booking?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Car stalled at a busy intersection; the app says no one available, this is unacceptable.",
+    "sentiment": "urgent_negative",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Your app matched me with a tow but it cancelled after 5min! I\u2019m on a dark freeway shoulder, send someone else NOW!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "My booking shows confirmed, but the provider never updated their ETA.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "AC died in 100 \u00b0F heat with my toddler inside. This is an emergency!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Flat tire in middle of highway at night. Can\u2019t fix it myself. Send urgent tire change NOW!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Why is the cheapest provider a 3-star? I expected better.",
+    "sentiment": "standard_negative",
+    "conversation_id": 14,
+    "pattern": "sentiment_shifts"
+  },
+  {
+    "text": "App glitched and I can\u2019t confirm a booking\u2014engine just stalled on busy freeway!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Your saved payment method disappeared and I had to re-enter all info just to pay.",
+    "sentiment": "standard_negative"
+  }
+]

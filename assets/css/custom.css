@@ -1,0 +1,190 @@
+/* 
+ * NLU Dashboard Custom CSS
+ * Enhanced styling for Phase 4 
+ */
+
+/* Card styling with hover effects */
+.metric-card {
+    border: 1px solid #f0f0f0;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background-color: white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Section styling */
+.dashboard-section {
+    padding: 1.5rem;
+    background-color: #f9f9f9;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #4b9dff;
+}
+
+.dashboard-section.performance {
+    border-left-color: #4bff9d;
+}
+
+.dashboard-section.errors {
+    border-left-color: #ff4b4b;
+}
+
+.dashboard-section.entities {
+    border-left-color: #ffcb3c;
+}
+
+/* Button styling */
+.action-button {
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.action-button:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+/* Help tooltip styling */
+.help-tooltip {
+    color: #999;
+    font-size: 1rem;
+    margin-left: 0.5rem;
+    cursor: help;
+}
+
+/* Tabs styling */
+.stTabs {
+    background-color: white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Expandable section styling */
+.st-expander {
+    border: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Performance indicator styling */
+.performance-bar {
+    height: 8px;
+    border-radius: 4px;
+    display: block;
+}
+
+.performance-bar.excellent {
+    background-color: #4bff9d;
+}
+
+.performance-bar.good {
+    background-color: #a5f2a5;
+}
+
+.performance-bar.fair {
+    background-color: #ffcb3c;
+}
+
+.performance-bar.poor {
+    background-color: #ff4b4b;
+}
+
+/* Enhanced table styling */
+.styled-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.9em;
+}
+
+.styled-table th {
+    background-color: #f2f2f2;
+    font-weight: 500;
+    text-align: left;
+    padding: 0.75rem;
+}
+
+.styled-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.styled-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Dashboard tour styling */
+.tour-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.tour-highlight {
+    position: relative;
+    z-index: 1001;
+    box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+}
+
+.tour-tooltip {
+    position: absolute;
+    z-index: 1002;
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+    .metric-card {
+        background-color: #262730;
+        border-color: #333;
+    }
+    
+    .dashboard-section {
+        background-color: #1e1e1e;
+    }
+    
+    .styled-table th {
+        background-color: #333;
+    }
+    
+    .styled-table td {
+        border-bottom-color: #333;
+    }
+    
+    .styled-table tr:hover {
+        background-color: #2a2a2a;
+    }
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .metric-card {
+        padding: 1rem;
+    }
+    
+    .dashboard-section {
+        padding: 1rem;
+    }
+} 

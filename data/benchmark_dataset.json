@@ -1,0 +1,487 @@
+[
+  {
+    "text": "My Jeep Cherokee is dead in the water - can you tow it from the movie theater to Bob's Auto on 5th Street?",
+    "intent": "towing_request_tow_full",
+    "entities": [
+      {
+        "entity": "vehicle_make",
+        "value": "Jeep"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Cherokee"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "movie theater"
+      },
+      {
+        "entity": "destination",
+        "value": "Bob's Auto on 5th Street"
+      }
+    ]
+  },
+  {
+    "text": "Help! I'm on Route 66 with my daughter and our car's smoking - need emergency towing NOW!",
+    "intent": "towing_request_tow_urgent",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "Route 66"
+      },
+      {
+        "entity": "urgency",
+        "value": "emergency"
+      }
+    ]
+  },
+  {
+    "text": "Battery completely died at Home Depot - can't even unlock the doors on my Tesla Model Y",
+    "intent": "roadside_request_roadside_battery",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "battery assistance"
+      },
+      {
+        "entity": "pickup_location", 
+        "value": "Home Depot"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Tesla"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Model Y"
+      },
+      {
+        "entity": "vehicle_type",
+        "value": "electric"
+      }
+    ]
+  },
+  {
+    "text": "Need an oil change ASAP - check engine light just came on in my 2023 Nissan Rogue",
+    "intent": "appointment_urgent_repair_request",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "oil change"
+      },
+      {
+        "entity": "issue_type",
+        "value": "check engine light"
+      },
+      {
+        "entity": "urgency",
+        "value": "immediate"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2023"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Nissan"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Rogue"
+      }
+    ]
+  },
+  {
+    "text": "I'm at the airport parking garage level 3, got locked out of my Audi. Can you help?",
+    "intent": "roadside_request_roadside_keys",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "lockout"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "airport parking garage level 3"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Audi"
+      },
+      {
+        "entity": "location_type",
+        "value": "parking garage"
+      }
+    ]
+  },
+  {
+    "text": "Two flat tires on my RV - I'm at the Wayside Campground off exit 43",
+    "intent": "roadside_specialized_service",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "flat tire"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Wayside Campground off exit 43"
+      },
+      {
+        "entity": "vehicle_type",
+        "value": "RV"
+      }
+    ]
+  },
+  {
+    "text": "My truck is stuck in a muddy field. Need winching and possibly a tow after.",
+    "intent": "roadside_multiple_issues",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "winching"
+      },
+      {
+        "entity": "additional_service",
+        "value": "towing"
+      },
+      {
+        "entity": "vehicle_condition",
+        "value": "stuck in mud"
+      }
+    ]
+  },
+  {
+    "text": "My car overheated on South Beach Parkway. The radiator's leaking everywhere.",
+    "intent": "towing_request_tow_location_partial",
+    "entities": [
+      {
+        "entity": "pickup_location",
+        "value": "South Beach Parkway"
+      },
+      {
+        "entity": "vehicle_condition",
+        "value": "overheated"
+      }
+    ]
+  },
+  {
+    "text": "Schedule 40,000 mile maintenance for my 2020 hybrid RAV4 next Wednesday afternoon",
+    "intent": "appointment_maintenance_package",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "40000-mile service"
+      },
+      {
+        "entity": "mileage",
+        "value": "40000"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2020"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Toyota"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "RAV4"
+      },
+      {
+        "entity": "vehicle_type",
+        "value": "hybrid"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "next Wednesday"
+      },
+      {
+        "entity": "appointment_time",
+        "value": "afternoon"
+      }
+    ]
+  },
+  {
+    "text": "What's the soonest you can fix the weird grinding when I brake? It's getting worse.",
+    "intent": "appointment_uncertain_service_needs",
+    "entities": [
+      {
+        "entity": "issue_description",
+        "value": "grinding when braking"
+      },
+      {
+        "entity": "potential_system",
+        "value": "brakes"
+      }
+    ]
+  },
+  {
+    "text": "I need help. Something's wrong with my car.",
+    "intent": "clarification_ambiguous_request",
+    "entities": []
+  },
+  {
+    "text": "Can you squeeze me in for a brake pad replacement tomorrow or Thursday?",
+    "intent": "appointment_book_service_date",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "brake pad replacement"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "tomorrow or Thursday"
+      }
+    ]
+  },
+  {
+    "text": "I'm completely out of gas at the corner of 7th and Broadway, any chance you can bring me some?",
+    "intent": "roadside_request_roadside_fuel",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "fuel"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "corner of 7th and Broadway"
+      }
+    ]
+  },
+  {
+    "text": "Looking to book full detail service for both our cars - a 2021 BMW X3 and a 2022 Mini Cooper",
+    "intent": "appointment_multiple_services",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "full detail"
+      },
+      {
+        "entity": "vehicle_count",
+        "value": "2"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2021"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "BMW"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "X3"
+      }
+    ]
+  },
+  {
+    "text": "Need roadside assistance - no idea what's wrong with my car but it won't start and there's smoke",
+    "intent": "roadside_uncertain_issue",
+    "entities": [
+      {
+        "entity": "issue_description",
+        "value": "won't start and there's smoke"
+      }
+    ]
+  },
+  {
+    "text": "Please send someone to replace my tire ASAP - I'm alone on I-95 and it's getting dark",
+    "intent": "roadside_safety_concern",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "flat tire"
+      },
+      {
+        "entity": "urgency",
+        "value": "urgent"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "I-95"
+      },
+      {
+        "entity": "safety_status",
+        "value": "unsafe"
+      }
+    ]
+  },
+  {
+    "text": "This price is ridiculous. Why is a simple tow costing $175?",
+    "intent": "towing_price_concern",
+    "entities": [
+      {
+        "entity": "final_charge",
+        "value": "$175"
+      }
+    ]
+  },
+  {
+    "text": "I got the recall notice about my Ford Bronco's steering - can I bring it in Thursday morning?",
+    "intent": "appointment_warranty_recall_service",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "recall"
+      },
+      {
+        "entity": "recall_component",
+        "value": "steering"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Ford"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Bronco"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "Thursday"
+      },
+      {
+        "entity": "appointment_time",
+        "value": "morning"
+      }
+    ]
+  },
+  {
+    "text": "Our company van broke down - it's a 2019 long-wheelbase Sprinter with about 100,000 miles",
+    "intent": "towing_vehicle_specialty",
+    "entities": [
+      {
+        "entity": "vehicle_year",
+        "value": "2019"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Mercedes"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Sprinter"
+      },
+      {
+        "entity": "vehicle_type",
+        "value": "long-wheelbase"
+      },
+      {
+        "entity": "mileage",
+        "value": "100000"
+      }
+    ]
+  },
+  {
+    "text": "How much longer until the tech arrives? It's storming and I have my kids with me.",
+    "intent": "roadside_service_eta_weather",
+    "entities": [
+      {
+        "entity": "weather_condition",
+        "value": "storming"
+      }
+    ]
+  },
+  {
+    "text": "I need a winter preparation package including tire change and fluid check for my Subaru",
+    "intent": "appointment_seasonal_recommendation",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "winter preparation"
+      },
+      {
+        "entity": "season",
+        "value": "winter"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Subaru"
+      }
+    ]
+  },
+  {
+    "text": "I'd like to set up recurring oil changes every 3 months for my delivery vehicle",
+    "intent": "appointment_recurring_appointment",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "oil change"
+      },
+      {
+        "entity": "schedule_type",
+        "value": "recurring"
+      },
+      {
+        "entity": "interval",
+        "value": "3 months"
+      }
+    ]
+  },
+  {
+    "text": "Both my 2020 Tacoma and my wife's 2022 Camry need service - can we get them done together?",
+    "intent": "appointment_multiple_services",
+    "entities": [
+      {
+        "entity": "vehicle_count",
+        "value": "2"
+      },
+      {
+        "entity": "vehicle_year",
+        "value": "2020"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Toyota"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "Tacoma"
+      }
+    ]
+  },
+  {
+    "text": "I need an immediate jump for my Porsche 911 - stuck at Blue Ridge Mall north entrance",
+    "intent": "roadside_request_roadside_battery",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "jump start"
+      },
+      {
+        "entity": "urgency",
+        "value": "immediate"
+      },
+      {
+        "entity": "vehicle_make",
+        "value": "Porsche"
+      },
+      {
+        "entity": "vehicle_model",
+        "value": "911"
+      },
+      {
+        "entity": "pickup_location",
+        "value": "Blue Ridge Mall north entrance"
+      }
+    ]
+  },
+  {
+    "text": "Can I get a full service for next Monday on my motorcycle?",
+    "intent": "appointment_book_service_date",
+    "entities": [
+      {
+        "entity": "service_type",
+        "value": "full service"
+      },
+      {
+        "entity": "appointment_date",
+        "value": "next Monday"
+      },
+      {
+        "entity": "vehicle_type",
+        "value": "motorcycle"
+      }
+    ]
+  }
+]

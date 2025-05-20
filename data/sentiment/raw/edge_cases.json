@@ -1,0 +1,242 @@
+[
+    {
+      "text": "I love how quickly your app found me a tow, but the final price was way above the original quote.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "positive",
+      "explanation": "Starts with praise for speed but ends with a complaint about price, mixing positive and negative feedback."
+    },
+    {
+      "text": "The provider was friendly and professional, yet the matching algorithm suggested someone two hours away.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "positive",
+      "explanation": "Positive comment on provider attitude conflicts with negative remark about poor location matching."
+    },
+    {
+      "text": "Your surge pricing explanation is clear, but I still felt nickel-and-dimed.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "positive",
+      "explanation": "Acknowledges clarity of explanation yet expresses frustration over costs."
+    },
+    {
+      "text": "The booking interface is fantastic, but unexpected cancellation fees ruined the experience.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "positive",
+      "explanation": "Celebrates interface usability but criticizes hidden fees."
+    },
+    {
+      "text": "I’m impressed by the real-time tracking feature, but the mechanic arrived overheated and unprepared.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "positive",
+      "explanation": "Praises tracking but complains about provider readiness."
+    },
+    {
+      "text": "The tow truck arrived faster than I expected, but the in-app payment failed twice.",
+      "primary_sentiment": "positive",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Highlights quick arrival positively, then describes payment failures negatively."
+    },
+    {
+      "text": "I like the clear service categories, but the pricing estimator is wildly inaccurate.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "positive",
+      "explanation": "Commends organization of categories but criticizes price estimation accuracy."
+    },
+    {
+      "text": "Your platform saved me time, but now I have to wait another hour because of a cancellation.",
+      "primary_sentiment": "positive",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Appreciates time savings but upset about cancellation delays."
+    },
+    {
+      "text": "I enjoyed using the promo code feature, but applying it deleted all my saved card details.",
+      "primary_sentiment": "positive",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Likes promo code functionality but frustrated by data loss bug."
+    },
+    {
+      "text": "The mobile mechanic was on time and knowledgeable, however your support chat was unresponsive.",
+      "primary_sentiment": "positive",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Praises provider expertise while calling out poor support responsiveness."
+    },
+    {
+      "text": "None of the mechanics in your app are available today and my car is making a concerning noise. I need to find someone before my road trip tomorrow.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "urgent_negative",
+      "explanation": "Expresses frustration over availability yet describes non-immediate urgency for tomorrow."
+    },
+    {
+      "text": "I can’t book a tow right now, but I’m okay for a bit—my car is overheating.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "urgent_negative",
+      "explanation": "Shows dissatisfaction with booking but indicates potential urgency due to overheating."
+    },
+    {
+      "text": "My steering feels loose and I’m on the freeway; not stalled, but I’d like help quickly.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "urgent_negative",
+      "explanation": "Reports a safety issue that’s concerning but not yet critical."
+    },
+    {
+      "text": "I’m hearing a knocking sound but still driving; can you match me with a mechanic today?",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "urgent_negative",
+      "explanation": "Mentions worrisome noise and desire for prompt service without describing a breakdown."
+    },
+    {
+      "text": "No providers available after 6 PM and I need tire repair before dawn.",
+      "primary_sentiment": "standard_negative",
+      "secondary_sentiment": "urgent_negative",
+      "explanation": "Complains about availability with a deadline approaching, suggesting mild urgency."
+    },
+    {
+      "text": "I’m stuck on the shoulder with a sputtering engine and no tow trucks available—this is really bad.",
+      "primary_sentiment": "urgent_negative",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Describes a roadside emergency but frames it as a service availability issue."
+    },
+    {
+      "text": "Engine overheating, need help now but app shows no providers—this platform failed me.",
+      "primary_sentiment": "urgent_negative",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Urgent request for overheating but primarily a complaint about platform failure."
+    },
+    {
+      "text": "My brakes are squealing loudly in heavy traffic with no available mechanics—please fix this.",
+      "primary_sentiment": "urgent_negative",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Conveys immediate safety concern but also frustration with provider availability."
+    },
+    {
+      "text": "Car stalled at a busy intersection; the app says no one available, this is unacceptable.",
+      "primary_sentiment": "urgent_negative",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Describes a breakdown at a dangerous location, yet focuses on platform inadequacy."
+    },
+    {
+      "text": "Tow cancellation left me stranded on a dark road—your app isn’t reliable in emergencies.",
+      "primary_sentiment": "urgent_negative",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Highlights an emergency scenario but the main complaint is about app reliability."
+    },
+    {
+      "text": "This is the third provider your app has matched me with that doesn't actually service European cars despite their profile saying they do.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Factual statement about service mismatch with a hint of frustration."
+    },
+    {
+      "text": "I selected a 5-star shop for my oil change but they were booked when I arrived.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Simply reports a booking error, but implies dissatisfaction."
+    },
+    {
+      "text": "The estimated wait time showed 20 minutes but no one arrived after 40.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "States a discrepancy in timing, slightly negative but mainly informative."
+    },
+    {
+      "text": "App reports active providers in my area, but I get 'no providers available' when booking.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Describes contradictory app behavior, factual yet critical."
+    },
+    {
+      "text": "I added my payment method but the app keeps returning an error at checkout.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Reports technical issue neutrally, with an undertone of annoyance."
+    },
+    {
+      "text": "I requested in-shop service, yet the provider came as a mobile mechanic instead.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Factual mismatch in service type that implies dissatisfaction."
+    },
+    {
+      "text": "My booking shows confirmed, but the provider never updated their ETA.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Informative status update that hints at disappointment."
+    },
+    {
+      "text": "The price estimator listed $50, but the final quote was $80.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Describes a numerical discrepancy, neutral in tone but critical in content."
+    },
+    {
+      "text": "Notifications are turned on, but I didn't get the arrival alert.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Neutral report of missing notification, implying frustration."
+    },
+    {
+      "text": "I reported a flat tire, but the service offered was a battery replacement.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "standard_negative",
+      "explanation": "Factual report of wrong service, subtly negative."
+    },
+    {
+      "text": "The mechanic your app matched me with completed the job within the estimated time frame and charged the quoted price.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "States facts that also imply satisfaction without overt praise."
+    },
+    {
+      "text": "I used the promo code successfully and it applied without any issues.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "Describes a successful action neutrally, suggesting positivity."
+    },
+    {
+      "text": "The booking interface loaded quickly, and the service was scheduled as requested.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "Neutral description of success hinting at a positive experience."
+    },
+    {
+      "text": "I found several 4-star providers in my area when filtering by rating.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "Factual statement that conveys a satisfactory selection."
+    },
+    {
+      "text": "I received a confirmation email immediately after booking.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "Reports functionality working as intended, subtly positive."
+    },
+    {
+      "text": "The app saved my vehicle details and pre-filled them for my next booking.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "Describes a convenience feature, implying user satisfaction."
+    },
+    {
+      "text": "The map accurately showed the provider's approach to my location.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "Neutral observation that also indicates a reliable feature."
+    },
+    {
+      "text": "I changed my booking time via the app in under a minute.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "Simple fact of efficiency, suggesting a positive outcome."
+    },
+    {
+      "text": "I was able to see detailed service packages before confirming.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "Factual note about feature availability, implying usefulness."
+    },
+    {
+      "text": "I navigated the help section and found answers to my platform questions.",
+      "primary_sentiment": "neutral",
+      "secondary_sentiment": "positive",
+      "explanation": "Neutral description of success in finding information."
+    }
+  ]

@@ -3,7 +3,7 @@ Easy Setup Instructions
 ============================
 
 1. Start API server with: export PORT=8001 && python api.py
-   (or use ./start_api.sh if available)
+   (or use ./scripts/start_api.sh if available)
 2. Your React Native app should connect to this server at http://YOUR_SERVER_IP:8001
 3. Use the /api/dialog endpoint with a JSON payload like: {"text": "Your message", "conversation_id": "optional_id"}
 4. For NLU-only analysis (including sentiment), use /api/nlu endpoint

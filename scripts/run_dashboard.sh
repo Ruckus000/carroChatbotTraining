@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configuration
-DASHBOARD_SCRIPT="nlu_dashboard.py"
-REQUIREMENTS_FILE="requirements-dashboard.txt"
+DASHBOARD_SCRIPT="src/nlu_dashboard.py"
+REQUIREMENTS_FILE="config/requirements-dashboard.txt"
 STREAMLIT_PORT=8501
 STREAMLIT_SERVER_HEADLESS=true
 

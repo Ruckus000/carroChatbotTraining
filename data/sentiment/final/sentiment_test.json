@@ -1,0 +1,136 @@
+[
+  {
+    "text": "I\u2019m impressed by the real-time tracking feature, but the mechanic arrived overheated and unprepared.",
+    "sentiment": "standard_negative",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Please show me the providers available for battery replacement in zip code 30301.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Your in-app chat is glitchy\u2014I can\u2019t send my location to the mechanic.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "I scheduled a tow for 7 AM but got a cancellation text at 6:55. Totally unprofessional.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Tow truck is coming from 30 miles away but my car is in pieces on the shoulder!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "App suggested an oil change provider when I needed brake repair. Please fix your matching algorithm.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Tow ETA says 45 min but traffic is gridlocked\u2014I can\u2019t wait that long on this busy ramp!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Tow driver went offline mid-route! I\u2019m stranded at exit 22 in Indiana!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Your review system is reliable; the 5-star mechanic lived up to the rating.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Engine just caught fire under the hood in Brooklyn. Dispatch the nearest mechanic urgently\u2014I\u2019m really worried about safety!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Booking maintenance through your platform in Boston was easy and stress-free. Will use again!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The app\u2019s responsiveness on both iOS and Android is excellent.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "What providers are available for towing within 10 miles of downtown Portland?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The booking interface loaded quickly, and the service was scheduled as requested.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Car overheated on desert highway\u2014waiting in 110 \u00b0F with no water. Urgent help needed!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Why are low-rated shops always the only ones available? My last booking was with a 2-star garage, and it sucked.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "I reported a flat tire, but the service offered was a battery replacement.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "I changed my booking time effortlessly through the app. Loved the reschedule feature.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Good to know you have 24/7 support for billing issues.",
+    "sentiment": "positive",
+    "conversation_id": 20,
+    "pattern": "mixed_sentiment"
+  },
+  {
+    "text": "No matches found for transmission work until next week. That\u2019s way too late!",
+    "sentiment": "standard_negative",
+    "conversation_id": 4,
+    "pattern": "escalating_negativity"
+  },
+  {
+    "text": "Why does your app say no providers available in my suburb when I know there are garages nearby?",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "Yes, please show me those.",
+    "sentiment": "positive",
+    "conversation_id": 13,
+    "pattern": "sentiment_shifts"
+  },
+  {
+    "text": "Does the app provide digital receipts for all completed services?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How do I change my booking date and time after confirmation?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Surge pricing slapped a $40 fee on my battery change at 10 AM. That\u2019s ridiculous.",
+    "sentiment": "standard_negative"
+  },
+  {
+    "text": "The simple onboarding tutorial helped me understand all features quickly.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Is there live phone support if I need help with my booking?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Hit a deer on remote highway. Radiator leaking\u2014need emergency tow or I\u2019ll overheat!",
+    "sentiment": "urgent_negative"
+  },
+  {
+    "text": "Okay, I see.",
+    "sentiment": "neutral",
+    "conversation_id": 13,
+    "pattern": "sentiment_shifts"
+  },
+  {
+    "text": "Vehicle fire in engine bay, flames rising! Please send emergency tow NOW!",
+    "sentiment": "urgent_negative"
+  }
+]

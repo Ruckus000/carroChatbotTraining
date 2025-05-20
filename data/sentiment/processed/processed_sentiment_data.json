@@ -1,0 +1,626 @@
+[
+  {
+    "text": "The mobile mechanic was on time and knowledgeable, however your support chat was unresponsive.",
+    "sentiment": "positive",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Do you offer any warranty or guarantee on the work performed by providers?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The weekend discount notifications helped me save on my oil change.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I changed my booking time via the app in under a minute.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Can I request a female mechanic specifically through the platform?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "What forms of payment do you accept? Can I pay with Apple Pay or Google Pay?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "My booking shows confirmed, but the provider never updated their ETA.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Please notify me when a provider is within 5 minutes of arrival.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "What service categories are available\u2014do you offer battery replacements or only brake and oil services?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How do I apply multiple promo codes to the same booking?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Booking a tire change through your platform in Seattle was seamless. Technician was friendly and efficient!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Does the app support promotional codes or discounts for first-time users?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How do I update my service location once the provider is en route?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Service matching for my RV was flawless\u2014you found a specialized shop.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I was able to see detailed service packages before confirming.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Being able to attach photos of my car issue helped the mechanic prepare in advance.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I reported a flat tire, but the service offered was a battery replacement.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "How do I track the tow truck once it's en route to my location?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Do you support mobile tire repair services, or only in-shop appointments?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I enjoyed using the promo code feature, but applying it deleted all my saved card details.",
+    "sentiment": "positive",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Thank you for matching me with QuickFix Tow in Dallas\u2014they arrived in 10 minutes and were super professional!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Thanks for the transparent pricing! No hidden fees and the estimate was spot-on.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "My second booking was even easier thanks to saved preferences.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Which service types does your platform support in Los Angeles?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Please show me the providers available for battery replacement in zip code 30301.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I appreciate the app auto-saving my vehicle details. Makes booking future services so much easier!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Can I book a tow for a motorcycle through the app?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How do I contact the provider after booking for location details?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The tow truck arrived faster than I expected, but the in-app payment failed twice.",
+    "sentiment": "positive",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "I selected a 5-star shop for my oil change but they were booked when I arrived.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "What steps should I follow if I experience issues with payment processing?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Thanks for the clear ETA updates during my roadside assistance in Denver\u2014very reassuring.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I was pleasantly surprised that I could book a mobile mechanic for my BMW at home. Such a convenient service.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The map accurately showed the provider's approach to my location.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "The real-time tracking of the tow truck in New York City was spot on. Loved the transparency!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Is there a way to save my vehicle information for future bookings?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The app\u2019s responsiveness on both iOS and Android is excellent.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Digital wallet integration saved time during checkout. Smooth experience.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The price estimator listed $50, but the final quote was $80.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "What is your policy on provider no-shows or late arrivals?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I love the subtle animations and design details\u2014it feels premium.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I appreciate no additional fees on holidays\u2014it\u2019s refreshing.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "This is the third provider your app has matched me with that doesn't actually service European cars despite their profile saying they do.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Booking maintenance through your platform in Boston was easy and stress-free. Will use again!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Are all providers insured and licensed? How can I verify their credentials?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I booked a tow for my motorcycle and the specialist arrived on time. Fantastic service!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Is it possible to book services outside of standard business hours?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Can I schedule a routine maintenance slot for next Wednesday around noon?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Do you provide estimated travel time plus service duration in the ETA?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I received a confirmation email immediately after booking.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "I like that I can schedule routine maintenance up to a month in advance. Very flexible.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I added my payment method but the app keeps returning an error at checkout.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Where can I view my past booking history and invoices?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "What is your average wait time for roadside assistance in suburban Atlanta?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Your platform never crashed during my booking process\u2014rock solid reliability.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Your app\u2019s rating filter helped me find a 5-star mechanic in Chicago. Repair was fast and affordable\u2014great job!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I requested in-shop service, yet the provider came as a mobile mechanic instead.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "The estimated wait time showed 20 minutes but no one arrived after 40.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "I\u2019d like to save my vehicle\u2019s make, model, and year for faster future bookings.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I\u2019d like to know the average wait time for a tow truck in the Chicago area through your platform.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I appreciate that my vehicle info is saved. Booking future services is so much faster now.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Referral credits worked perfectly\u2014my friend\u2019s tow was discounted and I earned free service credit. Win-win!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Your coverage in rural areas impressed me. I didn\u2019t expect to find any providers, but you delivered!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Knowing the provider holds insurance and credentials gave me peace of mind.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Your in-app chat so far has been super helpful for clarifying details with the provider. Love that feature.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Finding an ASE-certified mobile mechanic in my neighborhood took seconds. Thank you!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Access to 24/7 emergency service through the app is invaluable.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The service descriptions are very detailed\u2014helped me choose the right provider for brake repair.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Provider Sam\u2019s Mobile Mechanics in Austin did an excellent job on my oil change. Highly recommend!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Your customer feedback loop shows you actually care about improving.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I love that I can leave detailed feedback for my provider after service.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Notifications are turned on, but I didn't get the arrival alert.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "The in-app tutorial videos are short and very informative.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I want to request expedited service for an oil change.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "What geographic areas does your platform cover in Southern California?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How do I filter mechanics by customer ratings in the app?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The app\u2019s map view for nearby providers is incredibly useful.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I plan to schedule a routine maintenance appointment two weeks in advance.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How accurate are the price estimates shown in the app?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The app\u2019s UI is clean and intuitive. Finding what I need is a snap.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "What happens if the mechanic arrives and the issue is different than I reported?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I\u2019m thrilled with how quickly I got matched during my engine failure\u2014lifesaver!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Provider communication through the platform was clear and timely.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Are there additional charges for services on holidays or weekends?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The calendar integration for service reminders is a game-changer.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I found several 4-star providers in my area when filtering by rating.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Can I see a breakdown of the fees, including platform service fees and provider charges?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I\u2019d prefer to pre-authorize payment before the service to speed up checkout.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Thank you for offering live phone support\u2014got help right away.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Is there a limit to how many vehicles I can add to my account?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I love how easy it is to see all the towing options in my area with their ratings and prices. Makes a stressful situation much easier to handle!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Overall, this platform makes automotive emergencies feel manageable. Five stars!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Being able to pay with Apple Pay made checkout quick and easy.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Which providers offer brake pad replacement for a 2018 Toyota Camry within 10 miles?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How do I refer a friend to earn credit on my next service?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "What is the difference between in-shop and mobile mechanic services?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The real-time tracking of the tow truck was seamless. I knew exactly when they\u2019d arrive.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Applying a promo code was a breeze\u2014got 10% off my service without any issues.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Can I see a breakdown of service fees and provider fees before confirming?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How do I apply a promo code to my booking on the platform?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How do I update my payment method if my card expired?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Do you offer towing for heavy trucks or only passenger vehicles?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Is there a way to chat directly with the service provider before confirming a booking?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Your push notifications kept me informed every step of the way.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "What does surge pricing mean, and when is it applied?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How many providers are typically available in the downtown Seattle area?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Can I see providers sorted by price rather than rating?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The simple onboarding tutorial helped me understand all features quickly.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Is there a cancellation fee if I need to cancel my booking 30 minutes before the mechanic arrives?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Can I rate both the provider and the platform separately?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "App reports active providers in my area, but I get 'no providers available' when booking.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "I adore that the app supports Spanish; made it easy for my mom to book service.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "How do I change my booking date and time after confirmation?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "What are your hours of operation on Saturday?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Your platform saved me time, but now I have to wait another hour because of a cancellation.",
+    "sentiment": "positive",
+    "is_edge_case": true,
+    "secondary_sentiment": "standard_negative"
+  },
+  {
+    "text": "Splitting payment with my partner was easy using the payment-splitting option.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The app saved my vehicle details and pre-filled them for my next booking.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Booking heavy truck towing was seamless\u2014you matched me with the right provider.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The mechanic your app matched me with completed the job within the estimated time frame and charged the quoted price.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Is there live phone support if I need help with my booking?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Filtering mechanics by rating helped me choose a top-notch technician. Great UX.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Does the app provide digital receipts for all completed services?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "How do I filter for mobile mechanics only in the app? I need someone to come to my location.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "What providers are available for towing within 10 miles of downtown Portland?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I used the promo code successfully and it applied without any issues.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Can I compare prices for oil changes between different repair shops in my neighborhood?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Thank you for the digital receipt; it\u2019s so convenient for tracking my expenses.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Your customer support chat resolved my billing question instantly. Great service!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I\u2019m curious how provider ratings are calculated.",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "Is there an option to rate the provider after the service is complete?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The app\u2019s security measures gave me confidence in using my credit card.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Using surge pricing saved me from overpaying during peak hours. Fair and transparent!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The roadside assistance your team provided was amazing. They arrived quickly and got me back on the road in no time.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The booking interface loaded quickly, and the service was scheduled as requested.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Does your platform offer battery replacement services in rural Wisconsin?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I love how your price comparison showed me the best deal for brake pads in Miami. Saved me $30!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "I navigated the help section and found answers to my platform questions.",
+    "sentiment": "neutral",
+    "is_edge_case": true,
+    "secondary_sentiment": "positive"
+  },
+  {
+    "text": "Your app helped me find a great mechanic within 10 minutes! The price comparison feature saved me at least $200 compared to what I would have paid elsewhere.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "The customer support team resolved my billing question in minutes. Outstanding!",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Your review system is reliable; the 5-star mechanic lived up to the rating.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "How can I see detailed service descriptions before booking?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "I changed my booking time effortlessly through the app. Loved the reschedule feature.",
+    "sentiment": "positive"
+  },
+  {
+    "text": "Can I get a refund if the service takes longer than estimated?",
+    "sentiment": "neutral"
+  },
+  {
+    "text": "The one-click booking for favorite providers is a time-saver.",
+    "sentiment": "positive"
+  }
+]

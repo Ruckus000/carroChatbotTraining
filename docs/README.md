@@ -24,31 +24,56 @@ The system features a clean architecture with dependency injection, making it fl
 
 ---
 
-## Project Structure
+## Repository Structure
 
 ```
-.
-├── .github/
-│   └── workflows/
-│       └── ci.yml              # GitHub Actions CI configuration
-├── data/
-│   └── nlu_training_data.json  # THE ONLY TRAINING DATA FILE
-├── trained_nlu_model/          # Output directory for trained models
-│   ├── intent_model/           # Intent classification model files
-│   └── entity_model/           # Entity recognition model files
-├── .gitignore                  # Standard Git ignore file
-├── inference.py                # Loads models and performs NLU prediction
-├── dialog_manager.py           # Manages conversation state and determines actions
-├── response_generator.py       # Generates human-readable responses
-├── api.py                      # FastAPI server for exposing functionality
-├── README.md                   # This file
-├── API_README.md               # API documentation for frontend integration
-├── requirements.txt            # Full Python dependencies including dev/testing
-├── requirements-api.txt        # Runtime dependencies for the API server
-├── test_integration.py         # Basic integration test for NLUInferencer
-├── test_api_integration.py     # API integration tests
-├── test_dialog_manager_unified.py # Tests for the unified DialogManager
-└── train.py                    # Script to train the NLU models
+chatbot/
+├── src/                       # Core source code
+│   ├── api.py                 # API server implementation
+│   ├── dialog_manager.py      # Dialog management logic
+│   ├── evaluate_nlu.py        # Evaluation and benchmarking utilities
+│   ├── inference.py           # Inference utilities
+│   ├── model_pipeline.py      # End-to-end model lifecycle management
+│   ├── nlu_dashboard.py       # Streamlit dashboard for visualization
+│   ├── response_generator.py  # Response generation logic
+│   └── train.py               # Model training script
+├── scripts/                   # Helper scripts directory
+│   ├── run_dashboard.sh       # Script to launch the Streamlit dashboard
+│   ├── run_phase5_dashboard.sh # Script for Phase 5 dashboard
+│   ├── run_phase4_dashboard.sh # Script for Phase 4 dashboard
+│   ├── start_api.sh           # Shell script to start the API server
+│   ├── merge_data.py          # Script to merge training data
+│   ├── merge_data_unique.py   # Script to merge training data with uniqueness checks
+│   ├── merge_data_advanced.py # Advanced script for merging training data
+│   ├── analyze_data.py        # Script to analyze training data
+│   └── fix_sentiment_data.py  # Script to fix sentiment analysis data
+├── tests/                     # Test suite
+│   ├── test_api_integration.py # API integration tests
+│   ├── test_dialog_manager_unified.py # Tests for dialog manager
+│   ├── test_integration.py    # Integration tests
+│   ├── test_nlu_regression.py # Regression tests
+│   ├── test_phase5.py         # Phase 5 tests
+│   └── test_ui_components.py  # UI component tests
+├── docs/                      # Documentation
+│   ├── API_README.md          # API documentation
+│   ├── dashboard_user_guide.md # Dashboard user guide
+│   ├── metrics_glossary.md    # Explanation of metrics
+│   ├── troubleshooting_guide.md # Troubleshooting help
+│   └── nlu_best_practices.md  # Best practices guide
+├── config/                    # Configuration files
+│   ├── requirements.txt       # Full Python dependencies
+│   ├── requirements-api.txt   # API server dependencies
+│   ├── requirements-dashboard.txt # Dashboard dependencies
+│   ├── regression_config.yml  # Configuration for regression testing
+│   └── Dockerfile             # Docker container definition
+├── data/                      # Data files
+│   └── new_training_data.json # New training data
+├── benchmark_results/         # Benchmark results storage
+├── trained_nlu_model/         # Trained model storage
+├── utils/                     # Utilities and helper functions
+├── assets/                    # Static assets for the dashboard
+├── pages/                     # Streamlit multi-page components
+└── README.md                  # This file
 ```
 
 ---
@@ -61,6 +86,7 @@ The system follows a modular architecture with clear separation of concerns:
 2. **Dialog Management Layer (`dialog_manager.py`):** Manages conversation state, determines actions based on intents/entities/sentiment.
 3. **Response Generation Layer (`response_generator.py`):** Creates natural language responses based on actions and sentiment context.
 4. **API Layer (`api.py`):** Exposes the functionality via a REST API using FastAPI.
+5. **Utilities Layer (`utils/`):** Provides helper functions for path handling and other common tasks.
 
 Key architectural features:
 
@@ -69,6 +95,7 @@ Key architectural features:
 - **Action Determination:** Based on the current state, NLU results, and sentiment analysis, the DialogManager determines appropriate actions.
 - **Templated Responses:** The ResponseGenerator uses templates to create varied and context-appropriate responses, with special variations for negative sentiment.
 - **Hardware Acceleration:** The system automatically detects and uses Apple Silicon GPU (MPS) for inference and training when available.
+- **Client Tracking:** The API server includes client tracking middleware to log connections from different platforms (web, React Native, etc.)
 
 ---
 
@@ -115,7 +142,7 @@ No special configuration is needed - if you're running on a Mac with Apple Silic
 
 ## Training Data Format (`data/nlu_training_data.json`)
 
-This is the **only** file used for training. It's a JSON list of dictionaries, each representing one training example:
+This is the **primary** file used for training. It's a JSON list of dictionaries, each representing one training example:
 
 ```json
 [
@@ -150,6 +177,13 @@ This is the **only** file used for training. It's a JSON list of dictionaries, e
 ]
 ```
 
+The repository also includes utility scripts for merging and analyzing training data:
+
+- `scripts/merge_data.py`: Basic script to merge training data files
+- `scripts/merge_data_unique.py`: Merge training data while ensuring uniqueness
+- `scripts/merge_data_advanced.py`: Advanced script with more options for merging data
+- `scripts/analyze_data.py`: Tool to analyze and report on training data quality
+
 ---
 
 ## Training the Models
@@ -168,6 +202,126 @@ python train.py
 4.  **Trains Entity Model:** Fine-tunes a `DistilBertForTokenClassification` model using the `text` and `entities` fields (converting entities to BIO tags internally).
 5.  Saves the trained models, tokenizers, and necessary configuration/mapping files into `./trained_nlu_model/intent_model/` and `./trained_nlu_model/entity_model/`.
 6.  **Hardware Acceleration:** Automatically uses Apple Silicon GPU (MPS) if available, significantly improving training speed.
+7.  **Checkpoint Saving:** Saves checkpoints during training to `./trained_nlu_model/intent_model_checkpoints/` and `./trained_nlu_model/entity_model_checkpoints/`.
+
+---
+
+## NLU Model Benchmarking System
+
+The project includes a comprehensive benchmarking system for evaluating NLU model performance:
+
+### Core Components
+
+1. **Evaluation Script** (`evaluate_nlu.py`):
+
+   - Modular design for efficient NLU model benchmarking
+   - Optimized entity handling with BIO tagging
+   - Comprehensive metrics calculation (accuracy, F1, precision, recall)
+   - Detailed error analysis with pattern detection
+
+2. **Metrics Tracking** (`benchmark_results/metrics_history.csv`):
+
+   - Historical performance tracking over time
+   - Efficient file operations with atomic writing
+   - Minimal data duplication for better storage efficiency
+
+3. **Visualization System**:
+
+   - Performance trend charts using matplotlib/seaborn
+   - Intelligent confusion matrix visualization
+   - Class-specific performance analysis
+   - Error pattern visualization
+   - HTML report generation with embedded charts
+
+4. **Streamlit Dashboard** (`nlu_dashboard.py`):
+
+   - Interactive visualization of benchmark results
+   - Historical performance tracking
+   - Intent and entity analysis views
+   - Error analysis with actionable insights
+   - Model comparison capabilities
+
+5. **Regression Testing** (`test_nlu_regression.py`):
+
+   - Statistical significance testing for performance changes
+   - Configurable thresholds for different metrics
+   - Support for high-impact intent prioritization
+   - CI/CD integration for automated quality gates
+   - Multiple output formats (text, JSON, GitHub)
+
+6. **Model Pipeline Integration** (`model_pipeline.py`):
+   - End-to-end model lifecycle management
+   - Versioned model storage with metadata
+   - Integrated benchmarking and regression testing
+   - Export capabilities for production deployment
+
+### Using the Benchmarking System
+
+#### Basic Evaluation
+
+```bash
+# Run a basic evaluation with default settings
+python evaluate_nlu.py
+
+# Customize evaluation parameters
+python evaluate_nlu.py --benchmark data/nlu_benchmark_data.json --model trained_nlu_model --output benchmark_results
+```
+
+#### Running the Dashboard
+
+```bash
+# Start the Streamlit dashboard
+./scripts/run_dashboard.sh
+
+# The dashboard will be available at http://localhost:8501
+```
+
+#### Regression Testing
+
+```bash
+# Check if model performance has regressed
+python test_nlu_regression.py --metrics-file benchmark_results/metrics_latest.json
+
+# Use custom configuration
+python test_nlu_regression.py --config regression_config.yml
+```
+
+#### Full Pipeline
+
+```bash
+# Run the full model pipeline (train, benchmark, regression test)
+python model_pipeline.py pipeline \
+  --training-data data/nlu_training_data.json \
+  --benchmark-data data/nlu_benchmark_data.json \
+  --description "Test pipeline"
+```
+
+### Configuration
+
+Custom regression testing thresholds can be defined in `regression_config.yml`:
+
+```yaml
+thresholds:
+  intent_f1: 0.01 # 1% decrease in intent F1
+  entity_f1: 0.02 # 2% decrease in entity F1
+  high_impact_intents: 0.03 # 3% decrease for critical intents
+
+high_impact_intents:
+  - towing_request_tow_urgent
+  - roadside_emergency_situation
+
+significance_level: 0.05 # p-value threshold (95% confidence)
+```
+
+### Benchmark Results Storage
+
+Benchmark results are stored in the `benchmark_results` directory:
+
+- `metrics_*.json`: Individual benchmark run results
+- `metrics_history.csv`: Historical performance data
+- `visualizations/`: Generated charts and visualizations
+
+For more details, see the [NLU Benchmarking Documentation](docs/nlu_benchmarking.md).
 
 ---
 
@@ -181,15 +335,35 @@ To run the API server:
 export PORT=8001 && python api.py
 ```
 
+Alternatively, you can use the provided shell script:
+
+```bash
+./scripts/start_api.sh
+```
+
 This starts a FastAPI server on http://localhost:8001 that provides:
 
 - `/api/health` - Health check endpoint
 - `/api/nlu` - NLU processing endpoint (includes sentiment analysis)
 - `/api/dialog` - Dialog processing endpoint that maintains conversation state
+- `/api/connections` - Internal endpoint for monitoring active client connections
 
 **IMPORTANT NOTE**: There is a Docker container running on port 8000 with an older version of the API. For development and testing, use the local API on port 8001 as shown above. This ensures you're working with the latest version of the code.
 
 See the `API_README.md` file for detailed API documentation and integration examples.
+
+---
+
+## Docker Support
+
+The project includes Docker support with:
+
+```bash
+# Build and start the Docker container
+docker-compose up -d
+```
+
+This will run the API server inside a containerized environment on port 8000. For most development work, it's recommended to run the server directly on your machine using the instructions above.
 
 ---
 
@@ -206,6 +380,19 @@ This feature is particularly valuable for automotive assistance scenarios where 
 
 ---
 
+## Client Platform Detection
+
+The API includes client platform detection middleware that:
+
+1. Automatically identifies if the client is a web browser, React Native app, iOS, or Android
+2. Logs connection information for monitoring
+3. Adapts response handling based on the client platform when necessary
+4. Tracks active connections for system monitoring
+
+To identify your app as a React Native client, add the `X-Platform: React Native` header to your requests.
+
+---
+
 ## Testing
 
 Several test suites are available to verify different components of the system:
@@ -219,6 +406,9 @@ python -m unittest test_dialog_manager_unified.py
 
 # Run API integration tests (requires the API server to be running)
 python -m pytest test_api_integration.py
+
+# Additional tests
+python test_phase5.py
 ```
 
 ---
@@ -233,11 +423,16 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` automatically runs lin
 
 - **Python:** Core language
 - **Hugging Face Transformers:** For DistilBERT models and tokenizers
-- **PyTorch:** Backend for Transformers
+- **PyTorch:** Backend for Transformers (with MPS support for Apple Silicon)
 - **FastAPI:** REST API framework
 - **Uvicorn:** ASGI server for FastAPI
-- **Scikit-learn:** For data splitting
-- **Seqeval:** For entity recognition metrics (used during training)
-- **NumPy:** Numerical operations
+- **Scikit-learn:** For data splitting and metrics
+- **Seqeval:** For entity recognition metrics
+- **NumPy/Pandas:** Data handling and numerical operations
+- **Matplotlib/Seaborn:** Visualization libraries
+- **Streamlit:** Interactive dashboard framework
+- **PyYAML:** Configuration management
+- **SciPy:** Statistical significance testing
 - **Black:** Code formatting
 - **Pytest:** For testing
+- **Docker:** For containerization

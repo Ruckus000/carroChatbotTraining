@@ -8,6 +8,8 @@ from transformers import (
     DistilBertForSequenceClassification,
     DistilBertForTokenClassification,
     DistilBertTokenizer,
+    RobertaForSequenceClassification,
+    RobertaTokenizer,
     pipeline,
 )
 
@@ -92,23 +94,59 @@ class NLUInferencer:
         except Exception as e:
             raise RuntimeError(f"Error loading entity model: {e}")
 
-        # Load sentiment analysis pipeline
+        # Load sentiment model
         try:
-            model_name = "distilbert-base-uncased-finetuned-sst-2-english"
-            self.sentiment_pipeline = pipeline(
-                "sentiment-analysis",
-                model=model_name,
-                device=(
-                    0 if self.device.type == "cuda" or self.device.type == "mps" else -1
-                ),
+            self.sentiment_model_path = model_file_path("sentiment_model")
+            self.sentiment_model = RobertaForSequenceClassification.from_pretrained(
+                self.sentiment_model_path
             )
+            self.sentiment_model.to(self.device)
+            self.sentiment_model.eval()
+
+            self.sentiment_tokenizer = RobertaTokenizer.from_pretrained(
+                self.sentiment_model_path
+            )
+
+            # Load sentiment mappings - use model_file_path for the JSON file
+            with open(model_file_path("sentiment_model/sentiment2id.json"), "r") as f:
+                self.sentiment2id = json.load(f)
+
+            # Create id2sentiment mapping
+            self.id2sentiment = {v: k for k, v in self.sentiment2id.items()}
             print(
-                f"INFO [NLUInferencer]: Sentiment analysis model loaded successfully using {model_name}."
+                f"INFO [NLUInferencer]: Custom sentiment model loaded successfully from {self.sentiment_model_path}."
             )
+
+        except FileNotFoundError as e:
+            print(f"WARNING [NLUInferencer]: Failed to load sentiment model: {e}")
+            self.sentiment_model = None
+            self.sentiment_tokenizer = None
+            self.sentiment2id = None
+            self.id2sentiment = None
+            # Fall back to generic sentiment pipeline
+            try:
+                model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+                self.sentiment_pipeline = pipeline(
+                    "sentiment-analysis",
+                    model=model_name,
+                    device=(
+                        0 if self.device.type == "cuda" or self.device.type == "mps" else -1
+                    ),
+                )
+                print(
+                    f"INFO [NLUInferencer]: Fallback sentiment model loaded successfully using {model_name}."
+                )
+            except Exception as e:
+                print(
+                    f"WARNING [NLUInferencer]: Failed to load sentiment analysis model: {e}"
+                )
+                self.sentiment_pipeline = None
         except Exception as e:
-            print(
-                f"WARNING [NLUInferencer]: Failed to load sentiment analysis model: {e}"
-            )
+            print(f"WARNING [NLUInferencer]: Error loading sentiment model: {e}")
+            self.sentiment_model = None
+            self.sentiment_tokenizer = None
+            self.sentiment2id = None
+            self.id2sentiment = None
             self.sentiment_pipeline = None
 
     def predict(self, text):
@@ -196,8 +234,10 @@ class NLUInferencer:
 
     def _predict_sentiment(self, text):
         """
-        Predict the sentiment of the given text.
-
+        Predict the sentiment of the given text using our custom RoBERTa model.
+        
+        The model has 4 classes: ['neutral', 'positive', 'standard_negative', 'urgent_negative']
+        
         Args:
             text (str): The text to analyze.
 
@@ -205,20 +245,99 @@ class NLUInferencer:
             dict: A dictionary containing sentiment label and score.
         """
         try:
-            if self.sentiment_pipeline is None:
-                return {"label": "neutral", "score": 0.5}
+            # First try our custom sentiment model
+            if self.sentiment_model is not None and self.sentiment_tokenizer is not None:
+                # Tokenize the input
+                inputs = self.sentiment_tokenizer(
+                    text, padding=True, truncation=True, return_tensors="pt"
+                )
+                inputs = inputs.to(self.device)
 
-            # Get sentiment prediction
-            sentiment_result = self.sentiment_pipeline(text)[0]
+                # Predict
+                with torch.no_grad():
+                    outputs = self.sentiment_model(**inputs)
 
-            # Return the sentiment label and score
-            return {
-                "label": sentiment_result["label"].lower(),
-                "score": float(sentiment_result["score"]),
-            }
+                # Calculate probabilities using softmax
+                logits = outputs.logits.cpu()
+                probabilities = torch.softmax(logits, dim=1).numpy()[0]
+
+                # Get the predicted sentiment class
+                predicted_sentiment_id = np.argmax(probabilities)
+                predicted_sentiment_confidence = float(probabilities[predicted_sentiment_id])
+
+                # Map back to sentiment name
+                predicted_sentiment_name = self.id2sentiment.get(
+                    int(predicted_sentiment_id), "neutral"
+                )
+
+                print(f"INFO [NLUInferencer]: Sentiment prediction using RoBERTa model: {predicted_sentiment_name} with confidence {predicted_sentiment_confidence:.4f}")
+                
+                # For better debugging, also show all class probabilities
+                sentiment_probs = {self.id2sentiment.get(i, f"class_{i}"): float(probabilities[i]) for i in range(len(probabilities))}
+                print(f"DEBUG [Sentiment]: All probabilities: {sentiment_probs}")
+
+                return {
+                    "label": predicted_sentiment_name,
+                    "score": predicted_sentiment_confidence,
+                    "all_scores": sentiment_probs  # Include all scores for potential use in dialog manager
+                }
+            
+            # Fallback to generic sentiment pipeline if custom model is unavailable
+            elif self.sentiment_pipeline is not None:
+                # Get sentiment prediction from pipeline
+                sentiment_result = self.sentiment_pipeline(text)[0]
+                
+                # Map pipeline's binary sentiment to our 4-class schema
+                pipeline_label = sentiment_result["label"].lower()
+                pipeline_score = float(sentiment_result["score"])
+                
+                # Convert binary sentiment (POSITIVE/NEGATIVE) to our schema
+                if pipeline_label == "positive" and pipeline_score > 0.95:
+                    # High confidence positive
+                    transformed_label = "positive"
+                    transformed_score = pipeline_score 
+                elif pipeline_label == "positive":
+                    # Regular positive maps to neutral
+                    transformed_label = "neutral"
+                    transformed_score = pipeline_score
+                elif pipeline_label == "negative" and pipeline_score > 0.95:
+                    # High confidence negative maps to urgent negative
+                    transformed_label = "urgent_negative"
+                    transformed_score = pipeline_score
+                elif pipeline_label == "negative" and pipeline_score > 0.75:
+                    # Medium confidence negative maps to standard negative
+                    transformed_label = "standard_negative"
+                    transformed_score = pipeline_score
+                else:
+                    # Low confidence negative maps to neutral
+                    transformed_label = "neutral"
+                    transformed_score = pipeline_score
+                    
+                print(f"INFO [NLUInferencer]: Sentiment prediction using fallback pipeline: {transformed_label} with score {transformed_score:.4f}")
+                
+                # Create a simulated distribution for the fallback model
+                all_scores = {
+                    "neutral": 0.2,
+                    "positive": 0.1,
+                    "standard_negative": 0.1,
+                    "urgent_negative": 0.1
+                }
+                
+                # Update the appropriate score based on the prediction
+                all_scores[transformed_label] = transformed_score
+                
+                return {
+                    "label": transformed_label,
+                    "score": transformed_score,
+                    "all_scores": all_scores,
+                    "is_fallback": True
+                }
+            else:
+                return {"label": "neutral", "score": 0.5, "all_scores": {"neutral": 0.5}}
+
         except Exception as e:
             print(f"WARNING [NLUInferencer]: Sentiment analysis failed: {e}")
-            return {"label": "neutral", "score": 0.5}
+            return {"label": "neutral", "score": 0.5, "all_scores": {"neutral": 0.5}}
 
     def _predict_entities(self, text):
         """

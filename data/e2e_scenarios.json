@@ -1,0 +1,2049 @@
+[
+    {
+      "scenario_id": "towing_happy_path_sequential_1",
+      "description": "Happy path: User requests a tow and provides required slots one by one",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow truck please.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["location", "vehicle", "located", "where",
+    {
+      "scenario_id": "towing_happy_path_all_info_1",
+      "description": "User provides all tow details in the first utterance.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow from 123 Main St to ABC Auto Shop for my Ford Focus 2017.",
+          "expected_state_change": {"pickup_location": "123 Main St", "destination": "ABC Auto Shop", "vehicle_make": "Ford", "vehicle_model": "Focus", "vehicle_year": "2017"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "123 Main St", "ABC Auto Shop", "Ford Focus"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, please proceed.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Confirm booking complete.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "dispatched", "on the way"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "towing_happy_path_out_of_order_1",
+      "description": "User gives vehicle info first, then pickup and destination.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "It's a Honda Civic 2018, and I need it towed from 200 Oak Ave to Downtown Garage.",
+          "expected_state_change": {"vehicle_make": "Honda", "vehicle_model": "Civic", "vehicle_year": "2018", "pickup_location": "200 Oak Ave", "destination": "Downtown Garage"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "Honda Civic", "200 Oak Ave", "Downtown Garage"]
+        },
+        {
+          "speaker": "user",
+          "text": "That's right.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Confirm booking complete.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "booked", "dispatched"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "roadside_happy_path_sequential_jump_1",
+      "description": "User requests a jump start, provides slots in order.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a jump start.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["where", "located"]
+        },
+        {
+          "speaker": "user",
+          "text": "123 Pine St.",
+          "expected_state_change": {"pickup_location": "123 Pine St"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for vehicle details.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["make", "model", "year"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Chevrolet Malibu 2019.",
+          "expected_state_change": {"vehicle_make": "Chevrolet", "vehicle_model": "Malibu", "vehicle_year": "2019"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Summarize and confirm jump start service.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "jump start", "123 Pine St", "Chevrolet Malibu"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, please.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Booking complete.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["booked", "on the way", "jump start"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "roadside_happy_path_out_of_order_1",
+      "description": "User gives vehicle info then location then service type.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I'm driving a 2018 Civic, I'm locked out at 789 Oak Ave.",
+          "expected_state_change": {"vehicle_make": "Honda", "vehicle_model": "Civic", "vehicle_year": "2018", "pickup_location": "789 Oak Ave"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for service type.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "service_type",
+          "expected_response_keywords": ["what service", "lockout", "battery", "tire"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a lockout.",
+          "expected_state_change": {"service_type": "lockout"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Summarize and confirm lockout service.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "lockout", "789 Oak Ave", "Civic"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, please go ahead.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Booking complete.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["dispatched", "technician", "on your way"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "appointment_happy_path_sequential_1",
+      "description": "User schedules a service appointment with sequential prompts.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need to schedule a service appointment.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for service type.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "service_type",
+          "expected_response_keywords": ["what service", "oil", "tire", "maintenance"]
+        },
+        {
+          "speaker": "user",
+          "text": "An oil change.",
+          "expected_state_change": {"service_type": "oil change"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_location",
+          "expected_response_keywords": ["where", "location", "shop"]
+        },
+        {
+          "speaker": "user",
+          "text": "Downtown Garage.",
+          "expected_state_change": {"appointment_location": "Downtown Garage"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for date and time.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_date",
+          "expected_response_keywords": ["when", "date", "time"]
+        },
+        {
+          "speaker": "user",
+          "text": "May 20 at 10 AM.",
+          "expected_state_change": {"appointment_date": "May 20", "appointment_time": "10 AM"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Summarize and confirm appointment.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "oil change", "May 20", "10 AM", "Downtown Garage"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that works.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Appointment booked.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "appointment", "see you"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "appointment_happy_path_out_of_order_1",
+      "description": "User gives date/time, service type, and location in one utterance.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "Diagnostic on May 22 at 2 PM at Speedy Auto for my 2019 Camry.",
+          "expected_state_change": {"service_type": "diagnostic", "appointment_date": "May 22", "appointment_time": "2 PM", "appointment_location": "Speedy Auto", "vehicle_make": "Toyota", "vehicle_model": "Camry", "vehicle_year": "2019"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Summarize and confirm details.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "May 22", "2 PM", "Speedy Auto", "diagnostic"]
+        },
+        {
+          "speaker": "user",
+          "text": "That's correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Appointment booked.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "booking", "on schedule"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "fallback_ambiguous_request_1",
+      "description": "User makes an ambiguous request requiring clarification.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need help.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for clarification on service type.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "service_type",
+          "expected_response_keywords": ["what do you need", "help with", "service"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "error_invalid_location_1",
+      "description": "User provides an invalid pickup location.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["where", "located"]
+        },
+        {
+          "speaker": "user",
+          "text": "My location is 'downtown somewhere'.",
+          "expected_state_change": {"pickup_location": "downtown somewhere"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Request a valid address.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["valid address", "please provide"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "error_conflicting_information_1",
+      "description": "User gives conflicting pickup locations in one turn.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "Actually it's at 100 Main St, no wait, it's 300 Main St.",
+          "expected_state_change": {"pickup_location": "300 Main St"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask user to confirm correct pickup location.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["which one", "confirm", "pickup location"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "error_not_answer_question_1",
+      "description": "User asks an unrelated question instead of providing the requested slot.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for destination.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["where", "tow to"]
+        },
+        {
+          "speaker": "user",
+          "text": "How much do you charge?",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Provide pricing then repeat destination question.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["our rate", "destination"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "control_restart_flow_1",
+      "description": "User asks to start over at the beginning of a booking flow.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "Start over.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Restart conversation.",
+          "expected_action_type": "RESPOND_RESTART_FLOW",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["let's start", "how can I help"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "control_change_information_1",
+      "description": "User changes previously provided destination mid-flow.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow from 400 Maple St to Central Garage.",
+          "expected_state_change": {"pickup_location": "400 Maple St", "destination": "Central Garage"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Summarize and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "400 Maple St", "Central Garage"]
+        },
+        {
+          "speaker": "user",
+          "text": "Actually, change the destination to Eastside Service.",
+          "expected_state_change": {"destination": "Eastside Service"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Confirm new destination.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "Eastside Service"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's right.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Booking complete with updated details.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "Eastside Service", "dispatched"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "sentiment_urgency_negative_towing_1",
+      "description": "User expresses high stress and urgency during a tow request.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "My car broke down, I'm stuck and freaking out. I need a tow ASAP!",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Express empathy and ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["sorry", "understand", "ASAP", "where"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "sentiment_positive_roadside_1",
+      "description": "User greets positively referencing prior good service.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "Hey, awesome help last time! I need a jump start now.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Acknowledge praise and ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["happy to hear", "jump start", "where"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "urgency_initial_asap_appointment_1",
+      "description": "User requests an appointment ASAP tomorrow morning.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need to book an oil change ASAP tomorrow morning.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Acknowledge urgency and ask for date.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_date",
+          "expected_response_keywords": ["ASAP", "tomorrow", "what date"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "roadside_negative_sentiment_urgency_1",
+      "description": "User is upset and in an urgent roadside situation.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I'm panicking, flat tire in the rain!",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Show empathy and ask for location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["sorry", "rain", "flat tire", "where"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "appointment_invalid_date_format_1",
+      "description": "User provides an invalid date format for appointment.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "Book service on 32/13/2025.",
+          "expected_state_change": {"appointment_date": "32/13/2025"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Ask for a valid date format.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_date",
+          "expected_response_keywords": ["valid date", "please provide"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "urgent_all_in_one_towing_1",
+      "description": "User provides all tow details plus urgency in one turn.",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "Emergency tow from 5th St to HQ for my 2021 F-150 ASAP.",
+          "expected_state_change": {"pickup_location": "5th St", "destination": "HQ", "vehicle_make": "Ford", "vehicle_model": "F-150", "vehicle_year": "2021", "urgency": "ASAP"}
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Summarize and confirm urgent tow.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "ASAP", "5th St", "HQ", "F-150"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, do it now!",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "action_description": "Urgent tow dispatched.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["dispatched", "ASAP", "on the way"]
+        }
+      ]
+    }
+  ]
+        },
+        {
+          "speaker": "user",
+          "text": "My car is at 123 Main Street.",
+          "expected_state_change": {"pickup_location": "123 Main Street"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for destination.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["destination", "towed to"]
+        },
+        {
+          "speaker": "user",
+          "text": "Please tow it to ABC Auto Shop.",
+          "expected_state_change": {"destination": "ABC Auto Shop"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle make.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["vehicle", "make", "car"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Honda Civic, 2018.",
+          "expected_state_change": {"vehicle_make": "Honda", "vehicle_model": "Civic", "vehicle_year": "2018"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "correct", "summarize", "towing", "Honda Civic", "123 Main Street", "ABC Auto Shop"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes that is correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm booking complete.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "booked", "dispatched", "on the way", "all set"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "towing_happy_path_all_info_upfront",
+      "description": "Happy path: User provides all towing information in the first turn",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow truck for my 2020 Toyota Camry at 456 Oak Avenue. Please tow it to Joe's Auto Repair on 789 Elm Street.",
+          "expected_state_change": {"pickup_location": "456 Oak Avenue", "destination": "Joe's Auto Repair on 789 Elm Street", "vehicle_make": "Toyota", "vehicle_model": "Camry", "vehicle_year": "2020"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "correct", "summarize", "towing", "Toyota Camry", "456 Oak Avenue", "Joe's Auto Repair"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's right.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm booking complete.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "booked", "dispatched", "on the way", "all set"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "towing_urgent_negative_sentiment",
+      "description": "Urgent towing request with negative sentiment",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow truck RIGHT NOW! My car broke down on the highway and I'm in a dangerous spot!",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge urgency with empathy and ask for exact location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["immediately", "right away", "safety", "precise location", "exact", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm on I-95 northbound, mile marker 76, right shoulder. This is awful!",
+          "expected_state_change": {"pickup_location": "I-95 northbound, mile marker 76, right shoulder"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge distress and ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["understand", "priority", "vehicle", "make", "model"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Chevy Malibu 2019. Please hurry!",
+          "expected_state_change": {"vehicle_make": "Chevy", "vehicle_model": "Malibu", "vehicle_year": "2019"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for destination with acknowledgment of urgency.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["destination", "towed to", "prioritizing", "emergency"]
+        },
+        {
+          "speaker": "user",
+          "text": "Just take it to the nearest service center, I don't care which one!",
+          "expected_state_change": {"destination": "nearest service center"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Provide expedited confirmation with safety instructions.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["emergency", "dispatching", "immediately", "safety", "confirm", "nearest service center", "Chevy Malibu"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, please send help fast!",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm emergency booking with safety instructions.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["emergency", "priority", "dispatched", "ETA", "safety", "hazard lights", "stay in vehicle"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "towing_cancel_mid_flow",
+      "description": "User cancels a towing request in the middle of the flow",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need to get my car towed.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["location", "vehicle", "located", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm at 222 Pine Street.",
+          "expected_state_change": {"pickup_location": "222 Pine Street"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for destination.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["destination", "towed to"]
+        },
+        {
+          "speaker": "user",
+          "text": "Actually, nevermind. I don't need a tow anymore. My friend is going to help me.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge cancellation.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["cancel", "cancelled", "request", "help", "anything else"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "towing_change_previous_info",
+      "description": "User asks to change previously provided information during towing request",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow truck please.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["location", "vehicle", "located", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm at 333 Maple Road.",
+          "expected_state_change": {"pickup_location": "333 Maple Road"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for destination.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["destination", "towed to"]
+        },
+        {
+          "speaker": "user",
+          "text": "To City Auto Shop on 555 Lake Drive.",
+          "expected_state_change": {"destination": "City Auto Shop on 555 Lake Drive"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle make.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["vehicle", "make", "car"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Ford Focus 2017.",
+          "expected_state_change": {"vehicle_make": "Ford", "vehicle_model": "Focus", "vehicle_year": "2017"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "correct", "summarize", "towing", "Ford Focus", "333 Maple Road", "City Auto Shop"]
+        },
+        {
+          "speaker": "user",
+          "text": "Wait, I need to change the pickup location. I'm actually at 444 Birch Lane, not Maple Road.",
+          "expected_state_change": {"pickup_location": "444 Birch Lane"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge the change and re-summarize details for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["updated", "changed", "location", "confirm", "444 Birch Lane", "City Auto Shop", "Ford Focus"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's correct now.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm booking complete.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "booked", "dispatched", "on the way", "all set"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "towing_conflicting_information",
+      "description": "User provides conflicting vehicle information during towing request",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow for my car.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["location", "vehicle", "located", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm at 777 Beach Boulevard.",
+          "expected_state_change": {"pickup_location": "777 Beach Boulevard"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for destination.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["destination", "towed to"]
+        },
+        {
+          "speaker": "user",
+          "text": "To Premium Auto Repair on Main Street.",
+          "expected_state_change": {"destination": "Premium Auto Repair on Main Street"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle make.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["vehicle", "make", "car"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Toyota Corolla.",
+          "expected_state_change": {"vehicle_make": "Toyota", "vehicle_model": "Corolla"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle year.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_year",
+          "expected_response_keywords": ["year", "vehicle", "manufactured"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a 2016 Honda Accord actually.",
+          "expected_state_change": {"vehicle_make": "Honda", "vehicle_model": "Accord", "vehicle_year": "2016"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Note the conflict and clarify vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["different", "information", "previously", "mentioned", "Toyota", "Honda", "confirm", "vehicle"]
+        },
+        {
+          "speaker": "user",
+          "text": "Sorry for the confusion. It's definitely a 2016 Honda Accord.",
+          "expected_state_change": {"vehicle_make": "Honda", "vehicle_model": "Accord", "vehicle_year": "2016"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "correct", "summarize", "towing", "Honda Accord", "777 Beach Boulevard", "Premium Auto Repair"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's all correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm booking complete.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "booked", "dispatched", "on the way", "all set"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "towing_out_of_order_info",
+      "description": "User provides towing information out of the typical sequential order",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need to get my Nissan Altima 2021 towed.",
+          "expected_state_change": {"vehicle_make": "Nissan", "vehicle_model": "Altima", "vehicle_year": "2021"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge vehicle info and ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["Nissan Altima", "location", "vehicle", "located", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "I want it towed to Johnson's Auto Service.",
+          "expected_state_change": {"destination": "Johnson's Auto Service"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge destination and remind about pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["Johnson's Auto Service", "current location", "pickup", "where are you"]
+        },
+        {
+          "speaker": "user",
+          "text": "Oh right, I'm at the Walmart parking lot on Highway 30.",
+          "expected_state_change": {"pickup_location": "Walmart parking lot on Highway 30"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "correct", "summarize", "towing", "Nissan Altima", "Walmart parking lot", "Johnson's Auto Service"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's all correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm booking complete.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "booked", "dispatched", "on the way", "all set"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "roadside_tire_change_happy_path",
+      "description": "Happy path: User requests roadside assistance for tire change",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I have a flat tire and need help changing it.",
+          "expected_state_change": {"service_type": "tire change"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge service type and ask for location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["tire change", "location", "where", "assistance"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm parked at the Shell gas station on 101 River Road.",
+          "expected_state_change": {"pickup_location": "Shell gas station on 101 River Road"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["vehicle", "make", "model", "details"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Hyundai Sonata 2019.",
+          "expected_state_change": {"vehicle_make": "Hyundai", "vehicle_model": "Sonata", "vehicle_year": "2019"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "tire change", "assistance", "Hyundai Sonata", "Shell gas station"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm service dispatch.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "tire change", "technician", "dispatched", "ETA"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "roadside_jump_start_all_info",
+      "description": "User requests jump start with all information provided upfront",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "My 2022 Subaru Outback won't start. I need a jump start at the downtown library parking lot at 500 Center Street.",
+          "expected_state_change": {"service_type": "jump start", "vehicle_make": "Subaru", "vehicle_model": "Outback", "vehicle_year": "2022", "pickup_location": "downtown library parking lot at 500 Center Street"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "jump start", "Subaru Outback", "downtown library", "battery"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's all correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm service dispatch.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "jump start", "technician", "dispatched", "ETA"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "roadside_lockout_positive_sentiment",
+      "description": "User requests lockout service with positive sentiment",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "Hi there! I accidentally locked my keys in my car. Hope you can help me out!",
+          "expected_state_change": {"service_type": "lockout"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge service need and ask for location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["lockout", "location", "where", "keys"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm at the Starbucks on 202 University Avenue. Thanks so much for the quick response!",
+          "expected_state_change": {"pickup_location": "Starbucks on 202 University Avenue"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["vehicle", "make", "model", "details"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a beautiful blue Mazda CX-5, 2020 model. I really appreciate your help!",
+          "expected_state_change": {"vehicle_make": "Mazda", "vehicle_model": "CX-5", "vehicle_year": "2020"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation with positive tone.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "lockout", "Mazda CX-5", "Starbucks", "University Avenue"]
+        },
+        {
+          "speaker": "user",
+          "text": "Perfect! That's all correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm service dispatch with positive tone.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["great", "lockout specialist", "dispatched", "ETA", "assist"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "roadside_unclear_service_type",
+      "description": "User provides an unclear service type that requires clarification",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "My car isn't working. Can someone come help?",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for clarification on service type.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "service_type",
+          "expected_response_keywords": ["specific", "issue", "problem", "help", "options", "services"]
+        },
+        {
+          "speaker": "user",
+          "text": "It won't start. I think the battery is dead.",
+          "expected_state_change": {"service_type": "jump start"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm service type and ask for location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["jump start", "battery", "location", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm at home, 1234 Cedar Street.",
+          "expected_state_change": {"pickup_location": "1234 Cedar Street"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["vehicle", "make", "model", "details"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Kia Soul from 2018.",
+          "expected_state_change": {"vehicle_make": "Kia", "vehicle_model": "Soul", "vehicle_year": "2018"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "jump start", "battery", "Kia Soul", "Cedar Street"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's right.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm service dispatch.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "jump start", "technician", "dispatched", "ETA"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "roadside_fuel_delivery_new_question",
+      "description": "User asks a new question during roadside assistance flow for fuel delivery",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I ran out of gas. Can you bring me some?",
+          "expected_state_change": {"service_type": "fuel delivery"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge service type and ask for location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["fuel", "delivery", "location", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "How much does this service cost?",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Answer question briefly and return to slot filling.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["cost", "fee", "covered", "location", "still need", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm on Highway 61, mile marker 35.",
+          "expected_state_change": {"pickup_location": "Highway 61, mile marker 35"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["vehicle", "make", "model", "details"]
+        },
+        {
+          "speaker": "user",
+          "text": "What type of fuel do you offer?",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Answer question briefly and return to slot filling.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["fuel types", "regular", "diesel", "still need", "vehicle information"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Dodge Ram 1500, 2021.",
+          "expected_state_change": {"vehicle_make": "Dodge", "vehicle_model": "Ram 1500", "vehicle_year": "2021"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "fuel delivery", "Dodge Ram", "Highway 61"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm service dispatch.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "fuel delivery", "technician", "dispatched", "ETA"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "roadside_restart_flow",
+      "description": "User wants to restart the roadside assistance flow",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need help with a flat tire.",
+          "expected_state_change": {"service_type": "tire change"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge service type and ask for location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["tire change", "location", "where", "assistance"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm at 567 Grove Street.",
+          "expected_state_change": {"pickup_location": "567 Grove Street"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["vehicle", "make", "model", "details"]
+        },
+        {
+          "speaker": "user",
+          "text": "Wait, I want to start over. Actually, I need a jump start, not a tire change.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge restart request.",
+          "expected_action_type": "RESPOND_RESTART_FLOW",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["restart", "starting over", "new request", "jump start"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, I need a jump start for my car.",
+          "expected_state_change": {"service_type": "jump start"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for location for new service.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["jump start", "location", "where", "assistance"]
+        },
+        {
+          "speaker": "user",
+          "text": "Same place, 567 Grove Street.",
+          "expected_state_change": {"pickup_location": "567 Grove Street"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["vehicle", "make", "model", "details"]
+        },
+        {
+          "speaker": "user",
+          "text": "BMW X3, 2020.",
+          "expected_state_change": {"vehicle_make": "BMW", "vehicle_model": "X3", "vehicle_year": "2020"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "jump start", "BMW X3", "Grove Street"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm service dispatch.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "jump start", "technician", "dispatched", "ETA"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "appointment_oil_change_happy_path",
+      "description": "Happy path: User schedules an oil change appointment",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I'd like to schedule an oil change for my car.",
+          "expected_state_change": {"service_type": "oil change"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge service type and ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["oil change", "vehicle", "make", "model"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Jeep Grand Cherokee 2022.",
+          "expected_state_change": {"vehicle_make": "Jeep", "vehicle_model": "Grand Cherokee", "vehicle_year": "2022"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_location",
+          "expected_response_keywords": ["location", "service center", "facility", "preferred"]
+        },
+        {
+          "speaker": "user",
+          "text": "The Downtown Service Center.",
+          "expected_state_change": {"appointment_location": "Downtown Service Center"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred date.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_date",
+          "expected_response_keywords": ["date", "day", "prefer", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "Next Tuesday if possible.",
+          "expected_state_change": {"appointment_date": "Next Tuesday"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred time.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_time",
+          "expected_response_keywords": ["time", "morning", "afternoon", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "Around 2 PM would be perfect.",
+          "expected_state_change": {"appointment_time": "2 PM"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "oil change", "Jeep Grand Cherokee", "Downtown Service Center", "Tuesday", "2 PM"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that all looks correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm appointment booking.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "scheduled", "oil change", "appointment", "reminder"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "appointment_brake_service_all_info",
+      "description": "User schedules brake service with all information provided upfront",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need to schedule a brake service for my 2019 Volkswagen Tiguan at the Eastside Auto Shop for next Friday at 10 AM.",
+          "expected_state_change": {"service_type": "brake service", "vehicle_make": "Volkswagen", "vehicle_model": "Tiguan", "vehicle_year": "2019", "appointment_location": "Eastside Auto Shop", "appointment_date": "next Friday", "appointment_time": "10 AM"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "brake service", "Volkswagen Tiguan", "Eastside Auto Shop", "Friday", "10 AM"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's all correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm appointment booking.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "scheduled", "brake service", "appointment", "reminder"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "appointment_invalid_date_time",
+      "description": "User provides invalid date/time for service appointment",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I'd like to schedule a transmission service.",
+          "expected_state_change": {"service_type": "transmission service"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge service type and ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["transmission service", "vehicle", "make", "model"]
+        },
+        {
+          "speaker": "user",
+          "text": "Audi A4, 2023.",
+          "expected_state_change": {"vehicle_make": "Audi", "vehicle_model": "A4", "vehicle_year": "2023"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_location",
+          "expected_response_keywords": ["location", "service center", "facility", "preferred"]
+        },
+        {
+          "speaker": "user",
+          "text": "The Westside Service Center.",
+          "expected_state_change": {"appointment_location": "Westside Service Center"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred date.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_date",
+          "expected_response_keywords": ["date", "day", "prefer", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "February 30th.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Notify about invalid date and request a valid date.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_date",
+          "expected_response_keywords": ["invalid", "February", "30th", "date", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "Oh sorry, how about March 2nd?",
+          "expected_state_change": {"appointment_date": "March 2nd"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred time.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_time",
+          "expected_response_keywords": ["time", "morning", "afternoon", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "25:30 pm",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Notify about invalid time and request a valid time.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_time",
+          "expected_response_keywords": ["invalid", "time", "business hours", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "Sorry, 3:30 PM would work.",
+          "expected_state_change": {"appointment_time": "3:30 PM"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "transmission service", "Audi A4", "Westside Service Center", "March 2nd", "3:30 PM"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that works.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm appointment booking.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "scheduled", "transmission service", "appointment", "reminder"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "appointment_multiple_services",
+      "description": "User wants to schedule multiple services in one appointment",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need an oil change and tire rotation.",
+          "expected_state_change": {"service_type": "oil change and tire rotation"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge multiple services and ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["oil change", "tire rotation", "both", "services", "vehicle"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Tesla Model 3, 2022.",
+          "expected_state_change": {"vehicle_make": "Tesla", "vehicle_model": "Model 3", "vehicle_year": "2022"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_location",
+          "expected_response_keywords": ["location", "service center", "facility", "preferred"]
+        },
+        {
+          "speaker": "user",
+          "text": "The Tesla Service Center on Technology Boulevard.",
+          "expected_state_change": {"appointment_location": "Tesla Service Center on Technology Boulevard"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred date.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_date",
+          "expected_response_keywords": ["date", "day", "prefer", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "Next Saturday.",
+          "expected_state_change": {"appointment_date": "Next Saturday"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred time.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_time",
+          "expected_response_keywords": ["time", "morning", "afternoon", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "11 AM.",
+          "expected_state_change": {"appointment_time": "11 AM"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "oil change", "tire rotation", "Tesla Model 3", "Tesla Service Center", "Saturday", "11 AM"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's perfect.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm appointment booking.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "scheduled", "oil change", "tire rotation", "appointment", "reminder"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "appointment_change_time",
+      "description": "User wants to change the appointment time after initial confirmation",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I want to schedule a service appointment for my car.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for specific service type.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "service_type",
+          "expected_response_keywords": ["service", "type", "maintenance", "repair"]
+        },
+        {
+          "speaker": "user",
+          "text": "I need a brake inspection.",
+          "expected_state_change": {"service_type": "brake inspection"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge service type and ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["brake inspection", "vehicle", "make", "model"]
+        },
+        {
+          "speaker": "user",
+          "text": "It's a Volvo XC90, 2021.",
+          "expected_state_change": {"vehicle_make": "Volvo", "vehicle_model": "XC90", "vehicle_year": "2021"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_location",
+          "expected_response_keywords": ["location", "service center", "facility", "preferred"]
+        },
+        {
+          "speaker": "user",
+          "text": "The Volvo dealership on 123 North Main.",
+          "expected_state_change": {"appointment_location": "Volvo dealership on 123 North Main"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred date.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_date",
+          "expected_response_keywords": ["date", "day", "prefer", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "This Friday.",
+          "expected_state_change": {"appointment_date": "This Friday"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred time.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_time",
+          "expected_response_keywords": ["time", "morning", "afternoon", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "9 AM.",
+          "expected_state_change": {"appointment_time": "9 AM"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "brake inspection", "Volvo XC90", "Volvo dealership", "Friday", "9 AM"]
+        },
+        {
+          "speaker": "user",
+          "text": "Actually, can I change the time to 2 PM instead?",
+          "expected_state_change": {"appointment_time": "2 PM"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge the change and re-summarize for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["updated", "changed", "time", "2 PM", "brake inspection", "Volvo XC90", "Friday"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's perfect now.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm appointment booking.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "scheduled", "brake inspection", "appointment", "reminder"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "appointment_ambiguous_service",
+      "description": "User provides ambiguous service request requiring clarification",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a checkup for my car.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for clarification on specific service type.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "service_type",
+          "expected_response_keywords": ["specific", "service", "clarify", "options", "maintenance"]
+        },
+        {
+          "speaker": "user",
+          "text": "I want a general inspection and fluid check.",
+          "expected_state_change": {"service_type": "general inspection and fluid check"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge service type and ask for vehicle information.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["general inspection", "fluid check", "vehicle", "make", "model"]
+        },
+        {
+          "speaker": "user",
+          "text": "Lexus ES 350, 2020.",
+          "expected_state_change": {"vehicle_make": "Lexus", "vehicle_model": "ES 350", "vehicle_year": "2020"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_location",
+          "expected_response_keywords": ["location", "service center", "facility", "preferred"]
+        },
+        {
+          "speaker": "user",
+          "text": "The Southside Lexus dealership.",
+          "expected_state_change": {"appointment_location": "Southside Lexus dealership"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred date.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_date",
+          "expected_response_keywords": ["date", "day", "prefer", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "Wednesday of next week.",
+          "expected_state_change": {"appointment_date": "Wednesday of next week"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for preferred time.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "appointment_time",
+          "expected_response_keywords": ["time", "morning", "afternoon", "available"]
+        },
+        {
+          "speaker": "user",
+          "text": "Early afternoon, maybe 1 PM.",
+          "expected_state_change": {"appointment_time": "1 PM"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Summarize details and ask for confirmation.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirm", "general inspection", "fluid check", "Lexus ES 350", "Southside Lexus", "Wednesday", "1 PM"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, that's correct.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm appointment booking.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["confirmed", "scheduled", "general inspection", "fluid check", "appointment", "reminder"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "fallback_out_of_scope",
+      "description": "User sends a completely out-of-scope query",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "What's the weather forecast for tomorrow?",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Respond with fallback for out-of-scope query.",
+          "expected_action_type": "RESPOND_FALLBACK",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["unable", "specializes", "automotive", "towing", "roadside assistance", "service appointments", "help with"]
+        },
+        {
+          "speaker": "user",
+          "text": "Oh sorry, I need to get my car towed.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge towing request and ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["towing", "location", "vehicle", "located", "where"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "fallback_multi_intent",
+      "description": "User sends a multi-intent request that needs clarification",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need to get my oil changed and also I locked my keys in my car at the mall.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for clarification on primary intent.",
+          "expected_action_type": "RESPOND_FALLBACK",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["multiple requests", "first", "help with", "oil change", "locked keys", "prioritize"]
+        },
+        {
+          "speaker": "user",
+          "text": "I need help with the locked keys first, I'm stranded at the mall.",
+          "expected_state_change": {"service_type": "lockout"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge lockout service and ask for specific location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["lockout", "mall", "specific", "entrance", "where"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "fallback_low_confidence_input",
+      "description": "User provides low-confidence input during a flow",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "need tow please",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["towing", "location", "vehicle", "located", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "im at the place with the tree",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Request more specific location details.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["specific", "address", "landmark", "street name", "more details", "locate"]
+        },
+        {
+          "speaker": "user",
+          "text": "Sorry, I'm at Green Park Mall, near the food court entrance.",
+          "expected_state_change": {"pickup_location": "Green Park Mall, near the food court entrance"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for destination.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["destination", "towed to"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "emergency_towing_urgency_keywords",
+      "description": "User expresses urgency with keywords in initial towing request",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "EMERGENCY! Need a tow truck ASAP. My car crashed on the highway.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge emergency with empathy and ask for exact location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["emergency", "immediately", "safety", "exact location", "priority", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "I'm on I-75 South, mile marker 156, on the right shoulder.",
+          "expected_state_change": {"pickup_location": "I-75 South, mile marker 156, right shoulder"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for vehicle information with urgency.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "vehicle_make",
+          "expected_response_keywords": ["emergency", "priority", "vehicle", "details", "quickly"]
+        },
+        {
+          "speaker": "user",
+          "text": "Ford Escape 2023, silver.",
+          "expected_state_change": {"vehicle_make": "Ford", "vehicle_model": "Escape", "vehicle_year": "2023"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for destination with urgency.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["destination", "towed to", "emergency", "expediting"]
+        },
+        {
+          "speaker": "user",
+          "text": "Nearest certified Ford repair shop.",
+          "expected_state_change": {"destination": "Nearest certified Ford repair shop"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Expedited confirmation with safety instructions.",
+          "expected_action_type": "REQUEST_CONFIRMATION",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["emergency", "priority", "safety", "Ford Escape", "I-75", "repair shop"]
+        },
+        {
+          "speaker": "user",
+          "text": "Yes, please hurry!",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Confirm emergency dispatch with safety instructions.",
+          "expected_action_type": "RESPOND_COMPLETE",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["emergency", "dispatched", "priority", "ETA", "safety", "hazard lights", "stay in vehicle"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "general_query_to_service_flow",
+      "description": "User starts with general query that gets directed to a service flow",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "Hi there, how are you today?",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Respond with greeting and ask how to help.",
+          "expected_action_type": "RESPOND_FALLBACK",
+          "expected_slot_requested": null,
+          "expected_response_keywords": ["hello", "assist", "towing", "roadside assistance", "service appointment", "help"]
+        },
+        {
+          "speaker": "user",
+          "text": "My battery is dead. Can you help?",
+          "expected_state_change": {"service_type": "jump start"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Acknowledge service type and ask for location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["jump start", "battery", "location", "where"]
+        }
+      ]
+    },
+    {
+      "scenario_id": "towing_invalid_location_format",
+      "description": "User provides invalid format for location during towing request",
+      "turns": [
+        {
+          "speaker": "user",
+          "text": "I need a tow truck.",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for pickup location.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["location", "vehicle", "located", "where"]
+        },
+        {
+          "speaker": "user",
+          "text": "near water",
+          "expected_state_change": null
+        },
+        {
+          "speaker": "bot",
+          "text": "Request more specific location details.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "pickup_location",
+          "expected_response_keywords": ["specific", "address", "landmark", "street name", "more details", "locate"]
+        },
+        {
+          "speaker": "user",
+          "text": "Sorry, I'm at Lakeside Mall, north parking lot near Macy's.",
+          "expected_state_change": {"pickup_location": "Lakeside Mall, north parking lot near Macy's"}
+        },
+        {
+          "speaker": "bot",
+          "text": "Ask for destination.",
+          "expected_action_type": "REQUEST_SLOT",
+          "expected_slot_requested": "destination",
+          "expected_response_keywords": ["destination", "towed to"]
+        }
+      ]
+    }
+  ]

@@ -36,7 +36,7 @@ fi
 
 # Install dependencies
 echo -e "${YELLOW}Installing dependencies...${NC}"
-pip install -r requirements-api.txt
+pip install -r config/requirements-api.txt
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to install dependencies${NC}"
     exit 1
@@ -45,12 +45,12 @@ fi
 # Check if trained_nlu_model exists
 if [ ! -d "trained_nlu_model" ]; then
     echo -e "${RED}Error: trained_nlu_model directory not found${NC}"
-    echo "Please run 'python train.py' to train the NLU model first"
+    echo "Please run 'python src/train.py' to train the NLU model first"
     exit 1
 fi
 
 # Kill any existing API server processes
-pkill -f "python api.py" || true
+pkill -f "python src/api.py" || true
 
 # Show startup instructions
 echo -e "\n\033[1;36m============================\033[0m"
@@ -62,4 +62,4 @@ echo -e "Connect your React Native app to: http://YOUR_MACHINE_IP:8001\n"
 echo -e "\033[1;32mAPI server starting...\033[0m\n"
 
 # Start the API server
-PORT=8001 python api.py 
+PORT=8001 python src/api.py 

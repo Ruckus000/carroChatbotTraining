@@ -8,7 +8,7 @@ This document outlines how to integrate the NLU chatbot with your React Native f
 
 ```bash
 # Start the local API server on port 8001 (RECOMMENDED METHOD)
-./start_api.sh
+./scripts/start_api.sh
 ```
 
 This script automatically:
@@ -36,11 +36,11 @@ The chatbot API is a standalone service that:
 
 ~~The API server is **already running via Docker** at `http://localhost:8000`. You don't need to set up or deploy this service - it's ready to use.~~
 
-**Updated**: Run the local API server using the `start_api.sh` script. This ensures you're using the latest version with all improvements and proper logging.
+**Updated**: Run the local API server using the `scripts/start_api.sh` script. This ensures you're using the latest version with all improvements and proper logging.
 
 ### Monitoring API Activity
 
-When running with the `start_api.sh` script, all chat interactions will be displayed in the terminal with the following format:
+When running with the `scripts/start_api.sh` script, all chat interactions will be displayed in the terminal with the following format:
 
 ```
 🔵🔵🔵 REACT NATIVE APP 🔵🔵🔵
@@ -57,7 +57,7 @@ To ensure that React Native app connections are properly logged:
 
 If you don't see the messages in the terminal, ensure that:
 
-1. You started the server with `./start_api.sh` (not directly with Python)
+1. You started the server with `./scripts/start_api.sh` (not directly with Python)
 2. Your React Native app is sending the correct headers
 3. You're looking at the correct terminal window where the server is running
 
@@ -769,7 +769,7 @@ When testing locally:
 
    ```bash
    # RECOMMENDED: Use the start_api.sh script
-   ./start_api.sh
+   ./scripts/start_api.sh
    ```
 
 2. **For iOS simulator**: Use 'http://localhost:8001/api' as the base URL
@@ -778,7 +778,7 @@ When testing locally:
 
 ## Important Notes
 
-1. **Use the start_api.sh script** - Always use the provided script to start the server for proper logging and setup
+1. **Use the scripts/start_api.sh script** - Always use the provided script to start the server for proper logging and setup
 2. **Set X-Platform header** - Always include 'X-Platform: React Native' header in all API requests for proper logging
 3. **Conversation State** - The dialog endpoint maintains state between turns when you provide the same conversation_id
 4. **Dialog Flow** - The system will guide users through required information for different flows (towing, roadside assistance, etc.)
@@ -792,7 +792,7 @@ When testing locally:
 
 1. **Chat Messages Not Visible in Terminal**:
 
-   - Ensure you started the server using `./start_api.sh` (not directly with Python)
+   - Ensure you started the server using `./scripts/start_api.sh` (not directly with Python)
    - Verify your app is sending the 'X-Platform: React Native' header with every request
    - Make sure you're looking at the right terminal window where the server is running
 
