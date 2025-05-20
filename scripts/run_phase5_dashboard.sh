@@ -59,7 +59,7 @@ fi
 # Install or upgrade required packages
 echo -e "${YELLOW}Installing required packages...${NC}"
 pip install --upgrade pip > /dev/null
-pip install -r requirements-dashboard.txt > /dev/null
+pip install -r config/requirements-dashboard.txt > /dev/null
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to install required packages. See error above.${NC}"
     exit 1
@@ -102,8 +102,11 @@ echo -e "  • ${YELLOW}Educational Materials and Documentation${NC}"
 echo -e "  • ${YELLOW}Comprehensive User Guide${NC}"
 echo -e "\n${YELLOW}The dashboard will open in your web browser momentarily...${NC}\n"
 
-# Start the Streamlit app
-streamlit run src/nlu_dashboard.py
+# Get the project's absolute path for Python imports
+PYTHONPATH=$(pwd)
+
+# Start the Streamlit app with the project root in Python path
+PYTHONPATH=$PYTHONPATH streamlit run src/nlu_dashboard.py
 
 # Deactivate virtual environment when done
 deactivate 

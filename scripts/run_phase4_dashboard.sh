@@ -3,9 +3,10 @@
 # Run Phase 4 NLU Dashboard
 # - With enhanced UI and UX components
 
-# Set script directory as working directory
+# Get the project root directory (parent of scripts)
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+cd "$PROJECT_ROOT"
 
 # Check if Python is installed
 if ! command -v python3 &> /dev/null; then
@@ -40,7 +41,12 @@ fi
 # Run the Streamlit app
 echo "Starting NLU Dashboard with Phase 4 enhancements..."
 echo "Open your browser at http://localhost:8501 to view the dashboard"
-streamlit run src/nlu_dashboard.py
+
+# Get the project's absolute path for Python imports
+PYTHONPATH=$(pwd)
+
+# Start Streamlit with the project root in Python path
+PYTHONPATH=$PYTHONPATH streamlit run src/nlu_dashboard.py
 
 # Deactivate virtual environment
 deactivate 

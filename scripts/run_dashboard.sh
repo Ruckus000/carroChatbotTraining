@@ -65,6 +65,12 @@ fi
 
 # Start the dashboard
 print_message "$GREEN" "Starting NLU Benchmarking Dashboard on port $STREAMLIT_PORT..."
+
+# Add project root to Python path to fix imports
+PYTHONPATH=$(pwd)
+export PYTHONPATH
+
+# Run Streamlit with proper Python path
 streamlit run "$DASHBOARD_SCRIPT" -- --server.port=$STREAMLIT_PORT --server.headless=$STREAMLIT_SERVER_HEADLESS
 
 # Deactivate virtual environment on exit

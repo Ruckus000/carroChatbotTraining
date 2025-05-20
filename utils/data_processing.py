@@ -90,7 +90,7 @@ def process_confusion_matrix(confusion_matrix, labels):
                     'predicted': labels[j],
                     'count': int(cm[i, j]),
                     'true_total': int(np.sum(cm[i, :])),
-                    'percentage': float(cm[i, j] / np.sum(cm[i, :]) if np.sum(cm[i, :]) > 0 else 0)
+                    'percentage': float(cm[i, j] / np.maximum(np.sum(cm[i, :]), 1e-10))
                 })
                 
     # Sort by count, descending
@@ -98,7 +98,7 @@ def process_confusion_matrix(confusion_matrix, labels):
     
     return {
         'confusion_matrix': cm.tolist(),
-        'normalized_matrix': (cm.astype('float') / cm.sum(axis=1, keepdims=True)).tolist(),
+        'normalized_matrix': (cm.astype('float') / np.maximum(cm.sum(axis=1, keepdims=True), 1e-10)).tolist(),
         'labels': labels,
         'true_positives': true_positives.tolist(),
         'false_positives': false_positives.tolist(),
